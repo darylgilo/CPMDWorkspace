@@ -19,9 +19,11 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'role',      // User's role: user, admin, or superadmin
         'name',
         'email',
         'password',
+        'status', // User's account status: active or inactive
     ];
 
     /**
