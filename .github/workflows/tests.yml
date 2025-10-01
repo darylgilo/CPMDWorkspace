@@ -1,0 +1,54 @@
+name: ci-tests-sqlite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+          extensions: mbstring, bcmath, sqlite, pdo_sqlite
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      - name: Generate APP_KEY
+        run: php artisan key:generate --ansi
+
+      - name: Use sqlite
+        run: |
+          php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+        shell: bash
+
+      - name: Set env for sqlite
+        run: |
+          php artisan config:clear
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+          APP_ENV: testing
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Run tests & save log
+        run: |
+          php artisan test --verbose 2>&1 | tee test-output.txt
+      - name: Upload test log
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-output
+          path: test-output.txt

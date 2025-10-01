@@ -1,0 +1,93 @@
+name: browser-tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laravel
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: mbstring, bcmath, pdo_mysql
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Copy .env
+        run: cp .env.example .env
+
+      - name: Prepare env
+        run: |
+          php artisan key:generate --ansi
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          APP_ENV: testing
+
+      - name: Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install ChromeDriver
+        run: php artisan dusk:chrome-driver --detect
+
+      - name: Start Laravel server
+        run: php artisan serve --host=127.0.0.1 --port=8000 &
+        env:
+          APP_ENV: testing
+          APP_URL: http://127.0.0.1:8000
+          DB_CONNECTION: mysql
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+
+      - name: Run unit tests
+        run: php artisan test --verbose
+
+      - name: Run dusk tests
+        run: php artisan dusk
+        env:
+          APP_ENV: testing
+          APP_URL: http://127.0.0.1:8000
+          DB_CONNECTION: mysql
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
