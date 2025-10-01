@@ -2,6 +2,7 @@ import { AppContent } from '@/components/app-content';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
+import { NavUser } from '@/components/nav-user';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
 
@@ -16,6 +17,13 @@ export default function AppSidebarLayout({
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
             </AppContent>
+                {/* Floating NavUser in top right */}
+                <div
+                    style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50 }}
+                    className="pointer-events-auto"
+                >
+                    <NavUser />
+                </div>
         </AppShell>
     );
 }
