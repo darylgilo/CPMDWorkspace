@@ -23,7 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'status', // User's account status: active or inactive
+        'status', // added User's account status: active or inactive
     ];
 
     /**
