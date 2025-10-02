@@ -20,10 +20,25 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'role',      // User's role: user, admin, or superadmin
+        'status', // User's account status: active or inactive
+        'last_login_at', // Timestamp of the last login
+        'employee_id', // Unique employee identifier
         'name',
         'email',
         'password',
-        'status', // added User's account status: active or inactive
+        'position',
+        'employment_status',
+        'office',
+        'tin_number',
+        'gsis_number',
+        'address',
+        'date_of_birth',
+        'gender',
+        'mobile_number',
+        'contact_number',
+        'contact_person',
+        'cpmd',
+        
     ];
 
     /**
@@ -46,6 +61,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
         ];
     }
 }

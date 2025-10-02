@@ -12,13 +12,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            
             $table->enum('role',['user','admin','superadmin','biocon','psf','phps'])->default ('user');
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->id();
+            $table->string('employee_id')->unique()->nullable();
+            $table->string('position')->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->string('gsis_number')->unique()->nullable();
+            $table->string('tin_number')->unique()->nullable();
+            $table->string('mobile_number')->unique()->nullable();
+            $table->enum('gender', ['Male', 'Female'])->default('Male');
+            $table->string('address')->nullable();
+            $table->string('contact_number')->unique()->nullable();
+            $table->string('contact_person')->nullable();
             $table->string('name');
+            $table->enum('employment_status', ['Regular', 'COS','Job Order','Others'])->default('Regular');
+            $table->enum('office', ['DO','ADO','CPMD','AED','NSQCS','NPQSD','NSIC','CRPSD','PPSSD','ADMINISTRATIVE','Others'])->default('Others');
+            $table->enum('cpmd', ['BIOCON section','PFS section','PHPS SECTION','OC-Admin Support Unit','OC-ICT Unit','OC-Special Project','Others'])->default('Others');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('profile_picture')->nullable();
+            $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
