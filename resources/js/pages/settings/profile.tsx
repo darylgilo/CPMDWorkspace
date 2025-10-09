@@ -3,6 +3,7 @@ import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -30,6 +31,8 @@ export default function Profile({
     status?: string;
 }) {
     const { auth } = usePage<SharedData>().props;
+    const [officeValue, setOfficeValue] = useState<string>(auth.user.office ?? 'CPMD');
+    const [cpmdValue, setCpmdValue] = useState<string>(auth.user.cpmd ?? 'PFS section');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -106,7 +109,10 @@ export default function Profile({
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="employment_status">Employment Status</Label>
-                                                <Select name="employment_status" defaultValue={auth.user.employment_status ?? 'Regular'}>
+                                                <Select
+                                                    name="employment_status"
+                                                    defaultValue={auth.user.employment_status ?? 'Regular'}
+                                                >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select employment status" />
                                                     </SelectTrigger>
@@ -121,7 +127,11 @@ export default function Profile({
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="office">Office</Label>
-                                                <Select name="office" defaultValue={auth.user.office ?? 'CPMD'}>
+                                                <Select
+                                                    name="office"
+                                                    value={officeValue}
+                                                    onValueChange={(value) => setOfficeValue(value)}
+                                                >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select office" />
                                                     </SelectTrigger>
@@ -141,24 +151,30 @@ export default function Profile({
                                                 </Select>
                                                 <InputError message={errors.office} />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="cpmd">Section/Unit</Label>
-                                                <Select name="cpmd" defaultValue={auth.user.cpmd ?? 'PFS section'}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select CPMD section" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="BIOCON section">BIOCON section</SelectItem>
-                                                        <SelectItem value="PFS section">PFS section</SelectItem>
-                                                        <SelectItem value="PHPS SECTION">PHPS SECTION</SelectItem>
-                                                        <SelectItem value="OC-Admin Support Unit">OC-Admin Support Unit</SelectItem>
-                                                        <SelectItem value="OC-ICT Unit">OC-ICT Unit</SelectItem>
-                                                        <SelectItem value="OC-Special Project">OC-Special Project</SelectItem>
-                                                        <SelectItem value="Others">Others</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <InputError message={errors.cpmd} />
-                                            </div>
+                                            {officeValue === 'CPMD' && (
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="cpmd">Section/Unit</Label>
+                                                    <Select
+                                                        name="cpmd"
+                                                        value={cpmdValue}
+                                                        onValueChange={(value) => setCpmdValue(value)}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select CPMD section" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="BIOCON section">BIOCON section</SelectItem>
+                                                            <SelectItem value="PFS section">PFS section</SelectItem>
+                                                            <SelectItem value="PHPS SECTION">PHPS SECTION</SelectItem>
+                                                            <SelectItem value="OC-Admin Support Unit">OC-Admin Support Unit</SelectItem>
+                                                            <SelectItem value="OC-ICT Unit">OC-ICT Unit</SelectItem>
+                                                            <SelectItem value="OC-Special Project">OC-Special Project</SelectItem>
+                                                            <SelectItem value="Others">Others</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <InputError message={errors.cpmd} />
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Column 2 */}

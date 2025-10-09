@@ -3,10 +3,15 @@ import { cn } from '@/lib/utils';
 import { LucideIcon, Monitor, Moon, Sun } from 'lucide-react';
 import { HTMLAttributes } from 'react';
 
+type AppearanceToggleTabProps = HTMLAttributes<HTMLDivElement> & {
+    showLabels?: boolean;
+};
+
 export default function AppearanceToggleTab({
     className = '',
+    showLabels = true,
     ...props
-}: HTMLAttributes<HTMLDivElement>) {
+}: AppearanceToggleTabProps) {
     const { appearance, updateAppearance } = useAppearance();
 
     const tabs: { value: Appearance; icon: LucideIcon; label: string }[] = [
@@ -28,14 +33,15 @@ export default function AppearanceToggleTab({
                     key={value}
                     onClick={() => updateAppearance(value)}
                     className={cn(
-                        'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
+                        'flex items-center justify-center rounded-md transition-colors',
+                        showLabels ? 'px-3.5 py-1.5' : 'h-8 w-8',
                         appearance === value
                             ? 'bg-white shadow-xs dark:bg-neutral-700 dark:text-neutral-100'
                             : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
                     )}
                 >
-                    <Icon className="-ml-1 h-4 w-4" />
-                    <span className="ml-1.5 text-sm">{label}</span>
+                    <Icon className={cn('-ml-1 h-4 w-4', showLabels ? '' : 'm-0')} />
+                    {showLabels && <span className="ml-1.5 text-sm">{label}</span>}
                 </button>
             ))}
         </div>
