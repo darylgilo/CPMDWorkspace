@@ -80,7 +80,7 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run unit tests
-        run: php artisan test --verbose
+        run: php artisan test
 
       #- name: Run dusk tests
        # run: php artisan dusk
