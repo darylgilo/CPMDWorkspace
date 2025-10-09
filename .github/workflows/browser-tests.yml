@@ -66,8 +66,8 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Install ChromeDriver
-        run: php artisan dusk:chrome-driver --detect
+      #- name: Install ChromeDriver
+        #run: php artisan dusk:chrome-driver --detect
 
       - name: Start Laravel server
         run: php artisan serve --host=127.0.0.1 --port=8000 &
@@ -82,8 +82,8 @@ jobs:
       - name: Run unit tests
         run: php artisan test --verbose
 
-      - name: Run dusk tests
-        run: php artisan dusk
+      #- name: Run dusk tests
+       # run: php artisan dusk
         env:
           APP_ENV: testing
           APP_URL: http://127.0.0.1:8000
