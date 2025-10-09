@@ -8,6 +8,7 @@ import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
 import { edit } from '@/routes/profile';
+import AppearanceToggleTab from '@/components/appearance-tabs';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
@@ -33,6 +34,12 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                <div className="px-2 py-1.5">
+                    <div className="flex justify-center">
+                        <AppearanceToggleTab showLabels={false} />
+                    </div>
+                </div>
+                {/* Removed Appearance menu item; quick toggle above serves this purpose */}
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full"
