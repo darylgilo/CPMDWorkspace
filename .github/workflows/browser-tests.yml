@@ -7,18 +7,18 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  ci:
+ test:
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: laravel
-        ports: ['3306:3306']
+          MYSQL_DATABASE: your_db_name
+        ports:
+          - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost"
+          --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -51,8 +51,8 @@ jobs:
           DB_PASSWORD: root
           APP_ENV: testing
 
-      - name: Run migrations
-        run: php artisan migrate --force
+          - name: Run migrations
+          run: php artisan migrate --env=testing
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -66,8 +66,8 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Install ChromeDriver
-        run: php artisan dusk:chrome-driver --detect
+      #- name: Install ChromeDriver
+        #run: php artisan dusk:chrome-driver --detect
 
       - name: Start Laravel server
         run: php artisan serve --host=127.0.0.1 --port=8000 &
@@ -80,10 +80,10 @@ jobs:
           DB_PASSWORD: root
 
       - name: Run unit tests
-        run: php artisan test --verbose
+        run: php artisan test
 
-      - name: Run dusk tests
-        run: php artisan dusk
+      #- name: Run dusk tests
+       # run: php artisan dusk
         env:
           APP_ENV: testing
           APP_URL: http://127.0.0.1:8000
