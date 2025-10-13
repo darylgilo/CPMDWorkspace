@@ -125,7 +125,7 @@ const data = {
         },
         {
           title: "User Management",
-          url: "#",
+          url: "/superadmin/usermanagement",
         },
       ],
     },
