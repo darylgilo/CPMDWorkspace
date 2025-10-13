@@ -222,8 +222,8 @@ export default function EditUserManagement() {
                     
                     {/* Left Side: Profile Picture Card */}
                     <div className="lg:w-80 order-1">
-                        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Profile Picture</h3>
+                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                         
                             
                             {/* Profile Picture Section */}
                             <div className="flex flex-col items-center space-y-4">
@@ -285,10 +285,10 @@ export default function EditUserManagement() {
 
                     {/* Right Side: Main Form Card */}
                     <div className="flex-1 order-2">
-                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-700 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                             <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Edit User Profile</h2>
                             
-                            <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 
                                 {/* Main Form Sections - Table-based Layout */}
                                 <div className="space-y-8">
@@ -300,13 +300,13 @@ export default function EditUserManagement() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead className="w-1/3">Field</TableHead>
-                                                        <TableHead className="w-2/3">Value</TableHead>
+                                                        {/*<TableHead className="w-1/3"></TableHead>*/}
+                                                        {/*<TableHead className="w-2/3"></TableHead>*/}
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Name *</TableCell>
+                                                        <TableCell className="w-1/3 font-medium">Name *</TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="name"
@@ -330,6 +330,7 @@ export default function EditUserManagement() {
                                                                 value={employee_id}
                                                                 onChange={(e) => setEmployeeId(e.target.value)}
                                                                 className="w-full"
+                                                                autoComplete="off"
                                                                 placeholder="Employee ID"
                                                             />
                                                             <InputError className="mt-1" message={getErrorMessage('employee_id')} />
@@ -428,13 +429,13 @@ export default function EditUserManagement() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead className="w-1/3">Field</TableHead>
-                                                        <TableHead className="w-2/3">Value</TableHead>
+                                                        {/*<TableHead className="w-1/3"></TableHead>*/}
+                                                        {/*<TableHead className="w-2/3"></TableHead>*/}
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">TIN Number</TableCell>
+                                                        <TableCell className=" 1/3 font-medium">TIN Number</TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="tin_number"
@@ -534,13 +535,13 @@ export default function EditUserManagement() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
-                                                        <TableHead className="w-1/3">Field</TableHead>
-                                                        <TableHead className="w-2/3">Value</TableHead>
+                                                        {/*<TableHead className="w-1/3"></TableHead>*/}
+                                                        {/*<TableHead className="w-2/3"></TableHead>*/}
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Contact Person</TableCell>
+                                                        <TableCell className="w-1/3 font-medium">Contact Person</TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="contact_person"
