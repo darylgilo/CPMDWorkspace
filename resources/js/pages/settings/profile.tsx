@@ -32,7 +32,7 @@ export default function Profile({
 }) {
     const { auth } = usePage<SharedData>().props;
     const [officeValue, setOfficeValue] = useState<string>(auth.user.office ?? 'CPMD');
-    const [cpmdValue, setCpmdValue] = useState<string>(auth.user.cpmd ?? 'PFS section');
+    const [cpmdValue, setCpmdValue] = useState<string>(auth.user.cpmd ?? '');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

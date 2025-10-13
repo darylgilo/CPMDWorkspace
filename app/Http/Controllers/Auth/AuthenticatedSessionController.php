@@ -64,7 +64,8 @@ class AuthenticatedSessionController extends Controller
         // Regenerate session for security (prevents session fixation attacks)
         $request->session()->regenerate();
 
-        // ...existing code... (last login tracking here)
+        // Update last login timestamp
+        $user->update(['last_login_at' => now()]);
 
         // Redirect to intended destination or dashboard
         return redirect()->intended(route('dashboard', absolute: false));

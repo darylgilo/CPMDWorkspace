@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Usercontrol\UserRoleController;
+use App\Http\Controllers\Usercontrol\UserController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -39,7 +39,14 @@ Route::middleware(['auth', 'verified','role:admin,superadmin'])->group(function 
 
 // Superadmin user management route, accessible only to superadmin role
 Route::middleware(['auth', 'verified','role:superadmin'])->group(function () {
-    Route::get('/superadmin/usermanagement',[UserRoleController::class,'superadmin'])->name('superadmin');
+    // User management CRUD operations
+    Route::get('/superadmin/usermanagement', [UserController::class, 'index'])->name('usermanagement');
+    Route::get('/superadmin/usermanagement/create', [UserController::class, 'create'])->name('usermanagement.create');
+    Route::get('/superadmin/usermanagement/{id}/edit', [UserController::class, 'edit'])->name('usermanagement.edit');
+    Route::post('/superadmin/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/superadmin/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::patch('/superadmin/users/{id}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
+    Route::delete('/superadmin/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 require __DIR__.'/settings.php';
