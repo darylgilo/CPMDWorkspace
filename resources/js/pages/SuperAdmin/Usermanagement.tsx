@@ -209,20 +209,20 @@ export default function UserManagement() {
                 {/* Analytics Dashboard */}
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 ">
                     {/* Total Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-700 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
                                 <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.totalUsers}</p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                                <Users className="h-4 w-4 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
+                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                <Users className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
                             </div>
                         </div>
                     </div>
 
                     {/* Active Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-700 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Active Users</p>
@@ -235,21 +235,21 @@ export default function UserManagement() {
                     </div>
 
                     {/* New Users This Month Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-700 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">New Users</p>
                                 <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.newUsersThisMonth}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 hidden md:block">This month</p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-                                <UserPlus className="h-4 w-4 md:h-6 md:w-6 text-yellow-600 dark:text-yellow-400" />
+                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                <UserPlus className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
                             </div>
                         </div>
                     </div>
 
                     {/* Online Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-700 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Online Users</p>
@@ -278,7 +278,7 @@ export default function UserManagement() {
                       onClick={() => {
                         router.get('/superadmin/usermanagement/create', {}, { preserveState: false, replace: false });
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200 "
                     >
                       <UserRoundPlus className="h-4 w-4" />
                       <span className="hidden md:inline">Add User</span>
@@ -321,7 +321,7 @@ export default function UserManagement() {
                       placeholder="Search by name"
                       value={searchValue}
                       onChange={e => setSearchValue(e.target.value)}
-                      className="border px-3 py-2 rounded w-full"
+                      className="border px-3 py-2 rounded w-full bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 hover:bg-white dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600 dark:hover:bg-neutral-800"
                       style={{ minWidth: 180 }}
                     />
                     <button type="submit" className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700">Search</button>

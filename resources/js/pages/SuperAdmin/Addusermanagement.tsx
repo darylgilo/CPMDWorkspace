@@ -126,8 +126,8 @@ export default function AddUserManagement() {
                     
                     {/* Left Side: Profile Picture Card */}
                     <div className="lg:w-80 order-1">
-                        <div className="bg-white dark:bg-neutral-800 rounded-xl border border-gray-200 dark:border-neutral-700 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Profile Picture</h3>
+                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                            
                             
                             {/* Profile Picture Section */}
                             <div className="flex flex-col items-center space-y-4">
@@ -189,10 +189,10 @@ export default function AddUserManagement() {
 
                     {/* Right Side: Main Form Card */}
                     <div className="flex-1 order-2">
-                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-700 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                             <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Add New User</h2>
                             
-                            <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Main Form Sections - Organized Grid Layout */}
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     
@@ -224,6 +224,7 @@ export default function AddUserManagement() {
                                                     value={employee_id}
                                                     onChange={(e) => setEmployeeId(e.target.value)}
                                                     className="mt-1"
+                                                    autoComplete="off"
                                                     placeholder="Employee ID"
                                                 />
                                             </div>
@@ -514,6 +515,7 @@ export default function AddUserManagement() {
                                                 }}
                                                 className="mt-1"
                                                 required
+                                                autoComplete="new-password"
                                                 placeholder="Enter new password"
                                             />
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Password must be at least 8 characters</p>
@@ -532,6 +534,7 @@ export default function AddUserManagement() {
                                                 }}
                                                 className="mt-1"
                                                 required
+                                                autoComplete="new-password"
                                                 placeholder="Confirm new password"
                                             />
                                         </div>
