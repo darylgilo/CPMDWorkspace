@@ -247,6 +247,7 @@ class UserController extends Controller
                 'contact_number' => 'nullable|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'remove_profile_picture' => 'nullable|string',
             ]);
             
             // Custom validation: cpmd is required only when office is CPMD
@@ -267,8 +268,20 @@ class UserController extends Controller
                 unset($validated['password']);
             }
             
+            // Handle profile picture removal
+            if ($request->has('remove_profile_picture') && $request->remove_profile_picture == '1') {
+                // Delete existing profile picture if exists
+                if ($user->profile_picture) {
+                    $oldPath = storage_path('app/public/' . $user->profile_picture);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                        \Log::info('Profile picture removed:', ['old_path' => $oldPath]);
+                    }
+                }
+                $validated['profile_picture'] = null;
+            }
             // Handle profile picture upload
-            if ($request->hasFile('profile_picture')) {
+            elseif ($request->hasFile('profile_picture')) {
                 // Delete old profile picture if exists
                 if ($user->profile_picture) {
                     $oldPath = storage_path('app/public/' . $user->profile_picture);
