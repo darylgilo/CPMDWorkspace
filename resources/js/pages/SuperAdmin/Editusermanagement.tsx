@@ -240,7 +240,7 @@ export default function EditUserManagement() {
             <Head title="Edit User Profile" />
             <div className="p-4">
                 {/* Main Content Layout - Profile Picture Card on Left, Form on Right */}
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-4">
                     
                     {/* Left Side: Profile Picture Card */}
                     <div className="lg:w-80 order-1">
@@ -250,7 +250,7 @@ export default function EditUserManagement() {
                             {/* Profile Picture Section */}
                             <div className="flex flex-col items-center space-y-4">
                                 <div className="relative">
-                                    <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-card shadow-lg">
+                                    <div className="w-45 h-45 rounded-full bg-muted flex items-center justify-center overflow-hidden border-3 border-card shadow-lg">
                                         {getProfilePictureUrl() ? (
                                             <img
                                                 src={getProfilePictureUrl()!}
@@ -749,7 +749,7 @@ export default function EditUserManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-4 pt-6">
-                                    <Button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-70">
+                                    <Button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white disabled:opacity-70">
                                         {isSubmitting ? 'Updating...' : 'Update Profile'}
                                     </Button>
                                     <Button 

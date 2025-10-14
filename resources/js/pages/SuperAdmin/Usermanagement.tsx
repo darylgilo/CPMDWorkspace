@@ -209,57 +209,57 @@ export default function UserManagement() {
                 {/* Analytics Dashboard */}
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 ">
                     {/* Total Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                        <div className="flex items-center justify-between">
+                    <div className="bg-[#163832] text-white dark:bg-[#163832] dark:text-white rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)]">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
-                                <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.totalUsers}</p>
+                                <p className="text-xs md:text-sm font-medium text-white/80 dark:text-gray-400">Total Users</p>
+                                <p className="text-xl md:text-3xl font-bold text-white dark:text-white">{analytics.totalUsers}</p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                                <Users className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
+                            <div className="self-start h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                <Users className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-[#DAF1DE]" />
                             </div>
                         </div>
                     </div>
 
                     {/* Active Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                        <div className="flex items-center justify-between">
+                    <div className="bg-[#163832] text-white dark:bg-[#163832] dark:text-white rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)]">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Active Users</p>
-                                <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.activeUsers}</p>
+                                <p className="text-xs md:text-sm font-medium text-white/80 dark:text-gray-400">Active Users</p>
+                                <p className="text-xl md:text-3xl font-bold text-white dark:text-white">{analytics.activeUsers}</p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                                <UserCheck className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
+                            <div className="self-start h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                <UserCheck className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-[#DAF1DE]" />
                             </div>
                         </div>
                     </div>
 
                     {/* New Users This Month Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                        <div className="flex items-center justify-between">
+                    <div className="bg-[#163832] text-white dark:bg-[#163832] dark:text-white rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)]">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">New Users</p>
-                                <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.newUsersThisMonth}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 hidden md:block">This month</p>
+                                <p className="text-xs md:text-sm font-medium text-white/80 dark:text-gray-400">New Users</p>
+                                <p className="text-xl md:text-3xl font-bold text-white dark:text-white">{analytics.newUsersThisMonth}</p>
+                                <p className="text-xs text-white/70 dark:text-gray-400 hidden md:block">This month</p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                                <UserPlus className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-green-400" />
+                            <div className="self-start h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                                <UserPlus className="h-4 w-4 md:h-6 md:w-6 text-green-600 dark:text-[#DAF1DE]" />
                             </div>
                         </div>
                     </div>
 
                     {/* Online Users Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                        <div className="flex items-center justify-between">
+                    <div className="bg-[#163832] text-white dark:bg-[#163832] rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)]">
+                        <div className="flex items-start justify-between">
                             <div>
-                                <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400">Online Users</p>
-                                <p className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">{analytics.onlineUsers}</p>
+                                <p className="text-xs md:text-sm font-medium text-white/80 dark:text-gray-400">Online Users</p>
+                                <p className="text-xl md:text-3xl font-bold text-white dark:text-white">{analytics.onlineUsers}</p>
                                 <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1 hidden md:flex">
-                                    <Activity className="h-3 w-3" />
+                                    <Activity className="h-3 w-3 " />
                                     Last 15 minutes
                                 </p>
                             </div>
-                            <div className="h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                            <div className="self-start h-8 w-8 md:h-12 md:w-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                                 <div className="h-2 w-2 md:h-3 md:w-3 bg-green-500 rounded-full animate-pulse"></div>
                             </div>
                         </div>
@@ -267,7 +267,7 @@ export default function UserManagement() {
                 </div>
 
                 {/* Users Table */}
-                <div className="overborder-sidebar-border/70 dark:border-neutral-800 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl md:min-h-min bg-white dark:bg-neutral-900 p-4 border-t-4 border-t-green-600 dark:border-t-green-600 border-l border-r border-b border-gray-200 dark:border-neutral-600" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+                <div className="overborder-sidebar-border/70 dark:border-neutral-800 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl md:min-h-min bg-white dark:bg-neutral-900 p-4 border-t-4 border-t-[#163832] dark:border-t-[#235347] border-l border-r border-b border-gray-200 dark:border-neutral-600" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                 {/* DataTables-style Controls */}
                 <div className="flex justify-between items-center mb-4">
                   {/* Left: Show entries and Add User button */}
@@ -278,7 +278,7 @@ export default function UserManagement() {
                       onClick={() => {
                         router.get('/superadmin/usermanagement/create', {}, { preserveState: false, replace: false });
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors duration-200 "
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white text-sm font-medium rounded-md transition-colors duration-200 "
                     >
                       <UserRoundPlus className="h-4 w-4" />
                       <span className="hidden md:inline">Add User</span>
@@ -324,7 +324,7 @@ export default function UserManagement() {
                       className="border px-3 py-2 rounded w-full bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 hover:bg-white dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600 dark:hover:bg-neutral-800"
                       style={{ minWidth: 180 }}
                     />
-                    <button type="submit" className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700">Search</button>
+                    <button type="submit" className="bg-[#163832] text-white px-4 py-1 rounded hover:bg-[#235347] dark:bg-[#235347] dark:hover:bg-[#235347]/90">Search</button>
                   </form>
                 </div>
                     
@@ -383,7 +383,7 @@ export default function UserManagement() {
                                             }}
                                             className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-lg border transition-colors ${
                                                 sortDirection === 'asc' 
-                                                    ? 'bg-green-600 text-white border-green-600' 
+                                                    ? 'bg-[#163832] text-white border-[#163832] dark:bg-[#235347] dark:border-[#235347]' 
                                                     : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-neutral-600'
                                             }`}
                                         >
@@ -405,7 +405,7 @@ export default function UserManagement() {
                                             }}
                                             className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-lg border border-l-0 transition-colors ${
                                                 sortDirection === 'desc' 
-                                                    ? 'bg-green-600 text-white border-green-600' 
+                                                    ? 'bg-[#163832] text-white border-[#163832] dark:bg-[#235347] dark:border-[#235347]' 
                                                     : 'bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-neutral-600'
                                             }`}
                                         >
@@ -603,7 +603,7 @@ export default function UserManagement() {
                                 direction: sortDirection
                             }, { preserveState: true, replace: true }); 
                           }}
-                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'active' ? 'bg-green-600 text-white border-green-600' : 'bg-white dark:bg-neutral-900'}`}
+                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'active' ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]' : 'bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-600'}`}
                         >
                           Active Users
                         </button>
@@ -619,7 +619,7 @@ export default function UserManagement() {
                                 direction: sortDirection
                             }, { preserveState: true, replace: true }); 
                           }}
-                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'inactive' ? 'bg-green-600 text-white border-green-600' : 'bg-white dark:bg-neutral-900'}`}
+                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'inactive' ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]': 'bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-600'}`}
                         >
                           New Users
                         </button>
@@ -632,7 +632,13 @@ export default function UserManagement() {
                             <button
                               key={idx}
                               disabled={!link.url}
-                              className={`px-3 py-1 rounded border ${link.active ? 'bg-green-600 text-white' : 'bg-white dark:bg-green-900'}`}
+                              className={`px-3 py-1 rounded border transition-colors ${
+                                link.active
+                                  ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]'
+                                  : (link.label?.includes('Previous') || link.label?.includes('Next'))
+                                      ? 'bg-[#163832] text-white hover:bg-[#235347] border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]'
+                                      : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-gray-100 dark:border-neutral-600'
+                              }`}
                               dangerouslySetInnerHTML={{ __html: link.label }}
                               onClick={() => link.url && handlePageChange(link.url)}
                             />
