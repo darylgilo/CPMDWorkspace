@@ -47,6 +47,7 @@ export default function EditUserManagement() {
     const [profile_picture, setProfilePicture] = useState<File | undefined>(undefined);
     const [superadminPassword, setSuperadminPassword] = useState('');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [passwordError, setPasswordError] = useState('');
     
@@ -81,6 +82,7 @@ export default function EditUserManagement() {
         const file = e.target.files?.[0];
         if (file) {
             setProfilePicture(file);
+            setRemoveProfilePicture(false); // Reset remove flag when new image is selected
             
             // Create a preview URL for the selected image
             const reader = new FileReader();
@@ -95,6 +97,7 @@ export default function EditUserManagement() {
     const handleRemoveImage = () => {
         setProfilePicture(undefined);
         setPreviewImage(null);
+        setRemoveProfilePicture(true); // Set flag to remove existing profile picture from server
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -105,7 +108,7 @@ export default function EditUserManagement() {
         if (previewImage) {
             return previewImage;
         }
-        if (user?.profile_picture) {
+        if (!removeProfilePicture && user?.profile_picture) {
             return `/storage/${user.profile_picture}`;
         }
         return null;
@@ -144,7 +147,6 @@ export default function EditUserManagement() {
         
         // Add all form fields
         formData.append('_method', 'PUT');
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
         formData.append('name', name);
         formData.append('email', email);
         formData.append('role', role);
@@ -175,11 +177,31 @@ export default function EditUserManagement() {
             formData.append('profile_picture', profile_picture);
         }
         
-        // Submit using Inertia router
+        // Add flag to remove existing profile picture
+        if (removeProfilePicture) {
+            formData.append('remove_profile_picture', '1');
+        }
+        
+        // Debug: Log form data being sent
+        console.log('Form data being sent:', {
+            name, email, role, status, employee_id, position,
+            password: password ? '***' : 'not provided',
+            removeProfilePicture,
+            profile_picture: profile_picture ? 'file selected' : 'no file'
+        });
+        
+        // Submit using Inertia router with POST method (required for file uploads)
         router.post(`/superadmin/users/${user?.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
                 console.log('Form submitted successfully');
+                // Reset the remove flag after successful submission
+                setRemoveProfilePicture(false);
+                // Clear password fields
+                setPassword('');
+                setConfirmPassword('');
+                setSuperadminPassword('');
+                setPasswordError('');
             },
             onError: (errors) => {
                 console.log('Form submission errors:', errors);
@@ -268,7 +290,7 @@ export default function EditUserManagement() {
                                     >
                                         Upload Photo
                                     </Button>
-                                    {(getProfilePictureUrl() || user?.profile_picture) && (
+                                    {(getProfilePictureUrl() || (user?.profile_picture && !removeProfilePicture)) && (
                                         <Button
                                             type="button"
                                             variant="destructive"
@@ -288,7 +310,7 @@ export default function EditUserManagement() {
                         <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                             <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Edit User Profile</h2>
                             
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off" id={`edit-user-form-${user?.id}`}>
                                 
                                 {/* Main Form Sections - Table-based Layout */}
                                 <div className="space-y-8">
@@ -331,6 +353,9 @@ export default function EditUserManagement() {
                                                                 onChange={(e) => setEmployeeId(e.target.value)}
                                                                 className="w-full"
                                                                 autoComplete="off"
+                                                                autoCorrect="off"
+                                                                autoCapitalize="off"
+                                                                spellCheck="false"
                                                                 placeholder="Employee ID"
                                                             />
                                                             <InputError className="mt-1" message={getErrorMessage('employee_id')} />
@@ -664,6 +689,10 @@ export default function EditUserManagement() {
                                                     if (passwordError) setPasswordError('');
                                                 }}
                                                 className="mt-1"
+                                                autoComplete="new-password"
+                                                autoCorrect="off"
+                                                autoCapitalize="off"
+                                                spellCheck="false"
                                                 placeholder="Leave blank to keep current password"
                                             />
                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave blank to keep the current password</p>
@@ -682,6 +711,10 @@ export default function EditUserManagement() {
                                                     if (passwordError) setPasswordError('');
                                                 }}
                                                 className="mt-1"
+                                                autoComplete="new-password"
+                                                autoCorrect="off"
+                                                autoCapitalize="off"
+                                                spellCheck="false"
                                                 placeholder="Confirm new password"
                                             />
                                         </div>
