@@ -3,7 +3,7 @@ import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useRef, type ChangeEvent } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -33,6 +33,36 @@ export default function Profile({
     const { auth } = usePage<SharedData>().props;
     const [officeValue, setOfficeValue] = useState<string>(auth.user.office ?? 'CPMD');
     const [cpmdValue, setCpmdValue] = useState<string>(auth.user.cpmd ?? '');
+    const [employmentStatusValue, setEmploymentStatusValue] = useState<string>(auth.user.employment_status ?? 'Regular');
+
+    // Profile image preview and input ref
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [imgBroken, setImgBroken] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Return preview image if selected; otherwise, existing stored profile picture
+    const getProfilePictureUrl = () => {
+        if (imgBroken) return null;
+        if (previewImage) return previewImage;
+        const stored = (auth as any)?.user?.profile_picture as string | undefined;
+        if (!stored) return null;
+        if (stored.startsWith('http://') || stored.startsWith('https://')) return stored;
+        if (stored.startsWith('/')) return stored; // already absolute path
+        if (stored.startsWith('storage/')) return `/${stored}`; // already in storage folder
+        return `/storage/${stored}`;
+    };
+
+    // Handle local file selection to create a preview
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImgBroken(false);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setPreviewImage(ev.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -57,11 +87,44 @@ export default function Profile({
                                 {/* Left Column - User Info */}
                                 <div className="lg:col-span-1 space-y-6">
                                     <div className="text-center space-y-4">
-                                        <div className="w-24 h-24 mx-auto bg-muted rounded-full flex items-center justify-center">
-                                            <span className="text-2xl font-bold text-muted-foreground">
-                                                {auth.user.name?.charAt(0) || 'U'}
-                                            </span>
+                                       {/* Profile picture display container */}
+                                    <div className="relative">
+                                        <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-card shadow-lg mx-auto">
+                                            {/* Display profile picture if available, otherwise show default avatar icon */}
+                                            {getProfilePictureUrl() ? (
+                                                <img
+                                                    src={getProfilePictureUrl()!}
+                                                    alt="Profile"
+                                                    className="w-full h-full object-cover"
+                                                    onError={() => setImgBroken(true)}
+                                                />
+                                            ) : (
+                                                <svg
+                                                    className="w-16 h-16 text-muted-foreground"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            )}
                                         </div>
+                                        {/* Hidden file input for profile picture upload */}
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            className="hidden"
+                                            id="profile_picture"
+                                            name="profile_picture"
+                                        />
+                                    </div>
+
+                                       
                                         <div className="space-y-2">
                                             <div className="text-sm text-muted-foreground">
                                                 <span className="font-medium">Employee ID</span>
@@ -75,9 +138,14 @@ export default function Profile({
                                                 <span className="font-medium">Position</span>
                                                 <div className="font-semibold text-foreground">{auth.user.position || 'N/A'}</div>
                                             </div>
-                                        </div>
-                                        <div className="flex gap-2 justify-center">
-                                        {/* button here */}
+                                            <div className="text-sm text-muted-foreground">
+                                                <span className="font-medium">Employment Status</span>
+                                                <div className="font-semibold text-foreground">{auth.user.employment_status || 'N/A'}</div>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                <span className="font-medium">Hiring Date</span>
+                                                <div className="font-semibold text-foreground">{auth.user.hiring_date || 'N/A'}</div>   
+                                                </div>
                                         </div>
                                     </div>
                                 </div>
@@ -111,7 +179,8 @@ export default function Profile({
                                                 <Label htmlFor="employment_status">Employment Status</Label>
                                                 <Select
                                                     name="employment_status"
-                                                    defaultValue={auth.user.employment_status ?? 'Regular'}
+                                                    value={employmentStatusValue}
+                                                    onValueChange={(value) => setEmploymentStatusValue(value)}
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select employment status" />
@@ -125,6 +194,13 @@ export default function Profile({
                                                 </Select>
                                                 <InputError message={errors.employment_status} />
                                             </div>
+                                            {employmentStatusValue === 'Regular' && (
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="item_number">Item Number</Label>
+                                                    <Input id="item_number" defaultValue={`${auth.user.item_number ?? ''}`} name="item_number" placeholder="Item Number" />
+                                                    <InputError message={errors.item_number} />
+                                                </div>
+                                            )}
                                             <div className="space-y-2">
                                                 <Label htmlFor="office">Office</Label>
                                                 <Select
@@ -175,6 +251,11 @@ export default function Profile({
                                                     <InputError message={errors.cpmd} />
                                                 </div>
                                             )}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="hiring_date">Hiring Date</Label>
+                                                <Input id="hiring_date" type="date" defaultValue={`${auth.user.hiring_date ?? ''}`} name="hiring_date" />
+                                                <InputError message={errors.hiring_date} />
+                                            </div>
                                         </div>
 
                                         {/* Column 2 */}

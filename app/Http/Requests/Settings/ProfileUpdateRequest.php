@@ -28,11 +28,13 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-         // Employment information (all optional)
+            // Employment information (all optional)
             'position' => ['nullable', 'string', 'max:255'],
             'employment_status' => ['nullable', 'string'],
             'office' => ['nullable', 'string'],
             'employee_id' => ['nullable', 'string', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
+            'item_number' => ['nullable', 'string', 'max:255'],
+            'hiring_date' => ['nullable', 'date'],
             
             // Government identification numbers
             'tin_number' => ['nullable', 'string', 'max:255'],

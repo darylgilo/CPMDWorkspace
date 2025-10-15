@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('employee_id')->unique()->nullable();
             $table->string('position')->nullable();
             $table->date('date_of_birth')->nullable();
+            $table->date('hiring_date')->nullable();
+            $table->string('item_number')->nullable();
             $table->string('gsis_number')->unique()->nullable();
             $table->string('tin_number')->unique()->nullable();
             $table->string('mobile_number')->unique()->nullable();
