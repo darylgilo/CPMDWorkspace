@@ -2,22 +2,15 @@ name: linter
 
 on:
   push:
-    branches:
-      - develop
-      - main
+    branches: [ main, development ]
   pull_request:
-    branches:
-      - develop
-      - main
-
-permissions:
-  contents: write
 
 jobs:
-  quality:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,7 +18,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Install Node dependencies
+      - name: Install dependencies
         run: npm ci
 
       - name: Type check
@@ -36,9 +29,3 @@ jobs:
 
       - name: ESLint (CI)
         run: npm run lint:ci
-
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'
