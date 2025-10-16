@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { router, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Trash2, Power, PowerOff, Edit3, UserCheck, UserX, ChevronUp, ChevronDown, Users, TrendingUp, UserPlus, UserRoundPlus, Activity } from 'lucide-react';
+import { Trash2, Power, PowerOff, Edit3, UserCheck, UserX, ChevronUp, ChevronDown, Users, TrendingUp, UserPlus, UserRoundPlus, Activity, Search } from 'lucide-react';
 import FlashMessage from '@/components/flash-message';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
@@ -207,7 +207,7 @@ export default function UserManagement() {
                
                 
                 {/* Analytics Dashboard */}
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 ">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 ">
                     {/* Total Users Card */}
                     <div className="bg-[#163832] text-white dark:bg-[#163832] dark:text-white rounded-lg md:rounded-xl border border-gray-200 dark:border-neutral-800 p-3 md:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)]">
                         <div className="flex items-start justify-between">
@@ -269,23 +269,23 @@ export default function UserManagement() {
                 {/* Users Table */}
                 <div className="overborder-sidebar-border/70 dark:border-neutral-800 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl md:min-h-min bg-white dark:bg-neutral-900 p-4 border-t-4 border-t-[#163832] dark:border-t-[#235347] border-l border-r border-b border-gray-200 dark:border-neutral-600" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                 {/* DataTables-style Controls */}
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
                   {/* Left: Show entries and Add User button */}
-                  <div className="flex items-center space-x-4">
+                  <div className="w-full md:w-auto flex items-center justify-between md:justify-start gap-3 flex-wrap">
                     {/* Add User Button */}
                     <button
                     title="Add User"
                       onClick={() => {
                         router.get('/superadmin/usermanagement/create', {}, { preserveState: false, replace: false });
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white text-sm font-medium rounded-md transition-colors duration-200 "
+                      className="inline-flex items-center justify-center w-full md:w-auto gap-2 px-3 py-1.5 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white text-sm font-medium rounded-md transition-colors duration-200 "
                     >
                       <UserRoundPlus className="h-4 w-4" />
                       <span className="hidden md:inline">Add User</span>
                     </button>
                     
                     {/* Show entries */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <label htmlFor="entries" className="font-medium">Show</label>
                       <select
                         id="entries"
@@ -313,18 +313,21 @@ export default function UserManagement() {
                   </div>
                   
                   {/* Right: Search */}
-                  <form onSubmit={handleSearch} className="flex items-center space-x-2">
+                  <form onSubmit={handleSearch} className="w-full md:w-auto flex items-center gap-2">
                     <label htmlFor="search" className="font-medium"></label>
-                    <input
-                      id="search"
-                      type="text"
-                      placeholder="Search by name"
-                      value={searchValue}
-                      onChange={e => setSearchValue(e.target.value)}
-                      className="border px-3 py-2 rounded w-full bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 hover:bg-white dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600 dark:hover:bg-neutral-800"
-                      style={{ minWidth: 180 }}
-                    />
-                    <button type="submit" className="bg-[#163832] text-white px-4 py-1 rounded hover:bg-[#235347] dark:bg-[#235347] dark:hover:bg-[#235347]/90">Search</button>
+                    <div className="relative w-full md:max-w-md">
+                      <input
+                        id="search"
+                        type="text"
+                        placeholder="Search by name"
+                        value={searchValue}
+                        onChange={e => setSearchValue(e.target.value)}
+                        className="w-full border px-3 py-2 rounded bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#163832] dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600"
+                        style={{ minWidth: 180 }}
+                      />
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    </div>
+                    <button type="submit" className="inline-flex w-full md:w-auto max-w-full md:max-w-fit whitespace-nowrap items-center justify-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md">Search</button>
                   </form>
                 </div>
                     

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Usercontrol\UserController;
 use App\Http\Controllers\EmployeeManagementController;
+use App\Http\Controllers\EmployeeDirectoryController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -16,6 +17,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // Employee Directory (read-only, accessible to all authenticated users)
+    Route::get('/directory', [EmployeeDirectoryController::class, 'index'])->name('directory.index');
+    Route::get('/directory/{id}', [EmployeeDirectoryController::class, 'show'])->name('directory.show');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
