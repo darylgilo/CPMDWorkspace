@@ -38,6 +38,8 @@ class User extends Authenticatable
         'contact_number',
         'contact_person',
         'cpmd',
+        'hiring_date',
+        'item_number',
         'profile_picture', // Profile picture file path
     ];
 

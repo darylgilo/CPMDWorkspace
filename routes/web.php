@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Usercontrol\UserController;
+use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -34,7 +35,14 @@ Route::middleware(['auth', 'verified','role:admin,superadmin,phps'])->group(func
 
 // accessible to admin and superadmin roles
 Route::middleware(['auth', 'verified','role:admin,superadmin'])->group(function () {
-    Route::get('/admin/employeemanagement',[UserRoleController::class,'admin'])->name('admin');
+    // Make the sidebar link work by serving the new page here as well
+    Route::get('/admin/employeemanagement', [EmployeeManagementController::class, 'index'])->name('admin');
+    // Employee Management (Users as Employees)
+    Route::get('/employees', [EmployeeManagementController::class, 'index'])->name('employees.index');
+    Route::get('/employees/create', [EmployeeManagementController::class, 'create'])->name('employees.create');
+    Route::post('/employees', [EmployeeManagementController::class, 'store'])->name('employees.store');
+    Route::put('/employees/{id}', [EmployeeManagementController::class, 'update'])->name('employees.update');
+    Route::get('/employees/{id}', [EmployeeManagementController::class, 'show'])->name('employees.show');
 });
 
 // Superadmin user management route, accessible only to superadmin role

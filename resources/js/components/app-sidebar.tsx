@@ -121,7 +121,7 @@ const data = {
       items: [
         {
           title: "Employee Management",
-          url: "#",
+          url: "/employees",
         },
         {
           title: "User Management",

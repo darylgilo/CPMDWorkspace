@@ -26,10 +26,12 @@ export default function AddUserManagement() {
     const [gsis_number, setGsisNumber] = useState('');
     const [address, setAddress] = useState('');
     const [date_of_birth, setDateOfBirth] = useState('');
+    const [hiring_date, setHiringDate] = useState('');
     const [gender, setGender] = useState('Male');
     const [mobile_number, setMobileNumber] = useState('');
     const [contact_number, setContactNumber] = useState('');
     const [contact_person, setContactPerson] = useState('');
+    const [item_number, setItemNumber] = useState('');
     
     // Profile picture
     const [profile_picture, setProfilePicture] = useState<File | undefined>(undefined);
@@ -100,6 +102,8 @@ export default function AddUserManagement() {
         formData.append('gsis_number', gsis_number);
         formData.append('address', address);
         formData.append('date_of_birth', date_of_birth);
+        formData.append('hiring_date', hiring_date);
+        formData.append('item_number', item_number);
         formData.append('gender', gender);
         formData.append('mobile_number', mobile_number);
         formData.append('contact_number', contact_number);
@@ -257,6 +261,20 @@ export default function AddUserManagement() {
                                                     <option value="Others">Others</option>
                                                 </select>
                                             </div>
+                                            {employment_status === 'Regular' && (
+                                                <div>
+                                                    <Label htmlFor="item_number">Item Number</Label>
+                                                    <Input
+                                                        id="item_number"
+                                                        name="item_number"
+                                                        type="text"
+                                                        value={item_number}
+                                                        onChange={(e) => setItemNumber(e.target.value)}
+                                                        className="mt-1"
+                                                        placeholder="Item Number"
+                                                    />
+                                                </div>
+                                            )}
                                             
                                             <div>
                                                 <Label htmlFor="office">Office</Label>
@@ -301,6 +319,17 @@ export default function AddUserManagement() {
                                                     </select>
                                                 </div>
                                             )}
+                                            <div>
+                                                <Label htmlFor="hiring_date">Hiring Date</Label>
+                                                <Input
+                                                    id="hiring_date"
+                                                    name="hiring_date"
+                                                    type="date"
+                                                    value={hiring_date}
+                                                    onChange={(e) => setHiringDate(e.target.value)}
+                                                    className="mt-1"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

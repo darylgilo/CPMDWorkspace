@@ -38,6 +38,8 @@ export default function EditUserManagement() {
     const [gsis_number, setGsisNumber] = useState('');
     const [address, setAddress] = useState('');
     const [date_of_birth, setDateOfBirth] = useState('');
+    const [hiring_date, setHiringDate] = useState('');
+    const [item_number, setItemNumber] = useState('');
     const [gender, setGender] = useState('Male');
     const [mobile_number, setMobileNumber] = useState('');
     const [contact_number, setContactNumber] = useState('');
@@ -70,6 +72,8 @@ export default function EditUserManagement() {
             setGsisNumber(user.gsis_number || '');
             setAddress(user.address || '');
             setDateOfBirth(user.date_of_birth || '');
+            setHiringDate(user.hiring_date || '');
+            setItemNumber(user.item_number || '');
             setGender(user.gender || 'Male');
             setMobileNumber(user.mobile_number || '');
             setContactNumber(user.contact_number || '');
@@ -160,6 +164,8 @@ export default function EditUserManagement() {
         formData.append('gsis_number', gsis_number);
         formData.append('address', address);
         formData.append('date_of_birth', date_of_birth);
+        formData.append('hiring_date', hiring_date);
+        formData.append('item_number', item_number);
         formData.append('gender', gender);
         formData.append('mobile_number', mobile_number);
         formData.append('contact_number', contact_number);
@@ -394,6 +400,23 @@ export default function EditUserManagement() {
                                                             <InputError className="mt-1" message={getErrorMessage('employment_status')} />
                                                         </TableCell>
                                                     </TableRow>
+                                                    {employment_status === 'Regular' && (
+                                                        <TableRow>
+                                                            <TableCell className="font-medium">Item Number</TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    id="item_number"
+                                                                    name="item_number"
+                                                                    type="text"
+                                                                    value={item_number}
+                                                                    onChange={(e) => setItemNumber(e.target.value)}
+                                                                    className="w-full"
+                                                                    placeholder="Item Number"
+                                                                />
+                                                                <InputError className="mt-1" message={getErrorMessage('item_number')} />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     <TableRow>
                                                         <TableCell className="font-medium">Office</TableCell>
                                                         <TableCell>
@@ -442,6 +465,20 @@ export default function EditUserManagement() {
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
+                                                    <TableRow>
+                                                        <TableCell className="font-medium">Hiring Date</TableCell>
+                                                        <TableCell>
+                                                            <Input
+                                                                id="hiring_date"
+                                                                name="hiring_date"
+                                                                type="date"
+                                                                value={hiring_date}
+                                                                onChange={(e) => setHiringDate(e.target.value)}
+                                                                className="w-full"
+                                                            />
+                                                            <InputError className="mt-1" message={getErrorMessage('hiring_date')} />
+                                                        </TableCell>
+                                                    </TableRow>
                                                 </TableBody>
                                             </Table>
                                         </div>

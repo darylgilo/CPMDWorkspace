@@ -44,10 +44,12 @@ export interface User {
     employee_id?: string | null;
     position?: string | null;
     employment_status?: string | null;
+    item_number?: string | null;
     office?: string | null;
     cpmd?: string | null;
     
     // Personal Information
+    hiring_date?: string | null;
     date_of_birth?: string | null;
     gender?: string | null;
     address?: string | null;
