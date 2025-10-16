@@ -19,24 +19,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          php-version: '8.4'
+          node-version: 20
+          cache: npm
 
-      - name: Install Dependencies
-        run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
+      - name: Install Node dependencies
+        run: npm ci
 
-      - name: Run Pint
-        run: vendor/bin/pint
+      - name: Type check
+        run: npm run types
 
-      - name: Format Frontend
-        run: npm run format
+      - name: Prettier check
+        run: npm run format:check
 
-      - name: Lint Frontend
-        run: npm run lint
+      - name: ESLint (CI)
+        run: npm run lint:ci
 
       # - name: Commit Changes
       #   uses: stefanzweifel/git-auto-commit-action@v5
