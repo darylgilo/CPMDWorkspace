@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import HeadingSmall from '@/components/heading-small';
 import { Separator } from '@/components/ui/separator';
 
+// Add Employee create form page component
 export default function AddEmployee() {
+  // Primary account fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +17,7 @@ export default function AddEmployee() {
   const role = 'user';
   const [status, setStatus] = useState<'active' | 'inactive'>('inactive');
 
+  // Employee profile fields
   const [employee_id, setEmployeeId] = useState('');
   const [position, setPosition] = useState('');
   const [employment_status, setEmploymentStatus] = useState('Regular');
@@ -31,6 +34,7 @@ export default function AddEmployee() {
   const [contact_person, setContactPerson] = useState('');
   const [item_number, setItemNumber] = useState('');
 
+  // Profile picture upload state
   const [profile_picture, setProfilePicture] = useState<File | undefined>(undefined);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +42,7 @@ export default function AddEmployee() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Handle selecting a profile image and generating preview
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -50,12 +55,14 @@ export default function AddEmployee() {
     }
   };
 
+  // Remove selected profile image
   const handleRemoveImage = () => {
     setProfilePicture(undefined);
     setPreviewImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // Submit new employee to server via Inertia (multipart with image)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -106,7 +113,9 @@ export default function AddEmployee() {
     <AppLayout breadcrumbs={[{ title: 'Employee Management', href: '/employees' }, { title: 'Add Employee', href: '/employees/create' }]}>
       <Head title="Add Employee" />
       <div className="p-4">
+        {/* Main 2-column layout: left profile card, right form */}
         <div className="flex flex-col lg:flex-row gap-4">
+          {/* Left: profile picture upload card */}
           <div className="lg:w-80 order-1">
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
               <div className="flex flex-col items-center space-y-4">
@@ -132,12 +141,14 @@ export default function AddEmployee() {
             </div>
           </div>
 
+          {/* Right: employee details form */}
           <div className="flex-1 order-2">
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
               <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Add New Employee</h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Column 1: Personal Information */}
                   <div className="space-y-6">
                     <HeadingSmall title="Personal Information" description="" />
                     <div className="space-y-4">
@@ -209,6 +220,7 @@ export default function AddEmployee() {
                     </div>
                   </div>
 
+                  {/* Column 2: Additional Details */}
                   <div className="space-y-6">
                     <HeadingSmall title="Additional Details" description="" />
                     <div className="space-y-4">
@@ -242,6 +254,7 @@ export default function AddEmployee() {
                     </div>
                   </div>
 
+                  {/* Column 3: Emergency Contact */}
                   <div className="space-y-8">
                     <div className="space-y-6">
                       <HeadingSmall title="Emergency Contact" description="" />
@@ -265,6 +278,7 @@ export default function AddEmployee() {
                   <Separator className="bg-gray-200 dark:bg-neutral-700" />
                 </div>
 
+                {/* Password section */}
                 <div className="space-y-4">
                   <HeadingSmall title="Password Management" description="Set account password" />
                   {passwordError && (
@@ -299,6 +313,7 @@ export default function AddEmployee() {
                   <Separator className="bg-gray-200 dark:bg-neutral-700" />
                 </div>
 
+                {/* Form actions */}
                 <div className="flex items-center gap-4 pt-6">
                   <Button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white disabled:opacity-70">
                     {isSubmitting ? 'Creating...' : 'Create Employee'}

@@ -18,7 +18,7 @@ import { NavMain2 } from "@/components/nav-main2"
 import { NavProjects } from "@/components/nav-projects"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import AppLogo from './app-logo';
 
 import { type NavItem } from '@/types';
@@ -57,7 +57,7 @@ const data = {
     },
     {
       title: "Employee Directory",
-      url: "#",
+      url: "/directory",
       icon: Contact2Icon,
       isActive: true,
     },
@@ -167,6 +167,21 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pageProps = usePage().props as any
+  const { auth } = pageProps
+
+  const filteredNavMain2 = React.useMemo(() => {
+    return data.navMain2
+      .map((item) => {
+        const subItems = item.items?.filter((sub) => {
+          if (auth?.user?.role === 'superadmin') return true
+          return sub.title !== 'User Management'
+        })
+        return { ...item, items: subItems }
+      })
+      .filter((item) => (item.items && item.items.length > 0) || !!item.url)
+  }, [auth?.user?.role])
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -182,12 +197,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavMain2 items={data.navMain2} />
+        <NavMain2 items={filteredNavMain2} />
         {/* <NavProjects projects={data.projects} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-       
+        <div className="block md:hidden">
+          <NavUser />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

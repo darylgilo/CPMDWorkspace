@@ -7,7 +7,9 @@ import HeadingSmall from '@/components/heading-small';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 
+// Employee profile view/edit page component
 export default function EmployeeView() {
+  // Grab server-provided user payload from Inertia page props
   const pageProps = usePage().props as any;
   const { user } = pageProps;
 
@@ -32,6 +34,7 @@ export default function EmployeeView() {
     status: 'active' | 'inactive';
   }
 
+  // Initialize form with user values
   const initialData: FormData = {
     name: user?.name || '',
     email: user?.email || '',
@@ -53,15 +56,19 @@ export default function EmployeeView() {
     status: (user?.status || 'inactive') as FormData['status'],
   };
 
+  // Inertia form helper for PUT updates
   const { data, setData, put, processing, errors } = useForm<FormData>(initialData);
 
+  // Submit updated employee details
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     put(`/employees/${user?.id}`);
   };
 
+  // Reset form back to initial user values and navigate back to employees list
   const onCancel = () => {
     setData(initialData);
+    router.get('/employees');
   };
 
   return (
@@ -72,15 +79,19 @@ export default function EmployeeView() {
       <Head title={user?.name ? `${user.name} • Employee` : 'Employee'} />
 
       <div className="p-4">
+        {/* Back to employees list */}
+        {/*
         <button
           onClick={() => router.get('/employees')}
           className="inline-flex items-center gap-2 px-3 py-2 rounded border bg-white hover:bg-gray-50 text-gray-900 border-gray-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-gray-100 dark:border-neutral-600"
         >
           <ArrowLeft className="h-4 w-4" /> Back to list
         </button>
+        */}
 
+        {/* Main layout: left static profile card, right editable form */}
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left: profile card */}
+          {/* Left: profile summary card */}
           <div className="lg:col-span-1 bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6">
             <div className="flex flex-col items-center gap-3">
               <div className="mt-1 text-xs"><span className={`${user?.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-gray-300'} px-2 py-0.5 rounded-full`}>{user?.status || '—'}</span></div>
@@ -114,10 +125,11 @@ export default function EmployeeView() {
             </div>
           </div>
 
-          {/* Right: details editable form */}
+          {/* Right: editable details form */}
           <form onSubmit={onSubmit} className="lg:col-span-2 bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6">
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Column 1: Personal Information */}
                 <div className="space-y-6">
                   <HeadingSmall title="Personal Information" description="" />
                   <div className="space-y-4">
@@ -191,6 +203,7 @@ export default function EmployeeView() {
                   </div>
                 </div>
 
+                {/* Column 2: Additional Details */}
                 <div className="space-y-6">
                   <HeadingSmall title="Additional Details" description="" />
                   <div className="space-y-4">
@@ -228,6 +241,7 @@ export default function EmployeeView() {
                   </div>
                 </div>
 
+                {/* Column 3: Emergency Contact */}
                 <div className="space-y-6">
                   <HeadingSmall title="Emergency Contact" description="" />
                   <div className="space-y-4">
@@ -246,8 +260,10 @@ export default function EmployeeView() {
               <div className="py-2">
                 <Separator className="bg-gray-200 dark:bg-neutral-700" />
               </div>
+              {/* Form actions */}
               <div className="pt-2 flex justify-start gap-2">
-                <Button type="submit" disabled={processing}>
+                <Button type="submit" disabled={processing}
+                className="inline-flex w-fit max-w-fit whitespace-nowrap items-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md shrink-0 sm:self-auto">
                   {processing ? 'Updating...' : 'Update Employee'}
                 </Button>
                 <Button type="button" variant="outline" onClick={onCancel}>
