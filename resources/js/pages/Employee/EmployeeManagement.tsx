@@ -110,7 +110,7 @@ export default function EmployeeManagement() {
             </div>
           </form>
 
-          {auth?.user?.role === 'superadmin' && (
+          {(auth?.user?.role === 'superadmin' || auth?.user?.role === 'admin') && (
             <button
               onClick={() => router.get('/employees/create')}
               className="inline-flex w-full sm:w-auto max-w-full sm:max-w-fit whitespace-nowrap items-center justify-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md"

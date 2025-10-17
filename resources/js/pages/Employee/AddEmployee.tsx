@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ export default function AddEmployee() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle selecting a profile image and generating preview
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setProfilePicture(file);

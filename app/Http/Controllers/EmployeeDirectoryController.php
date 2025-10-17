@@ -18,7 +18,10 @@ class EmployeeDirectoryController extends Controller
 
         $query = User::query();
 
-        $query->where('role', 'user');
+        // Optionally filter to employees only (role = user). Default: include all roles.
+        if ($request->boolean('onlyEmployees', false)) {
+            $query->where('role', 'user');
+        }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
