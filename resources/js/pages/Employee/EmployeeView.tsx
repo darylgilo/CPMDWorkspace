@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 export default function EmployeeView() {
   // Grab server-provided user payload from Inertia page props
   const pageProps = usePage().props as any;
-  const { user } = pageProps;
+  const { user, auth } = pageProps;
 
   interface FormData {
     name: string;
@@ -59,9 +59,12 @@ export default function EmployeeView() {
   // Inertia form helper for PUT updates
   const { data, setData, put, processing, errors } = useForm<FormData>(initialData);
 
+  const isProtectedSuperadmin = (auth?.user?.role !== 'superadmin') && (user?.role === 'superadmin');
+
   // Submit updated employee details
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isProtectedSuperadmin) return;
     put(`/employees/${user?.id}`);
   };
 
@@ -262,7 +265,7 @@ export default function EmployeeView() {
               </div>
               {/* Form actions */}
               <div className="pt-2 flex justify-start gap-2">
-                <Button type="submit" disabled={processing}
+                <Button type="submit" disabled={processing || isProtectedSuperadmin}
                 className="inline-flex w-fit max-w-fit whitespace-nowrap items-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md shrink-0 sm:self-auto">
                   {processing ? 'Updating...' : 'Update Employee'}
                 </Button>

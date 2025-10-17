@@ -23,8 +23,8 @@ class EmployeeManagementController extends Controller
 
         $query = User::query();
 
-        // Optionally filter to only role 'user' as employees
-        if ($request->boolean('onlyEmployees', true)) {
+        // Optionally filter to only role 'user' as employees (default: include all roles)
+        if ($request->boolean('onlyEmployees', false)) {
             $query->where('role', 'user');
         }
 
@@ -149,6 +149,13 @@ class EmployeeManagementController extends Controller
     public function update(Request $request, int $id)
     {
         $user = User::findOrFail($id);
+
+        // Prevent updates to superadmin by anyone who is not a superadmin (case-insensitive)
+        $actorRole = strtolower((string) optional(auth()->user())->role);
+        $targetRole = strtolower((string) $user->role);
+        if ($actorRole !== 'superadmin' && $targetRole === 'superadmin') {
+            abort(403, 'You are not authorized to update a superadmin account.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

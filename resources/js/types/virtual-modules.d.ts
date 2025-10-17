@@ -12,9 +12,17 @@ declare module '@routes/*' {
 }
 
 declare module '@/routes' {
+  // Default export remains a catch-all for runtime-provided helpers
   const mod: any;
   export = mod;
   export default mod;
+
+  // Common named helpers used throughout the app; types kept broad to avoid drift
+  export function dashboard(...args: any[]): any;
+  export function home(...args: any[]): any;
+  export function login(...args: any[]): any;
+  export function register(...args: any[]): any;
+  export function logout(...args: any[]): any;
 }
 
 declare module '@/routes/*' {
