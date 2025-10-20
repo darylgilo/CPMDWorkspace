@@ -218,7 +218,7 @@ export default function AIchatbot() {
             <div className="flex h-[calc(100vh-12rem)] flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-sidebar-border/70 p-3 dark:border-sidebar-border md:h-[calc(100vh-10rem)]">
                 <div className="flex items-center gap-2 rounded-md bg-muted/40 p-2 text-sm">
                     <Bot className="h-4 w-4" />
-                    <span>Messages are processed by (Gemini).</span>
+                    <span>Gemini-2.5-flash</span>
                 </div>
 
                 <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto pr-1">
