@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   BookOpen,
   Bot,
+  BotMessageSquareIcon,
   Command,
   Contact2Icon,
   FolderArchive,
@@ -110,6 +111,11 @@ const data = {
           url: "#",
         },
       ],
+    },
+    {
+      title: "AI Assistant",
+      url: "/chatbot",
+      icon: BotMessageSquareIcon,
     },
   ],
 

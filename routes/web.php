@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Usercontrol\UserController;
 use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Controllers\EmployeeDirectoryController;
+use App\Http\Controllers\ChatbotController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -21,6 +22,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employee Directory (read-only, accessible to all authenticated users)
     Route::get('/directory', [EmployeeDirectoryController::class, 'index'])->name('directory.index');
     Route::get('/directory/{id}', [EmployeeDirectoryController::class, 'show'])->name('directory.show');
+
+    // AI Chatbot
+    Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
+    Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
