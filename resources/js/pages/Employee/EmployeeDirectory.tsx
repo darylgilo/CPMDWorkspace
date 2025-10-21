@@ -18,9 +18,18 @@ export default function EmployeeDirectory() {
   useEffect(() => setOffice(officeProp || ''), [officeProp]);
   useEffect(() => setCpmd(cpmdProp || ''), [cpmdProp]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.get('/directory', { search, perPage, office, cpmd }, { preserveState: true, replace: true });
+  // Debounce search to avoid excessive requests
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (search !== searchProp) {
+        router.get('/directory', { search, perPage, office, cpmd }, { preserveState: true, replace: true });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
   };
 
   const handlePageChange = (url: string) => {
@@ -33,77 +42,88 @@ export default function EmployeeDirectory() {
 
       <div className="p-4 flex flex-col gap-4">
         {/* Header actions (no Add button) */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-neutral-900 rounded-md border border-gray-200 dark:border-neutral-800 p-3 md:p-4" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-          <form onSubmit={handleSearch} className="flex-1 flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
-            <div className="relative w-full md:max-w-md">
-              <input
-                type="text"
-                placeholder="Search employees"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full border px-3 py-2 rounded bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#163832] dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600"
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-            <button type="submit" className="inline-flex w-full sm:w-auto max-w-full sm:max-w-fit whitespace-nowrap items-center justify-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md">Search</button>
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:ml-4 md:pl-4 md:border-l md:border-gray-200 dark:md:border-neutral-700 w-full sm:w-auto">
-              <select
-                className="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 dark:bg-neutral-800 dark:text-gray-100 dark:border-neutral-600"
-                value={office}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setOffice(val);
-                  const nextCpmd = val === 'CPMD' ? cpmd : '';
-                  setCpmd(nextCpmd);
-                  router.get('/directory', { search, perPage, office: val, cpmd: nextCpmd }, { preserveState: true, replace: true });
-                }}
-              >
-                <option value="">All Offices</option>
-                <option value="DO">DO</option>
-                <option value="ADO">ADO</option>
-                <option value="CPMD">CPMD</option>
-                <option value="AED">AED</option>
-                <option value="NSQCS">NSQCS</option>
-                <option value="NPQSD">NPQSD</option>
-                <option value="NSIC">NSIC</option>
-                <option value="CRPSD">CRPSD</option>
-                <option value="PPSSD">PPSSD</option>
-                <option value="ADMINISTRATIVE">ADMINISTRATIVE</option>
-                <option value="Others">Others</option>
-              </select>
-              <select
-                className="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 dark:bg-neutral-800 dark:text-gray-100 dark:border-neutral-600 disabled:opacity-60"
-                value={cpmd}
-                disabled={office !== 'CPMD'}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setCpmd(val);
-                  router.get('/directory', { search, perPage, office, cpmd: val }, { preserveState: true, replace: true });
-                }}
-              >
-                <option value="">{office === 'CPMD' ? 'All Sections' : 'Select Office First'}</option>
-                <option value="BIOCON section">BIOCON section</option>
-                <option value="PFS section">PFS section</option>
-                <option value="PHPS SECTION">PHPS SECTION</option>
-                <option value="OC-Admin Support Unit">OC-Admin Support Unit</option>
-                <option value="OC-ICT Unit">OC-ICT Unit</option>
-                <option value="OC-Special Project">OC-Special Project</option>
-                <option value="Others">Others</option>
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  setOffice('');
-                  setCpmd('');
-                  router.get('/directory', { search, perPage, office: '', cpmd: '' }, { preserveState: true, replace: true });
-                }}
-                className="inline-flex w-full sm:w-auto max-w-full sm:max-w-fit whitespace-nowrap items-center justify-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md"
-              >
-                Clear
-              </button>
-            </div>
-          </form>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white dark:bg-neutral-900 rounded-md border border-gray-200 dark:border-neutral-800 p-3 md:p-4" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+          {/* Filters on the left */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <select
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100"
+              value={office}
+              onChange={(e) => {
+                const val = e.target.value;
+                setOffice(val);
+                const nextCpmd = val === 'CPMD' ? cpmd : '';
+                setCpmd(nextCpmd);
+                router.get('/directory', { search, perPage, office: val, cpmd: nextCpmd }, { preserveState: true, replace: true });
+              }}
+            >
+              <option value="">All Offices</option>
+              <option value="DO">DO</option>
+              <option value="ADO">ADO</option>
+              <option value="CPMD">CPMD</option>
+              <option value="AED">AED</option>
+              <option value="NSQCS">NSQCS</option>
+              <option value="NPQSD">NPQSD</option>
+              <option value="NSIC">NSIC</option>
+              <option value="CRPSD">CRPSD</option>
+              <option value="PPSSD">PPSSD</option>
+              <option value="ADMINISTRATIVE">ADMINISTRATIVE</option>
+              <option value="Others">Others</option>
+            </select>
+            <select
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100 disabled:opacity-60"
+              value={cpmd}
+              disabled={office !== 'CPMD'}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCpmd(val);
+                router.get('/directory', { search, perPage, office, cpmd: val }, { preserveState: true, replace: true });
+              }}
+            >
+              <option value="">{office === 'CPMD' ? 'All Sections' : 'Select Office First'}</option>
+              <option value="BIOCON section">BIOCON section</option>
+              <option value="PFS section">PFS section</option>
+              <option value="PHPS SECTION">PHPS SECTION</option>
+              <option value="OC-Admin Support Unit">OC-Admin Support Unit</option>
+              <option value="OC-ICT Unit">OC-ICT Unit</option>
+              <option value="OC-Special Project">OC-Special Project</option>
+              <option value="Others">Others</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                setOffice('');
+                setCpmd('');
+                router.get('/directory', { search, perPage, office: '', cpmd: '' }, { preserveState: true, replace: true });
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition"
+            >
+              Clear
+            </button>
+          </div>
+
+          {/* Search on the right */}
+          <div className="relative w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Search employees"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  router.get('/directory', { search, perPage, office, cpmd }, { preserveState: true, replace: true });
+                }
+              }}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 md:w-80"
+            />
+            <button
+              type="button"
+              onClick={() => router.get('/directory', { search, perPage, office, cpmd }, { preserveState: true, replace: true })}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Cards grid */}
@@ -111,7 +131,7 @@ export default function EmployeeDirectory() {
           {Array.isArray(users?.data) && users.data.length > 0 ? (
             users.data.map((u: any) => (
                 /* Cards grid every user */
-              <div key={u.id} className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-4 flex gap-3" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
+              <div key={u.id} className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800 p-4 flex gap-3 transition hover:-translate-y-0.5 hover:shadow-lg" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                 <div className="h-14 w-14 rounded-full bg-muted overflow-hidden flex items-center justify-center border border-gray-200 dark:border-neutral-700">
                   {u.profile_picture ? (
                     <img src={`/storage/${u.profile_picture}`} className="h-full w-full object-cover" alt={u.name} />
