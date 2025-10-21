@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\Usercontrol\UserController;
 use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Controllers\EmployeeDirectoryController;
@@ -26,6 +27,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // AI Chatbot
     Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+    // Noticeboard
+    Route::get('/noticeboard', [NoticeController::class, 'index'])->name('noticeboard.index');
+    Route::post('/noticeboard', [NoticeController::class, 'store'])->name('noticeboard.store');
+    Route::post('/noticeboard/{notice}', [NoticeController::class, 'update'])->name('noticeboard.update');
+    Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
+    Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles

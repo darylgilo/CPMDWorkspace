@@ -65,7 +65,7 @@ const data = {
 
     {
       title: "Noticeboard",
-      url: "#",
+      url: "/noticeboard",
       icon: Bot,
       items: [
         {
