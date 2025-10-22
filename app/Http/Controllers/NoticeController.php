@@ -288,5 +288,30 @@ class NoticeController extends Controller
         $downloadName = 'notice-' . $notice->id . '-attachments.tar.gz';
         return response()->download($tarGzPath, $downloadName)->deleteFileAfterSend(true);
     }
+
+    // Delete a notice and its associated files
+    public function destroy(Notice $notice)
+    {
+        // Optional: Check if user owns the notice or has permission to delete
+        // if ($notice->user_id !== Auth::id()) {
+        //     abort(403);
+        // }
+
+        // Delete all associated files from storage
+        if (is_array($notice->files)) {
+            foreach ($notice->files as $file) {
+                if (isset($file['path']) && Storage::exists($file['path'])) {
+                    Storage::delete($file['path']);
+                }
+            }
+        } elseif ($notice->file_path && Storage::exists($notice->file_path)) {
+            Storage::delete($notice->file_path);
+        }
+
+        // Delete the notice record
+        $notice->delete();
+
+        return redirect()->route('noticeboard.index');
+    }
 }
 

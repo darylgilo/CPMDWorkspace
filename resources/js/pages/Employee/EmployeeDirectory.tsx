@@ -96,7 +96,7 @@ export default function EmployeeDirectory() {
                 router.get('/directory', { search, perPage, office: '', cpmd: '' }, { preserveState: true, replace: true });
               }}
               className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition"
-            >
+          >
               Clear
             </button>
           </div>
