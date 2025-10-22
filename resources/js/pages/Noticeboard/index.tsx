@@ -1,5 +1,5 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Search, Eye } from 'lucide-react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Search, Eye, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -64,6 +64,7 @@ export default function Noticeboard() {
 
   // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState<Category>('Announcement/News');
@@ -81,6 +82,19 @@ export default function Noticeboard() {
       // cleanup any object URLs created in this component (none after backend refactor)
     };
   }, []);
+
+ // Open edit dialog and populate with notice data (starts in read-only mode)
+  function openEditDialog(notice: Notice) {
+    setEditingNotice(notice);
+    setEditTitle(notice.title);
+    setEditCategory(notice.category);
+    setEditDescription(notice.description);
+    setEditFiles([]);
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
+    setIsEditMode(false); // Start in read-only mode
+    setEditOpen(true);
+  }
+
 
   // Map backend props into a typed, UI-friendly array of notices
   const mappedNotices: Notice[] = useMemo(() => {
@@ -210,16 +224,7 @@ export default function Noticeboard() {
     });
   }
 
-  // Open edit dialog and populate with notice data
-  function openEditDialog(notice: Notice) {
-    setEditingNotice(notice);
-    setEditTitle(notice.title);
-    setEditCategory(notice.category);
-    setEditDescription(notice.description);
-    setEditFiles([]);
-    if (editFileInputRef.current) editFileInputRef.current.value = '';
-    setEditOpen(true);
-  }
+ 
 
   // Handle edit file input change
   function handleEditFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -233,6 +238,7 @@ export default function Noticeboard() {
     setEditCategory('Announcement/News');
     setEditDescription('');
     setEditFiles([]);
+    setIsEditMode(false);
     if (editFileInputRef.current) editFileInputRef.current.value = '';
   }
 
@@ -366,23 +372,35 @@ export default function Noticeboard() {
                 </DialogContent>
               </Dialog>
 
-              {/* Edit Notice Dialog */}
+              {/* View/Edit Notice Dialog */}
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>View & Edit Notice</DialogTitle>
+                    <DialogTitle>{isEditMode ? 'Edit Notice' : 'View & Edit Notice'}</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={onEditSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="flex flex-col gap-2">
+                    <div className={`flex flex-col gap-2 ${!isEditMode ? 'md:col-span-2' : ''}`}>
                       <label className="text-sm font-medium">Title</label>
-                      <input
-                        type="text"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Enter title"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
-                        required
-                      />
+                      {!isEditMode ? (
+                        <textarea
+                          value={editTitle}
+                          readOnly
+                          rows={Math.ceil(editTitle.length / 80) || 1}
+                          onFocus={(e) => e.target.blur()}
+                          onMouseDown={(e) => e.preventDefault()}
+                          style={{ userSelect: 'none', resize: 'none' }}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 cursor-default bg-gray-50 dark:bg-neutral-800"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Enter title"
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                          required
+                        />
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -390,7 +408,8 @@ export default function Noticeboard() {
                       <select
                         value={editCategory}
                         onChange={(e) => setEditCategory(e.target.value as Category)}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                        disabled={!isEditMode}
+                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
                       >
                         {categoryOptions.map((opt) => (
                           <option key={opt} value={opt}>
@@ -406,8 +425,12 @@ export default function Noticeboard() {
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
                         placeholder="Write the notice details..."
-                        rows={4}
-                        className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                        rows={15}
+                        readOnly={!isEditMode}
+                        onFocus={(e) => !isEditMode && e.target.blur()}
+                        onMouseDown={(e) => !isEditMode && e.preventDefault()}
+                        style={!isEditMode ? { userSelect: 'none' } : undefined}
+                        className={`w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
                         required
                       />
                     </div>
@@ -432,41 +455,79 @@ export default function Noticeboard() {
                       </div>
                     )}
 
-                    <div className="md:col-span-2 flex flex-col gap-2">
-                      <label className="text-sm font-medium">Replace/Add Files</label>
-                      <input
-                        ref={editFileInputRef}
-                        type="file"
-                        onChange={handleEditFileChange}
-                        multiple
-                        className="w-full text-sm file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-50 dark:file:border-neutral-700 dark:file:bg-neutral-950 dark:hover:file:bg-neutral-900"
-                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                      />
-                      {editFiles.length > 0 && (
-                        <div className="text-xs text-gray-600 dark:text-gray-300">
-                          New files ({editFiles.length}): {editFiles.map((f) => f.name).join(', ')}
-                        </div>
-                      )}
-                    </div>
+                    {/* Only show file upload in edit mode */}
+                    {isEditMode && (
+                      <div className="md:col-span-2 flex flex-col gap-2">
+                        <label className="text-sm font-medium">Replace/Add Files</label>
+                        <input
+                          ref={editFileInputRef}
+                          type="file"
+                          onChange={handleEditFileChange}
+                          multiple
+                          className="w-full text-sm file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-50 dark:file:border-neutral-700 dark:file:bg-neutral-950 dark:hover:file:bg-neutral-900"
+                          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        />
+                        {editFiles.length > 0 && (
+                          <div className="text-xs text-gray-600 dark:text-gray-300">
+                            New files ({editFiles.length}): {editFiles.map((f) => f.name).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                    <div className="md:col-span-2 flex items-center justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditOpen(false);
-                          resetEditForm();
-                        }}
-                        className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={editForm.processing}
-                        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-neutral-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-gray-200"
-                      >
-                        {editForm.processing ? 'Updating...' : 'Update Notice'}
-                      </button>
+                    <div className="md:col-span-2 flex items-center justify-end" style={{ gap: '6px' }}>
+                      {!isEditMode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditOpen(false);
+                            resetEditForm();
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-gray-300 hover:bg-gray-50 px-4 py-2 text-sm font-medium transition dark:border-neutral-700 dark:hover:bg-neutral-800 min-w-[80px] h-[38px]"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      {isEditMode && editingNotice && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (confirm('Are you sure you want to delete this notice?')) {
+                              router.delete(`/noticeboard/${editingNotice.id}`, {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                  setEditOpen(false);
+                                  resetEditForm();
+                                },
+                              });
+                            }
+                          }}
+                          className="inline-flex items-center justify-center rounded-md bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-medium text-white transition active:scale-[0.98] min-w-[38px] h-[38px]"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                      {!isEditMode ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setIsEditMode(true);
+                          }}
+                          className="inline-flex items-center justify-center rounded-md bg-[#163832] hover:bg-[#163832]/90 px-4 py-2 text-sm font-medium text-white transition active:scale-[0.98] dark:bg-[#235347] dark:hover:bg-[#235347]/90 min-w-[100px] h-[38px]"
+                        >
+                          Edit Notice
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          disabled={editForm.processing}
+                          className="inline-flex items-center justify-center rounded-md bg-[#163832] hover:bg-[#163832]/90 px-4 py-2 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#235347] dark:hover:bg-[#235347]/90 min-w-[120px] h-[38px]"
+                        >
+                          {editForm.processing ? 'Updating...' : 'Update Notice'}
+                        </button>
+                      )}
                     </div>
                   </form>
                 </DialogContent>
@@ -525,8 +586,8 @@ export default function Noticeboard() {
                   <span className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</span>
                 </div>
 
-                <h3 className="mb-1 line-clamp-2 text-base font-semibold">{n.title}</h3>
-                <p className="mb-3 line-clamp-4 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
+                <h3 className="mb-1 line-clamp-1 text-base font-semibold">{n.title}</h3>
+                <p className="mb-3 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
 
                 {/** When a notice has multiple files, show one button that downloads an archive of all attachments */}
                 {Array.isArray(n.files) && n.files.length > 0 && n.files_download_url && (

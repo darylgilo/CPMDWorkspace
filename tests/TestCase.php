@@ -15,14 +15,6 @@ abstract class TestCase extends BaseTestCase
         'sqlite',
         'legacy',
         'issues',
-        'mysql',
-        'sqlite',
-        'legacy',
-        'issues',
-        'mysql',
-        'sqlite',
-        'legacy',
-        'issues',
     ];
     
 }

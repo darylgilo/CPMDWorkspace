@@ -31,13 +31,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/noticeboard', [NoticeController::class, 'index'])->name('noticeboard.index');
     Route::post('/noticeboard', [NoticeController::class, 'store'])->name('noticeboard.store');
     Route::post('/noticeboard/{notice}', [NoticeController::class, 'update'])->name('noticeboard.update');
+    Route::delete('/noticeboard/{notice}', [NoticeController::class, 'destroy'])->name('noticeboard.destroy');
     Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
     Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
 Route::middleware(['auth', 'verified','role:admin,superadmin,biocon'])->group(function () {
-    Route::get('/biocon/testpage',[UserRoleController::class,'biocon'])->name('biocon');
+    // Route::get('/biocon/testpage',[UserRoleController::class,'biocon'])->name('biocon');
 });
 
 // PSF user management route, accessible to admin, superadmin, and pfs roles
