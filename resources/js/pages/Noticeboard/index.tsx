@@ -146,22 +146,51 @@ export default function Noticeboard() {
 
   // Programmatically download a file/blob given a URL and an optional filename
   async function downloadFile(url: string, filename?: string) {
-    try {
-      const res = await fetch(url, { credentials: 'include' });
-      if (!res.ok) {
-        window.open(url, '_blank');
+    const isZip = url.includes('.zip') || url.includes('download-all');
+    const downloadName = filename || (isZip ? 'notice-attachments.zip' : 'download');
+    
+    // For zip files, use a different approach
+    if (isZip) {
+      try {
+        // Create a hidden iframe to handle the download
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        // Set the iframe's src to trigger the download
+        iframe.src = url;
+        
+        // Clean up after a delay
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 5000);
+        
         return;
+      } catch (e) {
+        console.error('Iframe download failed, trying direct download...', e);
       }
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
+    }
+    
+    // For non-zip files or if iframe method fails
+    try {
+      // Create a temporary anchor element
       const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = filename || 'download';
+      a.href = url;
+      a.download = downloadName;
+      
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const separator = url.includes('?') ? '&' : '?';
+      a.href = `${url}${separator}_=${timestamp}`;
+      
+      // Append to body, trigger click, and remove
       document.body.appendChild(a);
       a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      document.body.removeChild(a);
+      
     } catch (e) {
+      console.error('Download error:', e);
+      // Final fallback - open in new tab
       window.open(url, '_blank');
     }
   }

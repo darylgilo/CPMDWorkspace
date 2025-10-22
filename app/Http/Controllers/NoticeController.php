@@ -228,65 +228,145 @@ class NoticeController extends Controller
     // Download all attachments as a single archive (ZIP if available, otherwise TAR.GZ)
     public function downloadAll(Notice $notice)
     {
-        $files = is_array($notice->files) ? $notice->files : [];
-        if (empty($files)) {
-            if ($notice->file_path && Storage::exists($notice->file_path)) {
+        // Check for legacy single file first
+        if ($notice->file_path) {
+            if (Storage::exists($notice->file_path)) {
                 return $this->download($notice);
             }
-            abort(404);
+            abort(404, 'The requested file could not be found');
         }
 
-        if (class_exists(\ZipArchive::class)) {
-            $tmp = tempnam(sys_get_temp_dir(), 'notice_');
-            $zipPath = $tmp . '.zip';
-            @unlink($tmp);
+        // Handle multiple files
+        $files = is_array($notice->files) ? $notice->files : [];
+        if (empty($files)) {
+            abort(404, 'No files found for this notice');
+        }
 
+        // Validate files array
+        $validFiles = [];
+        foreach ($files as $file) {
+            if (!is_array($file) || empty($file['path']) || !is_string($file['path'])) {
+                continue;
+            }
+            $path = $file['path'];
+            if (!Storage::exists($path)) {
+                continue;
+            }
+            $validFiles[] = [
+                'path' => $path,
+                'name' => $file['name'] ?? basename($path)
+            ];
+        }
+
+        if (empty($validFiles)) {
+            abort(404, 'No valid files found for download');
+        }
+
+        // Try ZIP first if available
+        if (class_exists(\ZipArchive::class)) {
             $zip = new \ZipArchive();
+            $zipName = 'notice-' . $notice->id . '-attachments-' . time() . '.zip';
+            $zipPath = sys_get_temp_dir() . '/' . $zipName;
+            
             if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-                abort(500);
+                abort(500, 'Cannot create ZIP file');
             }
 
-            foreach ($files as $f) {
-                $p = $f['path'] ?? null;
-                if (!$p || !Storage::exists($p)) {
+            $addedFiles = 0;
+            foreach ($validFiles as $file) {
+                try {
+                    $filePath = Storage::path($file['path']);
+                    if (file_exists($filePath)) {
+                        $zip->addFile($filePath, $file['name']);
+                        $addedFiles++;
+                    }
+                } catch (\Exception $e) {
                     continue;
                 }
-                $abs = Storage::path($p);
-                $name = $f['name'] ?? basename($p);
-                $zip->addFile($abs, $name);
             }
 
             $zip->close();
 
-            $downloadName = 'notice-' . $notice->id . '-attachments.zip';
-            return response()->download($zipPath, $downloadName)->deleteFileAfterSend(true);
+            if ($addedFiles === 0) {
+                @unlink($zipPath);
+                abort(404, 'No files could be added to archive');
+            }
+
+            // Stream the file directly to the browser
+            return response()->stream(
+                function () use ($zipPath) {
+                    if (file_exists($zipPath)) {
+                        readfile($zipPath);
+                        @unlink($zipPath);
+                    }
+                },
+                200,
+                [
+                    'Content-Type' => 'application/zip',
+                    'Content-Disposition' => 'attachment; filename="' . $zipName . '"',
+                    'Content-Length' => filesize($zipPath),
+                    'Pragma' => 'no-cache',
+                    'Expires' => '0',
+                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                ]
+            );
         }
 
+        // Fallback to TAR.GZ if ZIP is not available
         $tmp = tempnam(sys_get_temp_dir(), 'notice_');
+        if ($tmp === false) {
+            abort(500, 'Failed to create temporary file');
+        }
+        
         $tarPath = $tmp . '.tar';
+        $tarGzPath = $tarPath . '.gz';
         @unlink($tmp);
 
         try {
             $phar = new \PharData($tarPath);
-            foreach ($files as $f) {
-                $p = $f['path'] ?? null;
-                if (!$p || !Storage::exists($p)) {
+            $addedFiles = 0;
+            
+            foreach ($validFiles as $file) {
+                try {
+                    $content = Storage::get($file['path']);
+                    if ($content === false) {
+                        continue;
+                    }
+                    $phar->addFromString($file['name'], $content);
+                    $addedFiles++;
+                } catch (\Exception $e) {
                     continue;
                 }
-                $abs = Storage::path($p);
-                $name = $f['name'] ?? basename($p);
-                $phar->addFile($abs, $name);
             }
+            
+            if ($addedFiles === 0) {
+                @unlink($tarPath);
+                @unlink($tarGzPath);
+                abort(404, 'No files could be added to archive');
+            }
+            
+            // Compress the TAR to TAR.GZ
             $phar->compress(\Phar::GZ);
-            unset($phar);
+            unset($phar); // Close the PharData object
+            
+            // Clean up the uncompressed TAR file
             @unlink($tarPath);
+            
+            if (!file_exists($tarGzPath)) {
+                abort(500, 'Failed to create compressed archive');
+            }
+            
+            $downloadName = 'notice-' . $notice->id . '-attachments.tar.gz';
+            return response()->download($tarGzPath, $downloadName, [
+                'Content-Type' => 'application/gzip'
+            ])->deleteFileAfterSend(true);
+            
         } catch (\Exception $e) {
-            abort(500);
+            // Clean up any partial files
+            @unlink($tarPath);
+            @unlink($tarGzPath);
+            abort(500, 'Failed to create archive: ' . $e->getMessage());
         }
-
-        $tarGzPath = $tarPath . '.gz';
-        $downloadName = 'notice-' . $notice->id . '-attachments.tar.gz';
-        return response()->download($tarGzPath, $downloadName)->deleteFileAfterSend(true);
     }
 
     // Delete a notice and its associated files
