@@ -1,5 +1,5 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
-import { Search, Eye, Trash2 } from 'lucide-react';
+import { Search, Eye, Trash2, Pin, PinOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -74,6 +74,33 @@ export default function Noticeboard() {
 
   const [filterCategory, setFilterCategory] = useState<'All' | Category>('All');
   const [search, setSearch] = useState('');
+  const [pinnedNotices, setPinnedNotices] = useState<Set<string>>(() => {
+    // Load pinned notices from localStorage on initial render
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pinnedNotices');
+      return saved ? new Set(JSON.parse(saved)) : new Set<string>();
+    }
+    return new Set<string>();
+  });
+
+  // Save pinned notices to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pinnedNotices', JSON.stringify(Array.from(pinnedNotices)));
+    }
+  }, [pinnedNotices]);
+
+  const togglePin = (noticeId: string) => {
+    setPinnedNotices(prev => {
+      const newPins = new Set(prev);
+      if (newPins.has(noticeId)) {
+        newPins.delete(noticeId);
+      } else {
+        newPins.add(noticeId);
+      }
+      return newPins;
+    });
+  };
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -141,7 +168,17 @@ export default function Noticeboard() {
           n.description.toLowerCase().includes(q)
         );
       })
-      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      .sort((a, b) => {
+        // Sort pinned notices first, then by date
+        const aIsPinned = pinnedNotices.has(a.id);
+        const bIsPinned = pinnedNotices.has(b.id);
+        
+        if (aIsPinned && !bIsPinned) return -1;
+        if (!aIsPinned && bIsPinned) return 1;
+        
+        // If both are pinned or both are not pinned, sort by date
+        return a.createdAt < b.createdAt ? 1 : -1;
+      });
   }, [mappedNotices, filterCategory, search]);
 
   // Programmatically download a file/blob given a URL and an optional filename
@@ -405,7 +442,7 @@ export default function Noticeboard() {
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>{isEditMode ? 'Edit Notice' : 'View & Edit Notice'}</DialogTitle>
+                    <DialogTitle>{isEditMode ? 'Edit Notice' : 'View Notice'}</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={onEditSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className={`flex flex-col gap-2 ${!isEditMode ? 'md:col-span-2' : ''}`}>
@@ -612,7 +649,24 @@ export default function Noticeboard() {
                       {n.category}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePin(n.id);
+                      }}
+                      className="text-gray-400 hover:text-yellow-500 transition-colors"
+                      aria-label={pinnedNotices.has(n.id) ? 'Unpin notice' : 'Pin notice'}
+                      title={pinnedNotices.has(n.id) ? 'Unpin' : 'Pin to top'}
+                    >
+                      {pinnedNotices.has(n.id) ? (
+                        <Pin className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                      ) : (
+                        <Pin className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <h3 className="mb-1 line-clamp-1 text-base font-semibold">{n.title}</h3>
@@ -661,13 +715,15 @@ export default function Noticeboard() {
 
                 <div className="mt-auto flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
                   <span>Posted by {n.username}</span>
-                  <button
-                    onClick={() => openEditDialog(n)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#163832] hover:bg-[#163832]/90 text-white text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    View
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openEditDialog(n)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#163832] hover:bg-[#163832]/90 text-white text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      View
+                    </button>
+                  </div>
                 </div>
               </div>
             );
