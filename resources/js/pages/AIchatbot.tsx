@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Bot, Send, User as UserIcon, Download, RefreshCw, Copy, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -11,7 +11,24 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+// Define the user type
+type User = {
+    id?: string | number;
+    name?: string;
+};
+
+// Define the page props
+type PageProps = {
+    auth?: {
+        user?: User;
+    };
+    [key: string]: any; // Allow additional properties
+};
+
 export default function AIchatbot() {
+    const page = usePage<PageProps>();
+    const authUser = page.props.auth?.user;
+    const previousUserId = useRef<string | null>(null);
     type ChatMessage = {
         id: string;
         role: 'user' | 'assistant';
@@ -19,18 +36,20 @@ export default function AIchatbot() {
         variants?: string[];
         variantIndex?: number;
     };
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        {
-            id: 'm1',
-            role: 'assistant',
-            content:
-                "Hi! I'm your AI assistant. Ask me anything or type a message below.",
-            variants: [
-                "Hi! I'm your AI assistant. Ask me anything or type a message below.",
-            ],
-            variantIndex: 0,
-        },
-    ]);
+    const [messages, setMessages] = useState<ChatMessage[]>(() => {
+        // Initialize with a welcome message that includes the user's name if available
+        const welcomeMessage = `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`;
+        
+        return [
+            {
+                id: 'm1',
+                role: 'assistant',
+                content: welcomeMessage,
+                variants: [welcomeMessage],
+                variantIndex: 0,
+            },
+        ];
+    });
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const listRef = useRef<HTMLDivElement | null>(null);
@@ -96,13 +115,47 @@ export default function AIchatbot() {
         );
     };
 
+    // Clear chat history when user changes
+    useEffect(() => {
+        const currentUserId = authUser?.id?.toString();
+        
+        // If user ID has changed (including from null to a user or vice versa)
+        if (currentUserId !== previousUserId.current) {
+            // Reset chat to initial state
+            setMessages([{
+                id: 'm1',
+                role: 'assistant',
+                content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`,
+                variants: [
+                    `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`,
+                ],
+                variantIndex: 0,
+            }]);
+            
+            // Update the previous user ID
+            previousUserId.current = currentUserId || null;
+        }
+    }, [authUser?.id, authUser?.name]);
+
+    // Auto-scroll to bottom when messages change
     useEffect(() => {
         if (!listRef.current) return;
         listRef.current.scrollTop = listRef.current.scrollHeight;
     }, [messages, isTyping]);
 
-    const getCsrfToken = () =>
-        (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null)?.content || '';
+    const getCsrfToken = () => {
+        // First try to get from meta tag
+        const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+        if (metaTag?.content) return metaTag.content;
+        
+        // Fallback to Laravel's default token name in cookies
+        const token = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1];
+            
+        return token ? decodeURIComponent(token) : '';
+    };
 
     const sendMessage = () => {
         const content = input.trim();
@@ -115,13 +168,21 @@ export default function AIchatbot() {
         // Call backend to get real Gemini reply
         (async () => {
             try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    throw new Error('CSRF token not found');
+                }
+                
                 const res = await fetch('/chatbot/message', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-XSRF-TOKEN': csrfToken,
                         'Accept': 'application/json',
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify({ message: content }),
                 });
 
