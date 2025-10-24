@@ -32,6 +32,8 @@ class NoticeController extends Controller
                     'file_mime' => $notice->file_mime,
                     'file_size' => $notice->file_size,
                     'file_url' => $notice->file_path ? route('noticeboard.download', $notice) : null,
+                    'date' => $notice->date,
+                    'time' => $notice->time,
                     // Array of attachments (for multiple files)
                     'files' => collect($notice->files ?? [])->map(function ($f) {
                         return [
@@ -64,7 +66,9 @@ class NoticeController extends Controller
             'description' => ['required', 'string'],
             'file' => ['nullable', 'file', 'max:10240'],
             'files' => ['nullable', 'array'],
-            'files.*' => ['file', 'max:10240'],
+            'files.*' => ['file', 'max:10240'], 
+            'date' => ['nullable', 'date'],
+            'time' => ['nullable', 'date_format:H:i'],
         ]);
 
         // Guard against accidental duplicate submissions (e.g., double-clicking submit)
@@ -131,6 +135,8 @@ class NoticeController extends Controller
             'file_mime' => $fileMime,
             'file_size' => $fileSize,
             'files' => $filesMeta,
+            'date' => $validated['date'] ?? null,
+            'time' => $validated['time'] ?? null,
         ]);
 
         return redirect()->route('noticeboard.index');
@@ -150,12 +156,16 @@ class NoticeController extends Controller
             'description' => ['required', 'string'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:10240'],
+            'date' => ['nullable', 'date'],
+            'time' => ['nullable', 'date_format:H:i'],
         ]);
 
         // Update basic fields
         $notice->title = $validated['title'];
         $notice->category = $validated['category'];
         $notice->description = $validated['description'];
+        $notice->date = $validated['date'] ?? null;
+        $notice->time = $validated['time'] ?? null;
 
         // Handle new file uploads if provided
         if ($request->hasFile('files')) {

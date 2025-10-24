@@ -14,6 +14,8 @@ interface Notice {
   description: string;
   username: string;
   createdAt: string;
+  date?: string | null;
+  time?: string | null;
   files_download_url?: string | null;
   file?: {
     name: string;
@@ -35,6 +37,8 @@ interface FormData {
   category: Category;
   description: string;
   files: File[];
+  date?: string;
+  time?: string;
 }
 
 const categoryOptions: Category[] = [
@@ -51,6 +55,46 @@ const categoryIcon: Record<Category, string> = {
   'Event Notice': '📢',
 };
 
+// Generate time options in 30-minute intervals
+const generateTimeOptions = (): string[] => {
+  const times: string[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const period = hour < 12 ? 'AM' : 'PM';
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      const displayMinute = minute.toString().padStart(2, '0');
+      times.push(`${displayHour}:${displayMinute} ${period}`);
+    }
+  }
+  return times;
+};
+
+const timeOptions = generateTimeOptions();
+
+// Convert 12-hour format (e.g., "2:30 PM") to 24-hour format (e.g., "14:30")
+function convertTo24Hour(time12h: string): string {
+  if (!time12h) return '';
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+// Convert 24-hour format (e.g., "14:30") to 12-hour format (e.g., "2:30 PM")
+function convertTo12Hour(time24h: string): string {
+  if (!time24h) return '';
+  const [hours, minutes] = time24h.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 export default function Noticeboard() {
   const pageProps = usePage().props as any;
   const serverNotices = (pageProps?.notices as any[]) ?? [];
@@ -60,6 +104,8 @@ export default function Noticeboard() {
   const [category, setCategory] = useState<Category>('Announcement/News');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState(''); // Stores 12-hour format for display
   const [open, setOpen] = useState(false);
 
   // Edit dialog state
@@ -70,6 +116,8 @@ export default function Noticeboard() {
   const [editCategory, setEditCategory] = useState<Category>('Announcement/News');
   const [editDescription, setEditDescription] = useState('');
   const [editFiles, setEditFiles] = useState<File[]>([]);
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState(''); // Stores 12-hour format for display
   const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [filterCategory, setFilterCategory] = useState<'All' | Category>('All');
@@ -117,6 +165,8 @@ export default function Noticeboard() {
     setEditCategory(notice.category);
     setEditDescription(notice.description);
     setEditFiles([]);
+    setEditDate(notice.date || '');
+    setEditTime(notice.time ? convertTo12Hour(notice.time) : '');
     if (editFileInputRef.current) editFileInputRef.current.value = '';
     setIsEditMode(false); // Start in read-only mode
     setEditOpen(true);
@@ -142,6 +192,8 @@ export default function Noticeboard() {
         description: n.description,
         username: n.username,
         createdAt: n.created_at,
+        date: n.date ?? null,
+        time: n.time ?? null,
         files_download_url: n.files_download_url ?? null,
         file: n.file_url
           ? {
@@ -238,6 +290,8 @@ export default function Noticeboard() {
     setCategory('Announcement/News');
     setDescription('');
     setFiles([]);
+    setDate('');
+    setTime('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -253,6 +307,8 @@ export default function Noticeboard() {
     category: 'Announcement/News' as Category,
     description: '',
     files: [] as File[],
+    date: '',
+    time: '',
   });
 
   // Inertia form for updating a notice
@@ -261,6 +317,8 @@ export default function Noticeboard() {
     category: 'Announcement/News' as Category,
     description: '',
     files: [] as File[],
+    date: '',
+    time: '',
   });
 
   // Submit create-notice request with FormData (supports multi-file)
@@ -274,6 +332,8 @@ export default function Noticeboard() {
       category,
       description,
       files,
+      date,
+      time: convertTo24Hour(time), // Convert to 24-hour format for backend
     }));
 
     // Submit the form
@@ -304,6 +364,8 @@ export default function Noticeboard() {
     setEditCategory('Announcement/News');
     setEditDescription('');
     setEditFiles([]);
+    setEditDate('');
+    setEditTime('');
     setIsEditMode(false);
     if (editFileInputRef.current) editFileInputRef.current.value = '';
   }
@@ -319,6 +381,8 @@ export default function Noticeboard() {
       category: editCategory,
       description: editDescription,
       files: editFiles,
+      date: editDate,
+      time: convertTo24Hour(editTime), // Convert to 24-hour format for backend
     }));
 
     // Submit the update (using POST with _method=PUT or PATCH)
@@ -402,6 +466,32 @@ export default function Noticeboard() {
                     </div>
 
                     <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">Date</label>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">Time</label>
+                      <select
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                      >
+                        <option value="">Select time</option>
+                        {timeOptions.map((timeOption) => (
+                          <option key={timeOption} value={timeOption}>
+                            {timeOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2 flex flex-col gap-2">
                       <label className="text-sm font-medium">Attach Files</label>
                       <input
                         ref={fileInputRef}
@@ -499,6 +589,35 @@ export default function Noticeboard() {
                         className={`w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
                         required
                       />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">Date</label>
+                      <input
+                        type="date"
+                        value={editDate}
+                        onChange={(e) => setEditDate(e.target.value)}
+                        readOnly={!isEditMode}
+                        disabled={!isEditMode}
+                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium">Time</label>
+                      <select
+                        value={editTime}
+                        onChange={(e) => setEditTime(e.target.value)}
+                        disabled={!isEditMode}
+                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
+                      >
+                        <option value="">Select time</option>
+                        {timeOptions.map((timeOption) => (
+                          <option key={timeOption} value={timeOption}>
+                            {timeOption}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     {/* Show existing files if any */}
@@ -670,7 +789,23 @@ export default function Noticeboard() {
                 </div>
 
                 <h3 className="mb-1 line-clamp-1 text-base font-semibold">{n.title}</h3>
-                <p className="mb-3 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
+                <p className="mb-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
+                {(n.date || n.time) && (
+                  <div className="mb-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    {n.date && (
+                      <span className="inline-flex items-center gap-1">
+                        <span>📅</span>
+                        <span>{new Date(n.date).toLocaleDateString()}</span>
+                      </span>
+                    )}
+                    {n.time && (
+                      <span className="inline-flex items-center gap-1">
+                        <span>🕐</span>
+                        <span>{n.time}</span>
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/** When a notice has multiple files, show one button that downloads an archive of all attachments */}
                 {Array.isArray(n.files) && n.files.length > 0 && n.files_download_url && (

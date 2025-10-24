@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string('file_mime')->nullable();
             $table->unsignedBigInteger('file_size')->nullable();
             $table->json('files')->nullable();
+            $table->string('date')->nullable();
+            $table->string('time')->nullable();
             $table->timestamps();
 
             $table->index(['created_at']);
