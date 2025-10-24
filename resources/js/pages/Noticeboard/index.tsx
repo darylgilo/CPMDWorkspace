@@ -1,6 +1,7 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { Search, Eye, Trash2, Pin, PinOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useMemo, useState, useEffect, useRef } from 'react';
@@ -440,17 +441,18 @@ export default function Noticeboard() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium">Category</label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value as Category)}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
-                      >
-                        {categoryOptions.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={category} onValueChange={(value) => setCategory(value as Category)}>
+                        <SelectTrigger className="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                          {categoryOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt} className="hover:bg-[#1a4d3e] cursor-pointer">
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="md:col-span-2 flex flex-col gap-2">
@@ -477,18 +479,19 @@ export default function Noticeboard() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium">Time</label>
-                      <select
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
-                      >
-                        <option value="">Select time</option>
-                        {timeOptions.map((timeOption) => (
-                          <option key={timeOption} value={timeOption}>
-                            {timeOption}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={time || "none"} onValueChange={(value) => setTime(value === "none" ? "" : value)}>
+                        <SelectTrigger className="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 max-h-[300px]">
+                          <SelectItem value="none" className="hover:bg-[#1a4d3e] cursor-pointer">Select time</SelectItem>
+                          {timeOptions.map((timeOption) => (
+                            <SelectItem key={timeOption} value={timeOption} className="hover:bg-[#1a4d3e] cursor-pointer">
+                              {timeOption}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="md:col-span-2 flex flex-col gap-2">
@@ -519,7 +522,7 @@ export default function Noticeboard() {
                       <button
                         type="submit"
                         disabled={form.processing}
-                        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-neutral-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-gray-200"
+                        className="inline-flex items-center justify-center rounded-md bg-[#163832] hover:bg-[#163832]/90 px-4 py-2 text-sm font-medium text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#235347] dark:hover:bg-[#235347]/90 min-w-[120px] h-[38px]"
                       >
                         {form.processing ? 'Submitting...' : 'Submit Notice'}
                       </button>
@@ -561,18 +564,18 @@ export default function Noticeboard() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium">Category</label>
-                      <select
-                        value={editCategory}
-                        onChange={(e) => setEditCategory(e.target.value as Category)}
-                        disabled={!isEditMode}
-                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
-                      >
-                        {categoryOptions.map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={editCategory} onValueChange={(value) => setEditCategory(value as Category)} disabled={!isEditMode}>
+                        <SelectTrigger className={`w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                          {categoryOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt} className="hover:bg-[#1a4d3e] cursor-pointer">
+                              {opt}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="md:col-span-2 flex flex-col gap-2">
@@ -605,19 +608,19 @@ export default function Noticeboard() {
 
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium">Time</label>
-                      <select
-                        value={editTime}
-                        onChange={(e) => setEditTime(e.target.value)}
-                        disabled={!isEditMode}
-                        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
-                      >
-                        <option value="">Select time</option>
-                        {timeOptions.map((timeOption) => (
-                          <option key={timeOption} value={timeOption}>
-                            {timeOption}
-                          </option>
-                        ))}
-                      </select>
+                      <Select value={editTime || "none"} onValueChange={(value) => setEditTime(value === "none" ? "" : value)} disabled={!isEditMode}>
+                        <SelectTrigger className={`w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700 max-h-[300px]">
+                          <SelectItem value="none" className="hover:bg-[#1a4d3e] cursor-pointer">Select time</SelectItem>
+                          {timeOptions.map((timeOption) => (
+                            <SelectItem key={timeOption} value={timeOption} className="hover:bg-[#1a4d3e] cursor-pointer">
+                              {timeOption}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     {/* Show existing files if any */}
@@ -718,18 +721,25 @@ export default function Noticeboard() {
                 </DialogContent>
               </Dialog>
 
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value as any)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
-              >
-                <option value="All">All Categories</option>
-                {categoryOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as any)}>
+                <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                  <SelectItem value="All" className="hover:bg-[#1a4d3e] cursor-pointer">
+                    All Categories
+                  </SelectItem>
+                  {categoryOptions.map((opt) => (
+                    <SelectItem 
+                      key={opt} 
+                      value={opt}
+                      className="hover:bg-[#1a4d3e] cursor-pointer"
+                    >
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="relative">
               <input

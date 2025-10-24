@@ -5,6 +5,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Trash2, Power, PowerOff, Edit3, UserCheck, UserX, ChevronUp, ChevronDown, Users, TrendingUp, UserPlus, UserRoundPlus, Activity, Search } from 'lucide-react';
 import FlashMessage from '@/components/flash-message';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Breadcrumb navigation items for the user management page
 const breadcrumbs: BreadcrumbItem[] = [
@@ -287,12 +288,10 @@ export default function UserManagement() {
                     {/* Show entries */}
                     <div className="flex items-center gap-2">
                       <label htmlFor="entries" className="font-medium">Show</label>
-                      <select
-                        id="entries"
-                        className="border rounded px-2 py-1 bg-white text-gray-900 dark:bg-neutral-800 dark:text-gray-100 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-gray-600"
-                        value={perPage}
-                        onChange={(e) => {
-                          const newPerPage = parseInt(e.target.value, 10) || 10;
+                      <Select
+                        value={perPage.toString()}
+                        onValueChange={(value) => {
+                          const newPerPage = parseInt(value, 10) || 10;
                           setPerPage(newPerPage);
                           router.get('/superadmin/usermanagement', { 
                               search: searchValue, 
@@ -303,11 +302,16 @@ export default function UserManagement() {
                           }, { preserveState: true, replace: true });
                         }}
                       >
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                        <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                          <SelectValue placeholder="10" />
+                        </SelectTrigger>
+                        <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                          <SelectItem value="10" className="hover:bg-[#1a4d3e] cursor-pointer">10</SelectItem>
+                          <SelectItem value="25" className="hover:bg-[#1a4d3e] cursor-pointer">25</SelectItem>
+                          <SelectItem value="50" className="hover:bg-[#1a4d3e] cursor-pointer">50</SelectItem>
+                          <SelectItem value="100" className="hover:bg-[#1a4d3e] cursor-pointer">100</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <span>entries</span>
                     </div>
                   </div>
