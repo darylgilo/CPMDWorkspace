@@ -19,6 +19,8 @@ class Notice extends Model
         'file_mime',
         'file_size',
         'files',
+        'date',
+        'time',
     ];
 
     protected $casts = [
