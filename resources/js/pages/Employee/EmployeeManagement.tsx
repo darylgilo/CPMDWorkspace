@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { UserPlus, Search, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Employee Management list page component
 export default function EmployeeManagement() {
@@ -56,50 +57,84 @@ export default function EmployeeManagement() {
                 <UserPlus className="h-4 w-4" /> Add Employee
               </button>
             )}
-            <select
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100"
-              value={office}
-              onChange={(e) => {
-                const val = e.target.value;
-                setOffice(val);
+            <Select
+              value={office || "all"}
+              onValueChange={(val) => {
+                const newValue = val === "all" ? "" : val;
+                setOffice(newValue);
                 // Reset section if office changes away from CPMD
-                const nextCpmd = val === 'CPMD' ? cpmd : '';
+                const nextCpmd = newValue === 'CPMD' ? cpmd : '';
                 setCpmd(nextCpmd);
-                router.get('/employees', { search, perPage, office: val, cpmd: nextCpmd }, { preserveState: true, replace: true });
+                router.get('/employees', { search, perPage, office: newValue, cpmd: nextCpmd }, { preserveState: true, replace: true });
               }}
             >
-              <option value="">All Offices</option>
-              <option value="DO">DO</option>
-              <option value="ADO">ADO</option>
-              <option value="CPMD">CPMD</option>
-              <option value="AED">AED</option>
-              <option value="NSQCS">NSQCS</option>
-              <option value="NPQSD">NPQSD</option>
-              <option value="NSIC">NSIC</option>
-              <option value="CRPSD">CRPSD</option>
-              <option value="PPSSD">PPSSD</option>
-              <option value="ADMINISTRATIVE">ADMINISTRATIVE</option>
-              <option value="Others">Others</option>
-            </select>
-            <select
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100 disabled:opacity-60"
-              value={cpmd}
+              <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                <SelectValue placeholder="All Offices" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                <SelectItem value="all" className="hover:bg-[#1a4d3e] cursor-pointer">All Offices</SelectItem>
+                <SelectItem value="DO" className="hover:bg-[#1a4d3e] cursor-pointer">DO</SelectItem>
+                <SelectItem value="ADO" className="hover:bg-[#1a4d3e] cursor-pointer">ADO</SelectItem>
+                <SelectItem value="CPMD" className="hover:bg-[#1a4d3e] cursor-pointer">CPMD</SelectItem>
+                <SelectItem value="AED" className="hover:bg-[#1a4d3e] cursor-pointer">AED</SelectItem>
+                <SelectItem value="NSQCS" className="hover:bg-[#1a4d3e] cursor-pointer">NSQCS</SelectItem>
+                <SelectItem value="NPQSD" className="hover:bg-[#1a4d3e] cursor-pointer">NPQSD</SelectItem>
+                <SelectItem value="NSIC" className="hover:bg-[#1a4d3e] cursor-pointer">NSIC</SelectItem>
+                <SelectItem value="CRPSD" className="hover:bg-[#1a4d3e] cursor-pointer">CRPSD</SelectItem>
+                <SelectItem value="PPSSD" className="hover:bg-[#1a4d3e] cursor-pointer">PPSSD</SelectItem>
+                <SelectItem value="ADMINISTRATIVE" className="hover:bg-[#1a4d3e] cursor-pointer">ADMINISTRATIVE</SelectItem>
+                <SelectItem value="Others" className="hover:bg-[#1a4d3e] cursor-pointer">Others</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={cpmd || "all"}
+              onValueChange={(val) => {
+                const newValue = val === "all" ? "" : val;
+                setCpmd(newValue);
+                router.get('/employees', { search, perPage, office, cpmd: newValue }, { preserveState: true, replace: true });
+              }}
               disabled={office !== 'CPMD'}
-              onChange={(e) => {
-                const val = e.target.value;
-                setCpmd(val);
-                router.get('/employees', { search, perPage, office, cpmd: val }, { preserveState: true, replace: true });
+            >
+              <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950 disabled:opacity-60">
+                <SelectValue placeholder={office === 'CPMD' ? 'All Sections' : 'Select Office First'} />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                <SelectItem value="all" className="hover:bg-[#1a4d3e] cursor-pointer">
+                  {office === 'CPMD' ? 'All Sections' : 'Select Office First'}
+                </SelectItem>
+                <SelectItem value="BIOCON section" className="hover:bg-[#1a4d3e] cursor-pointer">BIOCON section</SelectItem>
+                <SelectItem value="PFS section" className="hover:bg-[#1a4d3e] cursor-pointer">PFS section</SelectItem>
+                <SelectItem value="PHPS SECTION" className="hover:bg-[#1a4d3e] cursor-pointer">PHPS SECTION</SelectItem>
+                <SelectItem value="OC-Admin Support Unit" className="hover:bg-[#1a4d3e] cursor-pointer">OC-Admin Support Unit</SelectItem>
+                <SelectItem value="OC-ICT Unit" className="hover:bg-[#1a4d3e] cursor-pointer">OC-ICT Unit</SelectItem>
+                <SelectItem value="OC-Special Project" className="hover:bg-[#1a4d3e] cursor-pointer">OC-Special Project</SelectItem>
+                <SelectItem value="Others" className="hover:bg-[#1a4d3e] cursor-pointer">Others</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={perPage.toString()}
+              onValueChange={(value) => {
+                const newPerPage = parseInt(value);
+                setPerPage(newPerPage);
+                router.get(
+                  "/employees",
+                  { search, perPage: newPerPage, office, cpmd },
+                  { preserveState: true, replace: true }
+                );
               }}
             >
-              <option value="">{office === 'CPMD' ? 'All Sections' : 'Select Office First'}</option>
-              <option value="BIOCON section">BIOCON section</option>
-              <option value="PFS section">PFS section</option>
-              <option value="PHPS SECTION">PHPS SECTION</option>
-              <option value="OC-Admin Support Unit">OC-Admin Support Unit</option>
-              <option value="OC-ICT Unit">OC-ICT Unit</option>
-              <option value="OC-Special Project">OC-Special Project</option>
-              <option value="Others">Others</option>
-            </select>
+              <SelectTrigger className="w-[150px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                <SelectValue placeholder="Rows per page" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                <SelectItem value="12" className="hover:bg-[#1a4d3e] cursor-pointer">12 per page</SelectItem>
+                <SelectItem value="24" className="hover:bg-[#1a4d3e] cursor-pointer">24 per page</SelectItem>
+                <SelectItem value="48" className="hover:bg-[#1a4d3e] cursor-pointer">48 per page</SelectItem>
+                <SelectItem value="96" className="hover:bg-[#1a4d3e] cursor-pointer">96 per page</SelectItem>
+              </SelectContent>
+            </Select>
             <button
               type="button"
               onClick={() => {
