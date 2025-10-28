@@ -74,7 +74,7 @@ const data = {
         },
         {
           title: "Travel",
-          url: "#",
+          url: "/noticeboard/travel",
         },
         {
           title: "Meeting",
