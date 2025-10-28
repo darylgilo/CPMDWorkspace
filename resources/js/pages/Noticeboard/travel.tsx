@@ -4,12 +4,9 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useMemo, useState } from 'react';
 
-type Category = 'Announcement/News' | 'Travel Notice' | 'Meeting Notice' | 'Event Notice';
-
 interface Notice {
   id: string;
   title: string;
-  category: Category;
   description: string;
   username: string;
   createdAt: string;
@@ -22,15 +19,9 @@ interface Notice {
     type: string;
     size: number;
   } | null;
-  files?: Array<{
-    name: string;
-    url: string;
-    type: string;
-    size: number;
-  }>;
+  files?: Array<{ name: string; url: string; type: string; size: number }>;
+  category: string;
 }
-
-
 
 // Helper function to get days in a month
 function getDaysInMonth(year: number, month: number): number {
@@ -95,7 +86,6 @@ export default function AnnouncementPage() {
       return {
         id: String(n.id),
         title: n.title,
-        category: n.category as Category,
         description: n.description,
         username: n.username,
         createdAt: n.created_at,
@@ -111,22 +101,19 @@ export default function AnnouncementPage() {
             }
           : null,
         files: filesArr,
+        category: n.category,
       } as Notice;
     });
   }, [serverNotices]);
 
-  // Filter only Announcement/News category and apply search
+  // Filter only Travel category and apply search
   const announcements = useMemo(() => {
     return mappedNotices
-      .filter((n) => n.category === 'Announcement/News')
+      .filter((n) => n.category === 'Travel Notice')
       .filter((n) => {
         const q = search.trim().toLowerCase();
         if (!q) return true;
-        return (
-          n.title.toLowerCase().includes(q) ||
-          n.username.toLowerCase().includes(q) ||
-          n.description.toLowerCase().includes(q)
-        );
+        return n.title.toLowerCase().includes(q) || n.username.toLowerCase().includes(q) || n.description.toLowerCase().includes(q);
       });
   }, [mappedNotices, search]);
 
@@ -192,17 +179,17 @@ export default function AnnouncementPage() {
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Noticeboard', href: '/noticeboard' },
-    { title: 'Announcements', href: '/noticeboard/announcements' },
+    { title: 'Travel Notices', href: '/noticeboard/travel' },
   ];
 
-  // Check if a date has announcements
+  // Check if a date has travels
   const hasAnnouncements = (date: Date): boolean => {
     const dateKey = formatDate(date);
     return announcementsByDate.has(dateKey);
@@ -216,25 +203,27 @@ export default function AnnouncementPage() {
 
   const today = new Date();
 
-  console.log('pageProps:', pageProps);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Announcements & News" />
+      <Head title="Travel Notices" />
 
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
         {/* Header */}
         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Announcements & News</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Travel Notices</h1>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {selectedDate
-                  ? `Showing announcements for ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                  : 'View all announcements and news with scheduled dates'}
+                  ? `Showing travel notices for ${selectedDate.toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}`
+                  : 'View all travel notices with scheduled dates'}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {selectedDate && (
                 <button
@@ -244,7 +233,7 @@ export default function AnnouncementPage() {
                   View All
                 </button>
               )}
-              
+
               {/* Search Bar */}
               <div className="relative">
                 <input
@@ -272,94 +261,98 @@ export default function AnnouncementPage() {
           <div className="lg:col-span-2">
             <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-                {selectedDate ? `Announcements (${displayedAnnouncements.length})` : `All Announcements (${announcements.length})`}
+                {selectedDate
+                  ? `Travel Notices (${displayedAnnouncements.length})`
+                  : `All Travel Notices (${announcements.length})`}
               </h2>
-              
+
               <div className="space-y-4">
                 {displayedAnnouncements.length > 0 ? (
                   displayedAnnouncements.map((announcement) => {
                     const isExpanded = expandedCards.has(announcement.id);
                     return (
-                    <div
-                      key={announcement.id}
-                      className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
-                    >
-                      <div className="mb-3 flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl" aria-hidden>📰</span>
-                      <div>
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                              {announcement.title}
-                            </h3>
-                            <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                {announcement.username}
-                              </span>
-                              Posted on {new Date(announcement.createdAt).toLocaleString()}
+                      <div
+                        key={announcement.id}
+                        className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                      >
+                        <div className="mb-3 flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl" aria-hidden>✈️</span>
+                            <div>
+                              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                {announcement.title}
+                              </h3>
+                              <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <User className="h-3 w-3" />
+                                  {announcement.username}
+                                </span>
+                                Posted on {new Date(announcement.createdAt).toLocaleString()}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <p className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                        {announcement.description}
-                      </p>
-                      {announcement.description.length > 150 && (
-                        <button
-                          onClick={() => toggleCardExpansion(announcement.id)}
-                          className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                        <p
+                          className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                         >
-                          {isExpanded ? 'Show less' : 'Read more'}
-                        </button>
-                      )}
+                          {announcement.description}
+                        </p>
+                        {announcement.description.length > 150 && (
+                          <button
+                            onClick={() => toggleCardExpansion(announcement.id)}
+                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                          >
+                            {isExpanded ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
 
-                      {/* Attachments */}
-                      {announcement.files && announcement.files.length > 0 && (
-                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <FileText className="h-4 w-4" />
-                          <span>{announcement.files.length} attachment(s)</span>
-                          {announcement.files_download_url && (
+                        {/* Attachments */}
+                        {announcement.files && announcement.files.length > 0 && (
+                          <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <FileText className="h-4 w-4" />
+                            <span>{announcement.files.length} attachment(s)</span>
+                            {announcement.files_download_url && (
+                              <a
+                                href={announcement.files_download_url}
+                                className="text-[#163832] hover:underline dark:text-[#235347]"
+                                download
+                              >
+                                Download All
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        {announcement.file && !announcement.files?.length && (
+                          <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <FileText className="h-4 w-4" />
                             <a
-                              href={announcement.files_download_url}
+                              href={announcement.file.url}
                               className="text-[#163832] hover:underline dark:text-[#235347]"
-                              download
+                              download={announcement.file.name}
                             >
-                              Download All
+                              {announcement.file.name}
                             </a>
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                          {announcement.date && (
+                            <span className="flex items-center gap-1">
+                              <CalendarIcon className="h-3 w-3" />
+                              {new Date(announcement.date).toLocaleDateString()}
+                            </span>
+                          )}
+                          {announcement.time && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {announcement.time}
+                            </span>
                           )}
                         </div>
-                      )}
-
-                      {announcement.file && !announcement.files?.length && (
-                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <FileText className="h-4 w-4" />
-                          <a
-                            href={announcement.file.url}
-                            className="text-[#163832] hover:underline dark:text-[#235347]"
-                            download={announcement.file.name}
-                          >
-                            {announcement.file.name}
-                          </a>
-                        </div>
-                      )}
-
-                      <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                        {announcement.date && (
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="h-3 w-3" />
-                            {new Date(announcement.date).toLocaleDateString()}
-                          </span>
-                        )}
-                        {announcement.time && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {announcement.time}
-                          </span>
-                        )}
                       </div>
-                    </div>
-                  );
+                    );
                   })
                 ) : (
                   <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-neutral-700">
@@ -456,10 +449,10 @@ export default function AnnouncementPage() {
               </div>
 
               {/* Legend */}
-                  <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
+              <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
-                  <span>Has Travel Notices</span>
+                  <span>Has announcements</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
@@ -478,7 +471,7 @@ export default function AnnouncementPage() {
                     {announcements.length}
                   </div>
                   <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    Total Announcements
+                    Total Travel Notices
                   </div>
                 </div>
               </div>

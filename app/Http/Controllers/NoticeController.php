@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use ZipArchive;
+use PharData;
+use Exception;
 
 class NoticeController extends Controller
 {
@@ -66,7 +68,7 @@ class NoticeController extends Controller
             'description' => ['required', 'string'],
             'file' => ['nullable', 'file', 'max:10240'],
             'files' => ['nullable', 'array'],
-            'files.*' => ['file', 'max:10240'], 
+            'files.*' => ['file', 'max:10240'],
             'date' => ['nullable', 'date'],
             'time' => ['nullable', 'date_format:H:i'],
         ]);
@@ -449,5 +451,50 @@ class NoticeController extends Controller
             'notices' => $notices,
         ]);
     }
-}
 
+        // Display travel page with calendar
+    public function travel()
+    {
+        $notices = Notice::query()
+            ->with('user')
+            ->latest()
+            ->get()
+            ->map(function (Notice $notice) {
+                $hasFiles = is_array($notice->files) && count($notice->files) > 0;
+                $zipAvailable = class_exists(\ZipArchive::class);
+                return [
+                    'id' => $notice->id,
+                    'title' => $notice->title,
+                    'category' => $notice->category,
+                    'description' => $notice->description,
+                    'username' => optional($notice->user)->name ?? 'Unknown',
+                    'created_at' => $notice->created_at->toIso8601String(),
+                    'file_name' => $notice->file_name,
+                    'file_mime' => $notice->file_mime,
+                    'file_size' => $notice->file_size,
+                    'file_url' => $notice->file_path ? route('noticeboard.download', $notice) : null,
+                    'date' => $notice->date,
+                    'time' => $notice->time,
+                    // Array of attachments (for multiple files)
+                    'files' => collect($notice->files ?? [])->map(function ($f) {
+                        return [
+                            'path' => $f['path'] ?? null,
+                            'name' => $f['name'] ?? null,
+                            'mime' => $f['mime'] ?? null,
+                            'size' => $f['size'] ?? null,
+                            'url'  => isset($f['path']) ? Storage::url($f['path']) : null,
+                        ];
+                    })->all(),
+                    // One-click download URL and suggested filename for all attachments
+                    'files_download_url' => $hasFiles ? route('noticeboard.downloadAll', $notice) : null,
+                    'files_download_name' => $hasFiles
+                        ? ('notice-' . $notice->id . '-attachments.' . ($zipAvailable ? 'zip' : 'tar.gz'))
+                        : null,
+                ];
+            });
+
+        return Inertia::render('Noticeboard/travel', [
+            'notices' => $notices,
+        ]);
+    }
+}

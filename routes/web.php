@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
     // Noticeboard - specific routes before parameterized routes
     Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
+    Route::get('/noticeboard/travel', [NoticeController::class, 'travel'])->name('noticeboard.travel');
     Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
     Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
     Route::get('/noticeboard', [NoticeController::class, 'index'])->name('noticeboard.index');
