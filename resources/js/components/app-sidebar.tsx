@@ -70,7 +70,7 @@ const data = {
       items: [
         {
           title: "Announcements / News",
-          url: "#",
+          url: "/noticeboard/announcements",
         },
         {
           title: "Travel",

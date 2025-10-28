@@ -27,13 +27,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // AI Chatbot
     Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
-    // Noticeboard
+    // Noticeboard - specific routes before parameterized routes
+    Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
+    Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
+    Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
     Route::get('/noticeboard', [NoticeController::class, 'index'])->name('noticeboard.index');
     Route::post('/noticeboard', [NoticeController::class, 'store'])->name('noticeboard.store');
     Route::post('/noticeboard/{notice}', [NoticeController::class, 'update'])->name('noticeboard.update');
     Route::delete('/noticeboard/{notice}', [NoticeController::class, 'destroy'])->name('noticeboard.destroy');
-    Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
-    Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles

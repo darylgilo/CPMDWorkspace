@@ -109,11 +109,11 @@ export default function UserManagement() {
         }
     };
     
-    // Handle search form submission
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    // Handle search input change
+    const handleSearchChange = (value: string) => {
+        setSearchValue(value);
         router.get('/superadmin/usermanagement', { 
-            search: searchValue, 
+            search: value, 
             perPage, 
             status: statusFilter,
             sort: sortField,
@@ -317,7 +317,7 @@ export default function UserManagement() {
                   </div>
                   
                   {/* Right: Search */}
-                  <form onSubmit={handleSearch} className="w-full md:w-auto flex items-center gap-2">
+                  <div className="w-full md:w-auto flex items-center gap-2">
                     <label htmlFor="search" className="font-medium"></label>
                     <div className="relative w-full md:max-w-md">
                       <input
@@ -325,14 +325,13 @@ export default function UserManagement() {
                         type="text"
                         placeholder="Search by name"
                         value={searchValue}
-                        onChange={e => setSearchValue(e.target.value)}
+                        onChange={e => handleSearchChange(e.target.value)}
                         className="w-full border px-3 py-2 rounded bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#163832] dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600"
                         style={{ minWidth: 180 }}
                       />
                       <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     </div>
-                    <button type="submit" className="inline-flex w-full md:w-auto max-w-full md:max-w-fit whitespace-nowrap items-center justify-center gap-2 px-3 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white rounded-md">Search</button>
-                  </form>
+                  </div>
                 </div>
                     
                 {/* Mobile Card Layout */}
