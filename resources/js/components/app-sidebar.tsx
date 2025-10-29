@@ -69,20 +69,20 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: "Announcements / News",
+          title: "Announcement",
           url: "/noticeboard/announcements",
         },
         {
-          title: "Travel",
+          title: "Notice of Meeting",
+          url: "/noticeboard/meeting",
+        },
+        {
+          title: "Notice of Event",
+          url: "/noticeboard/event",
+        },
+        {
+          title: "Travel Information",
           url: "/noticeboard/travel",
-        },
-        {
-          title: "Meeting",
-          url: "#",
-        },
-        {
-          title: "Event",
-          url: "#",
         },
       ],
     },
@@ -113,7 +113,7 @@ const data = {
       ],
     },
     {
-      title: "AI Assistant",
+      title: "AI Chatbot",
       url: "/chatbot",
       icon: BotMessageSquareIcon,
     },
@@ -208,7 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <div className="block md:hidden">
+        <div className="block md:hidden bg-sidebar-accent rounded-md">
           <NavUser />
         </div>
       </SidebarFooter>

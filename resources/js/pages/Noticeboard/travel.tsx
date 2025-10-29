@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Calendar as CalendarIcon, Clock, User, FileText, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, FileText, ChevronLeft, ChevronRight, Search, Plane } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useMemo, useState } from 'react';
@@ -109,7 +109,7 @@ export default function AnnouncementPage() {
   // Filter only Travel category and apply search
   const announcements = useMemo(() => {
     return mappedNotices
-      .filter((n) => n.category === 'Travel Notice')
+      .filter((n) => n.category === 'Travel Information')
       .filter((n) => {
         const q = search.trim().toLowerCase();
         if (!q) return true;
@@ -186,7 +186,7 @@ export default function AnnouncementPage() {
 
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Noticeboard', href: '/noticeboard' },
-    { title: 'Travel Notices', href: '/noticeboard/travel' },
+    { title: 'Travel Information', href: '/noticeboard/travel' },
   ];
 
   // Check if a date has travels
@@ -205,22 +205,22 @@ export default function AnnouncementPage() {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Travel Notices" />
+      <Head title="Travel Information" />
 
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
         {/* Header */}
         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Travel Notices</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Travel Information</h1>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 {selectedDate
-                  ? `Showing travel notices for ${selectedDate.toLocaleDateString('en-US', {
+                  ? `Showing travel information for ${selectedDate.toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
                       year: 'numeric',
                     })}`
-                  : 'View all travel notices with scheduled dates'}
+                  : 'View all travel information with scheduled dates'}
               </p>
             </div>
 
@@ -262,8 +262,8 @@ export default function AnnouncementPage() {
             <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                 {selectedDate
-                  ? `Travel Notices (${displayedAnnouncements.length})`
-                  : `All Travel Notices (${announcements.length})`}
+                  ? `Travel Information (${displayedAnnouncements.length})`
+                  : `All Travel Information (${announcements.length})`}
               </h2>
 
               <div className="space-y-4">
@@ -277,7 +277,7 @@ export default function AnnouncementPage() {
                       >
                         <div className="mb-3 flex items-start justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-2xl" aria-hidden>✈️</span>
+                            <Plane className="h-6 w-6" aria-hidden />
                             <div>
                               <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                                 {announcement.title}
@@ -452,7 +452,7 @@ export default function AnnouncementPage() {
               <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
-                  <span>Has announcements</span>
+                  <span>Travel</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
@@ -471,7 +471,7 @@ export default function AnnouncementPage() {
                     {announcements.length}
                   </div>
                   <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    Total Travel Notices
+                    Total Travel Information
                   </div>
                 </div>
               </div>

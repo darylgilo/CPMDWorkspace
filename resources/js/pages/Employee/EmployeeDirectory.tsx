@@ -48,12 +48,15 @@ export default function EmployeeDirectory() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Select 
               value={office || "all"} 
-              onValueChange={(value) => {
-                const newValue = value === "all" ? "" : value;
+              onValueChange={(val) => {
+                const newValue = val === "all" ? "" : val;
                 setOffice(newValue);
+                // Reset section if office changes away from CPMD
+                const nextCpmd = newValue === 'CPMD' ? cpmd : '';
+                setCpmd(nextCpmd);
                 router.get(
                   "/directory",
-                  { search, perPage, office: newValue, cpmd },
+                  { search, perPage, office: newValue, cpmd: nextCpmd },
                   { preserveState: true, replace: true }
                 );
               }}
@@ -79,8 +82,8 @@ export default function EmployeeDirectory() {
 
             <Select
               value={cpmd || "all"}
-              onValueChange={(value) => {
-                const newValue = value === "all" ? "" : value;
+              onValueChange={(val) => {
+                const newValue = val === "all" ? "" : val;
                 setCpmd(newValue);
                 router.get(
                   "/directory",
@@ -88,9 +91,10 @@ export default function EmployeeDirectory() {
                   { preserveState: true, replace: true }
                 );
               }}
+              disabled={office !== 'CPMD'}
             >
-              <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                <SelectValue placeholder="All Sections" />
+              <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950 disabled:opacity-60">
+                <SelectValue placeholder={office === 'CPMD' ? 'All Sections' : 'Select CPMD First'} />
               </SelectTrigger>
               <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
                 <SelectItem value="all" className="hover:bg-[#1a4d3e] cursor-pointer">All Sections</SelectItem>
