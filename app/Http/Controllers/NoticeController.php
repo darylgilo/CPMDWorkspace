@@ -64,7 +64,7 @@ class NoticeController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'in:Announcement/News,Travel Notice,Meeting Notice,Event Notice'],
+            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,Travel Information'],
             'description' => ['required', 'string'],
             'file' => ['nullable', 'file', 'max:10240'],
             'files' => ['nullable', 'array'],
@@ -154,7 +154,7 @@ class NoticeController extends Controller
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'in:Announcement/News,Travel Notice,Meeting Notice,Event Notice'],
+            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,Travel Information'],
             'description' => ['required', 'string'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:10240'],
@@ -494,6 +494,98 @@ class NoticeController extends Controller
             });
 
         return Inertia::render('Noticeboard/travel', [
+            'notices' => $notices,
+        ]);
+    }
+
+    // Display events page with calendar
+    public function events()
+    {
+        $notices = Notice::query()
+            ->with('user')
+            ->where('category', 'Notice of Event')
+            ->latest()
+            ->get()
+            ->map(function (Notice $notice) {
+                $hasFiles = is_array($notice->files) && count($notice->files) > 0;
+                $zipAvailable = class_exists(\ZipArchive::class);
+                return [
+                    'id' => $notice->id,
+                    'title' => $notice->title,
+                    'category' => $notice->category,
+                    'description' => $notice->description,
+                    'username' => optional($notice->user)->name ?? 'Unknown',
+                    'created_at' => $notice->created_at->toIso8601String(),
+                    'file_name' => $notice->file_name,
+                    'file_mime' => $notice->file_mime,
+                    'file_size' => $notice->file_size,
+                    'file_url' => $notice->file_path ? route('noticeboard.download', $notice) : null,
+                    'date' => $notice->date,
+                    'time' => $notice->time,
+                    // Array of attachments (for multiple files)
+                    'files' => collect($notice->files ?? [])->map(function ($f) {
+                        return [
+                            'path' => $f['path'] ?? null,
+                            'name' => $f['name'] ?? null,
+                            'mime' => $f['mime'] ?? null,
+                            'size' => $f['size'] ?? null,
+                            'url'  => isset($f['path']) ? Storage::url($f['path']) : null,
+                        ];
+                    })->all(),
+                    // One-click download URL and suggested filename for all attachments
+                    'files_download_url' => $hasFiles ? route('noticeboard.downloadAll', $notice) : null,
+                    'files_download_name' => $hasFiles
+                        ? ('notice-' . $notice->id . '-attachments.' . ($zipAvailable ? 'zip' : 'tar.gz'))
+                        : null,
+                ];
+            });
+
+        return Inertia::render('Noticeboard/event', [
+            'notices' => $notices,
+        ]);
+    }
+
+    // Display meetings page with calendar
+    public function meetings()
+    {
+        $notices = Notice::query()
+            ->with('user')
+            ->where('category', 'Notice of Meeting')
+            ->latest()
+            ->get()
+            ->map(function (Notice $notice) {
+                $hasFiles = is_array($notice->files) && count($notice->files) > 0;
+                $zipAvailable = class_exists(\ZipArchive::class);
+                return [
+                    'id' => $notice->id,
+                    'title' => $notice->title,
+                    'category' => $notice->category,
+                    'description' => $notice->description,
+                    'username' => optional($notice->user)->name ?? 'Unknown',
+                    'created_at' => $notice->created_at->toIso8601String(),
+                    'file_name' => $notice->file_name,
+                    'file_mime' => $notice->file_mime,
+                    'file_size' => $notice->file_size,
+                    'file_url' => $notice->file_path ? route('noticeboard.download', $notice) : null,
+                    'date' => $notice->date,
+                    'time' => $notice->time,
+                    'files' => collect($notice->files ?? [])->map(function ($f) {
+                        return [
+                            'path' => $f['path'] ?? null,
+                            'name' => $f['name'] ?? null,
+                            'mime' => $f['mime'] ?? null,
+                            'size' => $f['size'] ?? null,
+                            'url'  => isset($f['path']) ? Storage::url($f['path']) : null,
+                        ];
+                    })->all(),
+                    'files_download_url' => $hasFiles ? route('noticeboard.downloadAll', $notice) : null,
+                    'files_download_name' => $hasFiles
+                        ? ('notice-' . $notice->id . '-attachments.' . ($zipAvailable ? 'zip' : 'tar.gz'))
+                        : null,
+                ];
+            });
+
+        return Inertia::render('Noticeboard/meeting', [
             'notices' => $notices,
         ]);
     }

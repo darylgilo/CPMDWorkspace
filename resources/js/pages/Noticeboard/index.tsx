@@ -1,11 +1,11 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
-import { Search, Eye, Trash2, Pin, PinOff } from 'lucide-react';
+import { Search, Eye, Trash2, Pin, PinOff, FileText, Bell, Calendar, Clock, Plane, Megaphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useMemo, useState, useEffect, useRef } from 'react';
-type Category = 'Announcement/News' | 'Travel Notice' | 'Meeting Notice' | 'Event Notice';
+type Category = 'Announcement' | 'Notice of Meeting' | 'Notice of Event' | 'Travel Information';
 
 // Display shape for a notice card in the UI
 interface Notice {
@@ -43,17 +43,17 @@ interface FormData {
 }
 
 const categoryOptions: Category[] = [
-  'Announcement/News',
-  'Travel Notice',
-  'Meeting Notice',
-  'Event Notice',
+  'Announcement',
+  'Notice of Meeting',
+  'Notice of Event',
+  'Travel Information',
 ];
 
-const categoryIcon: Record<Category, string> = {
-  'Announcement/News': '📰',
-  'Travel Notice': '✈️',
-  'Meeting Notice': '📅',
-  'Event Notice': '📢',
+const categoryIcon: Record<Category, React.ReactNode> = {
+  'Announcement': <Megaphone className="h-5 w-5" />,
+  'Notice of Meeting': <Calendar className="h-5 w-5" />,
+  'Notice of Event': <Bell className="h-5 w-5" />,
+  'Travel Information': <Plane className="h-5 w-5" />,
 };
 
 // Generate time options in 30-minute intervals
@@ -102,7 +102,7 @@ export default function Noticeboard() {
 
   // Local form state for creating a notice
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<Category>('Announcement/News');
+  const [category, setCategory] = useState<Category>('Announcement');
   const [description, setDescription] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [date, setDate] = useState('');
@@ -114,7 +114,7 @@ export default function Noticeboard() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [editCategory, setEditCategory] = useState<Category>('Announcement/News');
+  const [editCategory, setEditCategory] = useState<Category>('Announcement');
   const [editDescription, setEditDescription] = useState('');
   const [editFiles, setEditFiles] = useState<File[]>([]);
   const [editDate, setEditDate] = useState('');
@@ -288,7 +288,7 @@ export default function Noticeboard() {
   // Reset the create-notice form
   function resetForm() {
     setTitle('');
-    setCategory('Announcement/News');
+    setCategory('Announcement');
     setDescription('');
     setFiles([]);
     setDate('');
@@ -305,7 +305,7 @@ export default function Noticeboard() {
   // Inertia form for POST /noticeboard
   const form = useForm<FormData>({
     title: '',
-    category: 'Announcement/News' as Category,
+    category: 'Announcement' as Category,
     description: '',
     files: [] as File[],
     date: '',
@@ -315,7 +315,7 @@ export default function Noticeboard() {
   // Inertia form for updating a notice
   const editForm = useForm<FormData>({
     title: '',
-    category: 'Announcement/News' as Category,
+    category: 'Announcement' as Category,
     description: '',
     files: [] as File[],
     date: '',
@@ -362,7 +362,7 @@ export default function Noticeboard() {
   // Reset edit form
   function resetEditForm() {
     setEditTitle('');
-    setEditCategory('Announcement/News');
+    setEditCategory('Announcement');
     setEditDescription('');
     setEditFiles([]);
     setEditDate('');
@@ -746,7 +746,7 @@ export default function Noticeboard() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title or user..."
+                placeholder="Search by title or description..."
                 className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 md:w-80"
               />
               <button
@@ -800,61 +800,50 @@ export default function Noticeboard() {
 
                 <h3 className="mb-1 line-clamp-1 text-base font-semibold">{n.title}</h3>
                 <p className="mb-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
-                {(n.date || n.time) && (
-                  <div className="mb-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    {n.date && (
-                      <span className="inline-flex items-center gap-1">
-                        <span>📅</span>
-                        <span>{new Date(n.date).toLocaleDateString()}</span>
-                      </span>
-                    )}
-                    {n.time && (
-                      <span className="inline-flex items-center gap-1">
-                        <span>🕐</span>
-                        <span>{n.time}</span>
-                      </span>
-                    )}
-                  </div>
-                )}
+                <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                  {n.date && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(n.date).toLocaleDateString()}
+                    </span>
+                  )}
+                  {n.time && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {n.time}
+                    </span>
+                  )}
+                </div>
 
-                {/** When a notice has multiple files, show one button that downloads an archive of all attachments */}
-                {Array.isArray(n.files) && n.files.length > 0 && n.files_download_url && (
-                  <div className="mb-3">
-                    <a
-                      href={n.files_download_url}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const filename = (n as any).files_download_name || `${n.title || 'attachments'}.zip`;
-                        downloadFile(n.files_download_url!, filename as string);
-                      }}
-                      className="inline-block w-full truncate rounded-md border bg-gray-50 px-3 py-2 text-sm hover:underline dark:border-neutral-700 dark:bg-neutral-950"
-                    >
-                      Attachments ({n.files.length})
-                    </a>
-                  </div>
-                )}
-
-                {/** Fallback: legacy single-file preview/link */}
-                {!n.files?.length && n.file && (
-                  <div className="mb-3 overflow-hidden rounded-md border text-sm dark:border-neutral-700">
-                    {isImage ? (
-                      <img
-                        src={n.file.url}
-                        alt={n.file.name}
-                        className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />)
-                    : (
+                {/* Attachments */}
+                {n.files && n.files.length > 0 && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <FileText className="h-4 w-4" />
+                    <span>{n.files.length} attachment(s)</span>
+                    {n.files_download_url && (
                       <a
-                        href={n.file.url}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          downloadFile(n.file!.url, n.file!.name);
-                        }}
-                        className="block truncate bg-gray-50 px-3 py-2 hover:underline dark:bg-neutral-950"
+                        href={n.files_download_url}
+                        className="text-[#163832] hover:underline dark:text-[#235347]"
+                        download
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {n.file.name}
+                        Download All
                       </a>
                     )}
+                  </div>
+                )}
+
+                {n.file && !n.files?.length && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <FileText className="h-4 w-4" />
+                    <a
+                      href={n.file.url}
+                      className="text-[#163832] hover:underline dark:text-[#235347]"
+                      download={n.file.name}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {n.file.name}
+                    </a>
                   </div>
                 )}
 
