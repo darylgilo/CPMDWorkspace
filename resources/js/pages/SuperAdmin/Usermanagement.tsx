@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { router, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Trash2, Power, PowerOff, Edit3, UserCheck, UserX, ChevronUp, ChevronDown, Users, TrendingUp, UserPlus, UserRoundPlus, Activity, Search } from 'lucide-react';
+import { Trash2, Power, PowerOff, Edit3, UserCheck, UserX, ChevronUp, ChevronDown, Users, TrendingUp, UserPlus, UserRoundPlus, Activity } from 'lucide-react';
+import CustomPagination from '@/components/CustomPagination';
+import SearchBar from '@/components/SearchBar';
 import FlashMessage from '@/components/flash-message';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import ToggleButton from '@/components/ToggleButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Breadcrumb navigation items for the user management page
@@ -27,10 +30,13 @@ export default function UserManagement() {
     console.log('Page props:', pageProps);
     console.log('Flash messages:', pageProps.flash);
     
-    // Search functionality state
+    // Search and filter state
     const [searchValue, setSearchValue] = useState(search || '');
     const [perPage, setPerPage] = useState<number>(Number(perPageProp) || 10);
-    const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>(statusProp === 'inactive' ? 'inactive' : 'active');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>(statusProp === 'inactive' ? 'inactive' : 'active');
+    const [localUsers, setLocalUsers] = useState(users?.data || []);
+    const [filteredUsers, setFilteredUsers] = useState(users?.data || []);
+    const [currentPage, setCurrentPage] = useState(1);
     
     // Sorting state
     const [sortField, setSortField] = useState<string>('name');
@@ -74,16 +80,84 @@ export default function UserManagement() {
     // Prefer fixed analytics from server so they do not change with table filters
     const analytics = analyticsProp ?? calculateAnalytics();
 
-    // Sync local state when props change
+    // Update local state when props change
     useEffect(() => {
-        setSearchValue(search || '');
-    }, [search]);
+        setLocalUsers(users?.data || []);
+    }, [users.data]);
+
+    // Apply all filters and sorting
     useEffect(() => {
-        setPerPage(Number(perPageProp) || 10);
-    }, [perPageProp]);
+        let results = [...localUsers];
+        
+        // Apply search filter
+        if (searchValue) {
+            const query = searchValue.toLowerCase();
+            results = results.filter(user => 
+                (user.name?.toLowerCase().includes(query) ||
+                user.email?.toLowerCase().includes(query) ||
+                user.role?.toLowerCase().includes(query))
+            );
+        }
+        
+        // Apply status filter
+        if (statusFilter !== 'all') {
+            results = results.filter(user => user.status === statusFilter);
+        }
+        
+        // Apply sorting
+        results.sort((a, b) => {
+            let aValue = a[sortField] || '';
+            let bValue = b[sortField] || '';
+            
+            // Handle potential null/undefined values
+            if (aValue === null) aValue = '';
+            if (bValue === null) bValue = '';
+            
+            // Convert to string for case-insensitive comparison
+            aValue = String(aValue).toLowerCase();
+            bValue = String(bValue).toLowerCase();
+            
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+        
+        // Handle pagination when filters change
+        const newTotalPages = Math.ceil(results.length / perPage);
+        if (currentPage > newTotalPages && newTotalPages > 0) {
+          setCurrentPage(newTotalPages);
+        } else if (currentPage === 0 && newTotalPages > 0) {
+          setCurrentPage(1);
+        } else if (searchValue || statusFilter !== 'all' || sortField !== 'name' || sortDirection !== 'asc') {
+          setCurrentPage(1);
+        }
+        
+        setFilteredUsers(results);
+    }, [searchValue, localUsers, statusFilter, sortField, sortDirection, perPage]);
+
+    // No longer updating URL with filter/sort parameters
+    const updateUrl = () => {
+        // Just update to clean URL without parameters
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+    };
+
+    // Calculate pagination with bounds checking
+    const totalItems = filteredUsers.length;
+    const totalPages = Math.ceil(totalItems / perPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * perPage;
+    const paginatedUsers = filteredUsers.slice(startIndex, startIndex + perPage);
+    
+    // Update current page if it was out of bounds
+    if (currentPage !== safeCurrentPage && totalPages > 0) {
+      setCurrentPage(safeCurrentPage);
+    }
+    
+    // Clean up URL on initial load
     useEffect(() => {
-        setStatusFilter(statusProp === 'inactive' ? 'inactive' : 'active');
-    }, [statusProp]);
+        updateUrl();
+    }, []);
     
     // Get sorting parameters from page props
     const { sort: sortProp = 'name', direction: directionProp = 'asc' } = usePage().props as any;
@@ -109,16 +183,9 @@ export default function UserManagement() {
         }
     };
     
-    // Handle search input change
+    // Handle search input change (client-side only)
     const handleSearchChange = (value: string) => {
         setSearchValue(value);
-        router.get('/superadmin/usermanagement', { 
-            search: value, 
-            perPage, 
-            status: statusFilter,
-            sort: sortField,
-            direction: sortDirection
-        }, { preserveState: true, replace: true });
     };
     
     // Handle pagination navigation (links already include query via withQueryString)
@@ -266,7 +333,26 @@ export default function UserManagement() {
                         </div>
                     </div>
                 </div>
-
+                <div className="flex items-center justify-between">
+                    <ToggleButton
+                          options={[
+                            { value: 'active', label: 'Active Users' },
+                            { value: 'inactive', label: 'New Users' }
+                          ]}
+                          activeValue={statusFilter}
+                          onChange={(value) => {
+                            setStatusFilter(value as 'active' | 'inactive');
+                            router.get('/superadmin/usermanagement', { 
+                              search: searchValue, 
+                              perPage, 
+                              status: value,
+                              sort: sortField,
+                              direction: sortDirection
+                            }, { preserveState: true, replace: true });
+                          }}
+                          className="mb-1  rounded-lg md:rounded-xl md:p-1"
+                        />
+                </div>
                 {/* Users Table */}
                 <div className="overborder-sidebar-border/70 dark:border-neutral-800 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl md:min-h-min bg-white dark:bg-neutral-900 p-4 border-t-4 border-t-[#163832] dark:border-t-[#235347] border-l border-r border-b border-gray-200 dark:border-neutral-600" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
                 {/* DataTables-style Controls */}
@@ -318,19 +404,19 @@ export default function UserManagement() {
                   
                   {/* Right: Search */}
                   <div className="w-full md:w-auto flex items-center gap-2">
-                    <label htmlFor="search" className="font-medium"></label>
-                    <div className="relative w-full md:max-w-md">
-                      <input
-                        id="search"
-                        type="text"
-                        placeholder="Search by name"
-                        value={searchValue}
-                        onChange={e => handleSearchChange(e.target.value)}
-                        className="w-full border px-3 py-2 rounded bg-white text-gray-900 placeholder-gray-500 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#163832] dark:bg-neutral-800 dark:text-gray-100 dark:placeholder-gray-400 dark:border-neutral-600"
-                        style={{ minWidth: 180 }}
-                      />
-                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    </div>
+                    <SearchBar
+                      search={searchValue}
+                      onSearchChange={handleSearchChange}
+                      placeholder="Search by name"
+                      className="w-full md:max-w-md"
+                      searchRoute="/superadmin/usermanagement"
+                      additionalParams={{
+                        perPage,
+                        status: statusFilter,
+                        sort: sortField,
+                        direction: sortDirection
+                      }}
+                    />
                   </div>
                 </div>
                     
@@ -436,6 +522,15 @@ export default function UserManagement() {
                                         ({sortDirection === 'asc' ? 'A-Z' : 'Z-A'})
                                     </span>
                                 </div>
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {searchValue ? (
+                                    <span>Found <span className="font-medium">{filteredUsers.length}</span> {filteredUsers.length === 1 ? 'user' : 'users'}{searchValue ? ' matching your search' : ''}</span>
+                                ) : (
+                                    <span>Showing <span className="font-medium">{users.from || 0}</span> to{' '}
+                                    <span className="font-medium">{users.to || 0}</span> of{' '}
+                                    <span className="font-medium">{users.total || 0}</span> users</span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -544,7 +639,8 @@ export default function UserManagement() {
                             </TableHeader>
                             <TableBody>
                                 {/* Render user rows or show "No users found" message */}
-                                {Array.isArray(users?.data) && users.data.length > 0 ? users.data.map((user: any) => (
+                                {filteredUsers && filteredUsers.length > 0 ? (
+                                    filteredUsers.map((user: any) => (
                                     <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors duration-200 cursor-default">
                                         <TableCell className="border-b px-4 py-2 border-l">{user.name}</TableCell>
                                         <TableCell className="border-b px-4 py-2">{user.email}</TableCell>
@@ -584,9 +680,12 @@ export default function UserManagement() {
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                )) : (
+                                    ))
+                                ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-4">No users found.</TableCell>
+                                        <TableCell colSpan={7} className="text-center py-4">
+                                            {searchValue ? 'No users match your search' : 'No users found'}
+                                        </TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -594,63 +693,22 @@ export default function UserManagement() {
                     </div>
                     {/* Bottom Bar: active/inactive Toggle (left) + Pagination (right) */}
                     <div className="mt-4 flex w-full items-center justify-between">
-                      {/* Status Toggle */}
-                      <div className="flex items-center gap-2">
-                        
-                        <button
-                          type="button"
-                          onClick={() => { 
-                            setStatusFilter('active'); 
-                            router.get('/superadmin/usermanagement', { 
-                                search: searchValue, 
-                                perPage, 
-                                status: 'active',
-                                sort: sortField,
-                                direction: sortDirection
-                            }, { preserveState: true, replace: true }); 
-                          }}
-                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'active' ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]' : 'bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-600'}`}
-                        >
-                          Active Users
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { 
-                            setStatusFilter('inactive'); 
-                            router.get('/superadmin/usermanagement', { 
-                                search: searchValue, 
-                                perPage, 
-                                status: 'inactive',
-                                sort: sortField,
-                                direction: sortDirection
-                            }, { preserveState: true, replace: true }); 
-                          }}
-                          className={`px-3 py-1 rounded border text-sm ${statusFilter === 'inactive' ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]': 'bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-600'}`}
-                        >
-                          New Users
-                        </button>
-                      </div>
-
-                      {/* Pagination Controls */}
-                      {users.links && users.links.length > 1 && (
-                        <div className="flex items-center justify-end gap-2 flex-wrap">
-                          {users.links.map((link: any, idx: number) => (
-                            <button
-                              key={idx}
-                              disabled={!link.url}
-                              className={`px-3 py-1 rounded border transition-colors ${
-                                link.active
-                                  ? 'bg-[#163832] text-white hover:bg-[#163832]/90 border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]'
-                                  : (link.label?.includes('Previous') || link.label?.includes('Next'))
-                                      ? 'bg-[#163832] text-white hover:bg-[#235347] border-[#163832] dark:bg-[#235347] dark:hover:bg-[#235347]/90 dark:border-[#235347]'
-                                      : 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-gray-100 dark:border-neutral-600'
-                              }`}
-                              dangerouslySetInnerHTML={{ __html: link.label }}
-                              onClick={() => link.url && handlePageChange(link.url)}
-                            />
-                          ))}
+                      {/* Pagination */}
+                      <div className="mt-4 w-full overflow-x-auto">
+                        <div className="min-w-max">
+                          <CustomPagination
+                            currentPage={currentPage}
+                            totalItems={filteredUsers.length}
+                            perPage={perPage}
+                            onPageChange={(page) => {
+                              setCurrentPage(page);
+                              // Scroll to top of the table when changing pages
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="w-full"
+                          />
                         </div>
-                      )}
+                      </div>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
-import { Calendar as CalendarIcon, Clock, User, FileText, ChevronLeft, ChevronRight, Search, Megaphone } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, FileText, ChevronLeft, ChevronRight, Megaphone } from 'lucide-react';
+import SearchBar from '@/components/SearchBar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { useMemo, useState } from 'react';
@@ -246,21 +247,13 @@ export default function AnnouncementPage() {
               )}
               
               {/* Search Bar */}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+              <div className="w-full md:w-80">
+                <SearchBar
+                  search={search}
+                  onSearchChange={setSearch}
                   placeholder="Search by title or user..."
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 md:w-80"
+                  className="w-full"
                 />
-                <button
-                  type="button"
-                  aria-label="Search"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-neutral-800"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
               </div>
             </div>
           </div>
