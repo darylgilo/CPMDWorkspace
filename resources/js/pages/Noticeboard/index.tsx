@@ -1,5 +1,7 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
-import { Search, Eye, Trash2, Pin, PinOff, FileText, Bell, Calendar, Clock, Plane, Megaphone } from 'lucide-react';
+import { Eye, Trash2, Pin, PinOff, FileText, Bell, Calendar, Clock, Plane, Megaphone } from 'lucide-react';
+import CustomPagination from '@/components/CustomPagination';
+import SearchBar from '@/components/SearchBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
@@ -123,6 +125,8 @@ export default function Noticeboard() {
 
   const [filterCategory, setFilterCategory] = useState<'All' | Category>('All');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
   const [pinnedNotices, setPinnedNotices] = useState<Set<string>>(() => {
     // Load pinned notices from localStorage on initial render
     if (typeof window !== 'undefined') {
@@ -232,7 +236,23 @@ export default function Noticeboard() {
         // If both are pinned or both are not pinned, sort by date
         return a.createdAt < b.createdAt ? 1 : -1;
       });
-  }, [mappedNotices, filterCategory, search]);
+  }, [mappedNotices, filterCategory, search, pinnedNotices]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedNotices = filteredNotices.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change or adjust current page when items per page changes
+  useEffect(() => {
+    const newTotalPages = Math.ceil(filteredNotices.length / itemsPerPage);
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    } else if (currentPage === 0 && newTotalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [filterCategory, search, itemsPerPage, filteredNotices.length, currentPage]);
 
   // Programmatically download a file/blob given a URL and an optional filename
   async function downloadFile(url: string, filename?: string) {
@@ -411,8 +431,9 @@ export default function Noticeboard() {
 
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
         <div className="rounded-xl border border-sidebar-border/70 bg-white p-4 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3">
+            {/* Top row - Create button */}
+            <div className="flex items-center">
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <button
@@ -530,6 +551,57 @@ export default function Noticeboard() {
                   </form>
                 </DialogContent>
               </Dialog>
+            </div>
+
+            {/* Second row - Filters and Search */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              {/* Filters on the left */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as any)}>
+                  <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                    <SelectItem value="All" className="hover:bg-[#1a4d3e] cursor-pointer">
+                      All Categories
+                    </SelectItem>
+                    {categoryOptions.map((opt) => (
+                      <SelectItem 
+                        key={opt} 
+                        value={opt}
+                        className="hover:bg-[#1a4d3e] cursor-pointer"
+                      >
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(value) => setItemsPerPage(parseInt(value))}
+                >
+                  <SelectTrigger className="w-[150px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectValue placeholder="Items per page" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                    <SelectItem value="12" className="hover:bg-[#1a4d3e] cursor-pointer">12 per page</SelectItem>
+                    <SelectItem value="24" className="hover:bg-[#1a4d3e] cursor-pointer">24 per page</SelectItem>
+                    <SelectItem value="48" className="hover:bg-[#1a4d3e] cursor-pointer">48 per page</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterCategory('All');
+                    setSearch('');
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition"
+                >
+                  Clear
+                </button>
+              </div>
 
               {/* View/Edit Notice Dialog */}
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -721,48 +793,21 @@ export default function Noticeboard() {
                 </DialogContent>
               </Dialog>
 
-              <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as any)}>
-                <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
-                  <SelectItem value="All" className="hover:bg-[#1a4d3e] cursor-pointer">
-                    All Categories
-                  </SelectItem>
-                  {categoryOptions.map((opt) => (
-                    <SelectItem 
-                      key={opt} 
-                      value={opt}
-                      className="hover:bg-[#1a4d3e] cursor-pointer"
-                    >
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by title or description..."
-                className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 md:w-80"
-              />
-              <button
-                type="button"
-                aria-label="Search"
-                onClick={() => {}}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-neutral-800"
-              >
-                <Search className="h-4 w-4" />
-              </button>
+              {/* Search on the right */}
+              <div className="w-full md:w-80">
+                <SearchBar
+                  search={search}
+                  onSearchChange={setSearch}
+                  placeholder="Search by title or description..."
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
         
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredNotices.map((n) => {
+          {paginatedNotices.map((n) => {
             const isImage = n.file?.type?.startsWith('image/');
             return (
               <div
@@ -868,6 +913,16 @@ export default function Noticeboard() {
               No notices yet. Create one above.
             </div>
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-4">
+          <CustomPagination
+            currentPage={currentPage}
+            totalItems={filteredNotices.length}
+            perPage={itemsPerPage}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </div>
       </div>
     </AppLayout>
