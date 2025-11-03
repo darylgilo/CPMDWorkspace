@@ -179,7 +179,7 @@ export default function AnnouncementPage() {
     const days: (Date | null)[] = [];
 
     // Add empty cells for days before the first day of the month
-    for (let i = 0; i <firstDay; i++) {
+    for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
 
