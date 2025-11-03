@@ -1,8 +1,9 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
-import { Eye, Trash2, Pin, PinOff, FileText, Bell, Calendar, Clock, Plane, Megaphone } from 'lucide-react';
+import { Trash2, FileText, Bell, Calendar, Clock, Plane, Megaphone, RotateCcw } from 'lucide-react';
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import CustomCardPin from '@/components/ui/CustomCardPin';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -430,15 +431,15 @@ export default function Noticeboard() {
       <Head title="Noticeboard" />
 
       <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
-        <div className="rounded-xl border border-sidebar-border/70 bg-white p-4 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
-          <div className="flex flex-col gap-3">
-            {/* Top row - Create button */}
-            <div className="flex items-center">
-              <Dialog open={open} onOpenChange={setOpen}>
+        {/* Header actions */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white dark:bg-neutral-900 rounded-md border border-gray-200 dark:border-neutral-800 p-3 md:p-4 shadow-sm">
+          {/* Filters and Create button on the left */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
                   <button
                     disabled={form.processing}
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition"
                   >
                     Create Notice
                   </button>
@@ -551,60 +552,68 @@ export default function Noticeboard() {
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
 
-            {/* Second row - Filters and Search */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              {/* Filters on the left */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as any)}>
-                  <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
-                    <SelectItem value="All" className="hover:bg-[#1a4d3e] cursor-pointer">
-                      All Categories
-                    </SelectItem>
-                    {categoryOptions.map((opt) => (
-                      <SelectItem 
-                        key={opt} 
-                        value={opt}
-                        className="hover:bg-[#1a4d3e] cursor-pointer"
-                      >
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as any)}>
+              <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                <SelectItem value="All" className="hover:bg-[#1a4d3e] cursor-pointer">
+                  All Categories
+                </SelectItem>
+                {categoryOptions.map((opt) => (
+                  <SelectItem 
+                    key={opt} 
+                    value={opt}
+                    className="hover:bg-[#1a4d3e] cursor-pointer"
+                  >
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <Select
-                  value={itemsPerPage.toString()}
-                  onValueChange={(value) => setItemsPerPage(parseInt(value))}
-                >
-                  <SelectTrigger className="w-[150px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                    <SelectValue placeholder="Items per page" />
-                  </SelectTrigger>
-                  <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
-                    <SelectItem value="12" className="hover:bg-[#1a4d3e] cursor-pointer">12 per page</SelectItem>
-                    <SelectItem value="24" className="hover:bg-[#1a4d3e] cursor-pointer">24 per page</SelectItem>
-                    <SelectItem value="48" className="hover:bg-[#1a4d3e] cursor-pointer">48 per page</SelectItem>
-                  </SelectContent>
-                </Select>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => setItemsPerPage(parseInt(value))}
+            >
+              <SelectTrigger className="w-[150px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                <SelectValue placeholder="Items per page" />
+              </SelectTrigger>
+              <SelectContent className="dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
+                <SelectItem value="12" className="hover:bg-[#1a4d3e] cursor-pointer">12 per page</SelectItem>
+                <SelectItem value="24" className="hover:bg-[#1a4d3e] cursor-pointer">24 per page</SelectItem>
+                <SelectItem value="48" className="hover:bg-[#1a4d3e] cursor-pointer">48 per page</SelectItem>
+              </SelectContent>
+            </Select>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterCategory('All');
-                    setSearch('');
-                  }}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 px-3 py-2 text-sm text-white transition"
-                >
-                  Clear
-                </button>
-              </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFilterCategory('All');
+                setSearch('');
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 p-2 text-white transition"
+              title="Reset filters"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
 
-              {/* View/Edit Notice Dialog */}
-              <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          {/* Search on the right */}
+          <div className="w-full md:w-auto">
+
+            <SearchBar
+              search={search}
+              onSearchChange={setSearch}
+              placeholder="Search by title or description..."
+              className="w-full md:max-w-md"
+            />
+          </div>
+        </div>
+
+        {/* View/Edit Notice Dialog */}
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{isEditMode ? 'Edit Notice' : 'View Notice'}</DialogTitle>
@@ -792,119 +801,32 @@ export default function Noticeboard() {
                   </form>
                 </DialogContent>
               </Dialog>
-
-              {/* Search on the right */}
-              <div className="w-full md:w-80">
-                <SearchBar
-                  search={search}
-                  onSearchChange={setSearch}
-                  placeholder="Search by title or description..."
-                  className="w-full"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
         
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {paginatedNotices.map((n) => {
-            const isImage = n.file?.type?.startsWith('image/');
+            const category = {
+              id: n.category.toLowerCase(),
+              name: n.category,
+              icon: categoryIcon[n.category] || null
+            };
+
             return (
-              <div
+              <CustomCardPin
                 key={n.id}
-                className="group flex flex-col rounded-xl border border-sidebar-border/70 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-sidebar-border dark:bg-neutral-900"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl" aria-hidden>{categoryIcon[n.category]}</span>
-                    <span
-                      className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      {n.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">{new Date(n.createdAt).toLocaleString()}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        togglePin(n.id);
-                      }}
-                      className="text-gray-400 hover:text-yellow-500 transition-colors"
-                      aria-label={pinnedNotices.has(n.id) ? 'Unpin notice' : 'Pin notice'}
-                      title={pinnedNotices.has(n.id) ? 'Unpin' : 'Pin to top'}
-                    >
-                      {pinnedNotices.has(n.id) ? (
-                        <Pin className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      ) : (
-                        <Pin className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <h3 className="mb-1 line-clamp-1 text-base font-semibold">{n.title}</h3>
-                <p className="mb-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{n.description}</p>
-                <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  {n.date && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(n.date).toLocaleDateString()}
-                    </span>
-                  )}
-                  {n.time && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {n.time}
-                    </span>
-                  )}
-                </div>
-
-                {/* Attachments */}
-                {n.files && n.files.length > 0 && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <FileText className="h-4 w-4" />
-                    <span>{n.files.length} attachment(s)</span>
-                    {n.files_download_url && (
-                      <a
-                        href={n.files_download_url}
-                        className="text-[#163832] hover:underline dark:text-[#235347]"
-                        download
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Download All
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {n.file && !n.files?.length && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <FileText className="h-4 w-4" />
-                    <a
-                      href={n.file.url}
-                      className="text-[#163832] hover:underline dark:text-[#235347]"
-                      download={n.file.name}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {n.file.name}
-                    </a>
-                  </div>
-                )}
-
-                <div className="mt-auto flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                  <span>Posted by {n.username}</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEditDialog(n)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#163832] hover:bg-[#163832]/90 text-white text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      View
-                    </button>
-                  </div>
-                </div>
-              </div>
+                id={n.id}
+                title={n.title}
+                description={n.description}
+                category={category}
+                username={n.username}
+                createdAt={n.createdAt}
+                date={n.date}
+                time={n.time}
+                files={n.files || (n.file ? [n.file] : [])}
+                files_download_url={n.files_download_url}
+                isPinned={pinnedNotices.has(n.id)}
+                onPinClick={togglePin}
+                onViewClick={() => openEditDialog(n)}
+              />
             );
           })}
 
