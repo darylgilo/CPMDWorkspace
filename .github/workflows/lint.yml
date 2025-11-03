@@ -28,6 +28,19 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+
+      - name: Generate routes
+        run: npm run build
+
       - name: Type check
         run: npm run types
 
