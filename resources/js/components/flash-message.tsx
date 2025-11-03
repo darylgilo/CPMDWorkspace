@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
 import { usePage } from '@inertiajs/react';
-import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface FlashMessageProps {
     type?: 'success' | 'error' | 'warning' | 'info';
@@ -9,20 +9,20 @@ interface FlashMessageProps {
     duration?: number;
 }
 
-export default function FlashMessage({ 
-    type = 'success', 
-    message, 
-    autoClose = true, 
-    duration = 10000 
+export default function FlashMessage({
+    type = 'success',
+    message,
+    autoClose = true,
+    duration = 10000,
 }: FlashMessageProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [displayMessage, setDisplayMessage] = useState('');
     const timeoutRef = useRef<number | null>(null);
     const pageProps = usePage().props as any;
-    
+
     // Get flash message from page props if no message is provided
     const flashMessage = message || pageProps.flash?.[type];
-    
+
     // Clear any existing timeout
     const clearTimer = () => {
         if (timeoutRef.current) {
@@ -30,17 +30,17 @@ export default function FlashMessage({
             timeoutRef.current = null;
         }
     };
-    
+
     // Show message when it exists
     useEffect(() => {
         if (flashMessage && flashMessage !== displayMessage) {
             console.log(`Flash message (${type}):`, flashMessage);
             setDisplayMessage(flashMessage);
             setIsVisible(true);
-            
+
             // Clear any existing timeout
             clearTimer();
-            
+
             if (autoClose) {
                 timeoutRef.current = window.setTimeout(() => {
                     setIsVisible(false);
@@ -52,24 +52,24 @@ export default function FlashMessage({
             setDisplayMessage('');
             clearTimer();
         }
-        
+
         // Cleanup on unmount
         return () => {
             clearTimer();
         };
     }, [flashMessage, type, autoClose, duration]);
-    
+
     // Handle manual close
     const handleClose = () => {
         clearTimer();
         setIsVisible(false);
         setDisplayMessage('');
     };
-    
+
     if (!flashMessage || !isVisible || !displayMessage) {
         return null;
     }
-    
+
     const getIcon = () => {
         switch (type) {
             case 'success':
@@ -84,7 +84,7 @@ export default function FlashMessage({
                 return <CheckCircle className="h-5 w-5" />;
         }
     };
-    
+
     const getStyles = () => {
         switch (type) {
             case 'success':
@@ -99,23 +99,21 @@ export default function FlashMessage({
                 return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200';
         }
     };
-    
+
     return (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-full animate-in slide-in-from-top-2 duration-300`}>
+        <div
+            className={`fixed top-4 left-1/2 z-50 w-full max-w-sm -translate-x-1/2 transform duration-300 animate-in slide-in-from-top-2`}
+        >
             <div className={`rounded-lg border p-4 shadow-lg ${getStyles()}`}>
                 <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                        {getIcon()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">
-                            {displayMessage}
-                        </p>
+                    <div className="flex-shrink-0">{getIcon()}</div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{displayMessage}</p>
                     </div>
                     <div className="flex-shrink-0">
                         <button
                             onClick={handleClose}
-                            className="inline-flex h-5 w-5 items-center justify-center rounded-md text-current hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                            className="inline-flex h-5 w-5 items-center justify-center rounded-md text-current transition-colors hover:bg-black/10 dark:hover:bg-white/10"
                         >
                             <X className="h-4 w-4" />
                         </button>
