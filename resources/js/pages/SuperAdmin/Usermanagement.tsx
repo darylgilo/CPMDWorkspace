@@ -333,7 +333,7 @@ export default function UserManagement() {
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between ">
                     <ToggleButton
                           options={[
                             { value: 'active', label: 'Active Users' },
@@ -350,7 +350,7 @@ export default function UserManagement() {
                               direction: sortDirection
                             }, { preserveState: true, replace: true });
                           }}
-                          className="mb-1  rounded-lg md:rounded-xl md:p-1"
+                          className="mb-1  rounded-lg md:rounded-xl md:p-1 shadow-sm"
                         />
                 </div>
                 {/* Users Table */}
