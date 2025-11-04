@@ -19,6 +19,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import {
     Activity,
     ChevronDown,
@@ -81,13 +82,15 @@ interface AnalyticsData {
     [key: string]: number; // Index signature for dynamic properties
 }
 
-interface PageProps {
+interface PageProps extends InertiaPageProps {
     users?: {
         data: User[];
         current_page?: number;
         last_page?: number;
         per_page?: number;
         total?: number;
+        from?: number;
+        to?: number;
         [key: string]: unknown;
     };
     search?: string;
@@ -714,15 +717,15 @@ export default function UserManagement() {
                                         <span>
                                             Showing{' '}
                                             <span className="font-medium">
-                                                {users.from || 0}
+                                                {users.from !== undefined ? users.from : 0}
                                             </span>{' '}
                                             to{' '}
                                             <span className="font-medium">
-                                                {users.to || 0}
+                                                {users.to !== undefined ? users.to : 0}
                                             </span>{' '}
                                             of{' '}
                                             <span className="font-medium">
-                                                {users.total || 0}
+                                                {users.total !== undefined ? users.total : 0}
                                             </span>{' '}
                                             users
                                         </span>
