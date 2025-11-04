@@ -21,8 +21,8 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Bell,
     Calendar,
+    FileText,
     Megaphone,
-    Plane,
     RotateCcw,
     Trash2,
 } from 'lucide-react';
@@ -31,7 +31,7 @@ type Category =
     | 'Announcement'
     | 'Notice of Meeting'
     | 'Notice of Event'
-    | 'Travel Information';
+    | 'MEMO';
 
 // Display shape for a notice card in the UI
 interface Notice {
@@ -72,14 +72,14 @@ const categoryOptions: Category[] = [
     'Announcement',
     'Notice of Meeting',
     'Notice of Event',
-    'Travel Information',
+    'MEMO',
 ];
 
 const categoryIcon: Record<Category, React.ReactNode> = {
     Announcement: <Megaphone className="h-5 w-5" />,
     'Notice of Meeting': <Calendar className="h-5 w-5" />,
     'Notice of Event': <Bell className="h-5 w-5" />,
-    'Travel Information': <Plane className="h-5 w-5" />,
+    MEMO: <FileText className="h-5 w-5" />,
 };
 
 // Generate time options in 30-minute intervals

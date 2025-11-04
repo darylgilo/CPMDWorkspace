@@ -8,14 +8,20 @@ import {
     ChevronRight,
     Clock,
     FileText,
-    Plane,
     User,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+type Category =
+    | 'Announcement'
+    | 'Notice of Meeting'
+    | 'Notice of Event'
+    | 'MEMO';
+
 interface Notice {
     id: string;
     title: string;
+    category: Category;
     description: string;
     username: string;
     createdAt: string;
@@ -28,8 +34,12 @@ interface Notice {
         type: string;
         size: number;
     } | null;
-    files?: Array<{ name: string; url: string; type: string; size: number }>;
-    category: string;
+    files?: Array<{
+        name: string;
+        url: string;
+        type: string;
+        size: number;
+    }>;
 }
 
 // Helper function to get days in a month
@@ -59,30 +69,12 @@ function isSameDay(date1: Date, date2: Date): boolean {
     );
 }
 
-export default function AnnouncementPage() {
-    interface PageProps {
-        notices?: Array<{
-            id: number | string;
-            title: string;
-            description: string;
-            username: string;
-            created_at: string;
-            date?: string | null;
-            time?: string | null;
-            files_download_url?: string | null;
-            files?: Array<{
-                name?: string;
-                url: string;
-                mime?: string;
-                size?: number | string;
-            }>;
-            [key: string]: unknown;
-        }>;
-        [key: string]: unknown;
-    }
-
-    const { props } = usePage<PageProps>();
-    const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
+export default function MemoPage() {
+    const pageProps = usePage().props as Record<string, unknown>;
+    const serverNotices = useMemo(
+        () => (pageProps?.notices as Array<Record<string, unknown>>) ?? [],
+        [pageProps?.notices],
+    );
 
     // Current date state for calendar navigation
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -106,7 +98,7 @@ export default function AnnouncementPage() {
     const mappedNotices: Notice[] = useMemo(() => {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
-                ? n.files.map((f) => ({
+                ? (n.files as Array<Record<string, unknown>>).map((f) => ({
                       name: f.name ?? 'file',
                       url: f.url,
                       type: f.mime ?? '',
@@ -116,6 +108,7 @@ export default function AnnouncementPage() {
             return {
                 id: String(n.id),
                 title: n.title,
+                category: n.category as Category,
                 description: n.description,
                 username: n.username,
                 createdAt: n.created_at,
@@ -131,15 +124,14 @@ export default function AnnouncementPage() {
                       }
                     : null,
                 files: filesArr,
-                category: n.category,
             } as Notice;
         });
     }, [serverNotices]);
 
-    // Filter only Travel category and apply search
-    const announcements = useMemo(() => {
+    // Filter only MEMO category and apply search
+    const memos = useMemo(() => {
         return mappedNotices
-            .filter((n) => n.category === 'Travel Information')
+            .filter((n) => n.category === 'MEMO')
             .filter((n) => {
                 const q = search.trim().toLowerCase();
                 if (!q) return true;
@@ -151,29 +143,29 @@ export default function AnnouncementPage() {
             });
     }, [mappedNotices, search]);
 
-    // Group announcements by date
-    const announcementsByDate = useMemo(() => {
+    // Group memos by date
+    const memosByDate = useMemo(() => {
         const grouped = new Map<string, Notice[]>();
-        announcements.forEach((announcement) => {
-            if (announcement.date) {
-                const dateKey = announcement.date;
+        memos.forEach((memo) => {
+            if (memo.date) {
+                const dateKey = memo.date;
                 if (!grouped.has(dateKey)) {
                     grouped.set(dateKey, []);
                 }
-                grouped.get(dateKey)!.push(announcement);
+                grouped.get(dateKey)!.push(memo);
             }
         });
         return grouped;
-    }, [announcements]);
+    }, [memos]);
 
-    // Get announcements for selected date or all announcements
-    const displayedAnnouncements = useMemo(() => {
+    // Get memos for selected date or all memos
+    const displayedMemos = useMemo(() => {
         if (selectedDate) {
             const dateKey = formatDate(selectedDate);
-            return announcementsByDate.get(dateKey) || [];
+            return memosByDate.get(dateKey) || [];
         }
-        return announcements;
-    }, [selectedDate, announcements, announcementsByDate]);
+        return memos;
+    }, [selectedDate, memos, memosByDate]);
 
     // Calendar navigation
     const goToPreviousMonth = () => {
@@ -234,26 +226,28 @@ export default function AnnouncementPage() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Travel Information', href: '/noticeboard/travel' },
+        { title: 'Memo', href: '/noticeboard/memo' },
     ];
 
-    // Check if a date has travels
-    const hasAnnouncements = (date: Date): boolean => {
+    // Check if a date has memos
+    const hasMemos = (date: Date): boolean => {
         const dateKey = formatDate(date);
-        return announcementsByDate.has(dateKey);
+        return memosByDate.has(dateKey);
     };
 
-    // Get announcement count for a date
-    const getAnnouncementCount = (date: Date): number => {
+    // Get memo count for a date
+    const getMemoCount = (date: Date): number => {
         const dateKey = formatDate(date);
-        return announcementsByDate.get(dateKey)?.length || 0;
+        return memosByDate.get(dateKey)?.length || 0;
     };
 
     const today = new Date();
 
+    console.log('pageProps:', pageProps);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Travel Information" />
+            <Head title="Memo" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
                 {/* Header */}
@@ -261,19 +255,12 @@ export default function AnnouncementPage() {
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Travel Information
+                                Memo
                             </h1>
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 {selectedDate
-                                    ? `Showing travel information for ${selectedDate.toLocaleDateString(
-                                          'en-US',
-                                          {
-                                              month: 'long',
-                                              day: 'numeric',
-                                              year: 'numeric',
-                                          },
-                                      )}`
-                                    : 'View all travel information with scheduled dates'}
+                                    ? `Showing memos for ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                                    : 'View all memos'}
                             </p>
                         </div>
 
@@ -302,163 +289,144 @@ export default function AnnouncementPage() {
 
                 {/* Main Content Grid */}
                 <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Announcements List */}
+                    {/* Memo List */}
                     <div className="lg:col-span-2">
                         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
                             <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                                 {selectedDate
-                                    ? `Travel Information (${displayedAnnouncements.length})`
-                                    : `All Travel Information (${announcements.length})`}
+                                    ? `Memos (${displayedMemos.length})`
+                                    : `All Memos (${memos.length})`}
                             </h2>
 
                             <div className="space-y-4">
-                                {displayedAnnouncements.length > 0 ? (
-                                    displayedAnnouncements.map(
-                                        (announcement) => {
-                                            const isExpanded =
-                                                expandedCards.has(
-                                                    announcement.id,
-                                                );
-                                            return (
-                                                <div
-                                                    key={announcement.id}
-                                                    className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
-                                                >
-                                                    <div className="mb-3 flex items-start justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <Plane
-                                                                className="h-6 w-6"
-                                                                aria-hidden
-                                                            />
-                                                            <div>
-                                                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                {displayedMemos.length > 0 ? (
+                                    displayedMemos.map((memo) => {
+                                        const isExpanded = expandedCards.has(
+                                            memo.id,
+                                        );
+                                        return (
+                                            <div
+                                                key={memo.id}
+                                                className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                                            >
+                                                <div className="mb-3 flex items-start justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText
+                                                            className="h-6 w-6"
+                                                            aria-hidden
+                                                        />
+                                                        <div>
+                                                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                                {memo.title}
+                                                            </h3>
+                                                            <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                                                <span className="flex items-center gap-1">
+                                                                    <User className="h-3 w-3" />
                                                                     {
-                                                                        announcement.title
+                                                                        memo.username
                                                                     }
-                                                                </h3>
-                                                                <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                    <span className="flex items-center gap-1">
-                                                                        <User className="h-3 w-3" />
-                                                                        {
-                                                                            announcement.username
-                                                                        }
-                                                                    </span>
-                                                                    Posted on{' '}
-                                                                    {new Date(
-                                                                        announcement.createdAt,
-                                                                    ).toLocaleString()}
-                                                                </div>
+                                                                </span>
+                                                                Posted on{' '}
+                                                                {new Date(
+                                                                    memo.createdAt,
+                                                                ).toLocaleString()}
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                    <p
-                                                        className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
-                                                    >
-                                                        {
-                                                            announcement.description
+                                                <p
+                                                    className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                >
+                                                    {memo.description}
+                                                </p>
+                                                {memo.description.length >
+                                                    150 && (
+                                                    <button
+                                                        onClick={() =>
+                                                            toggleCardExpansion(
+                                                                memo.id,
+                                                            )
                                                         }
-                                                    </p>
-                                                    {announcement.description
-                                                        .length > 150 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleCardExpansion(
-                                                                    announcement.id,
-                                                                )
-                                                            }
-                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                        >
-                                                            {isExpanded
-                                                                ? 'Show less'
-                                                                : 'Read more'}
-                                                        </button>
-                                                    )}
+                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                    >
+                                                        {isExpanded
+                                                            ? 'Show less'
+                                                            : 'Read more'}
+                                                    </button>
+                                                )}
 
-                                                    {/* Attachments */}
-                                                    {announcement.files &&
-                                                        announcement.files
-                                                            .length > 0 && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
-                                                                <span>
-                                                                    {
-                                                                        announcement
-                                                                            .files
-                                                                            .length
-                                                                    }{' '}
-                                                                    attachment(s)
-                                                                </span>
-                                                                {announcement.files_download_url && (
-                                                                    <a
-                                                                        href={
-                                                                            announcement.files_download_url
-                                                                        }
-                                                                        className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                        download
-                                                                    >
-                                                                        Download
-                                                                        All
-                                                                    </a>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                    {announcement.file &&
-                                                        !announcement.files
-                                                            ?.length && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
+                                                {/* Attachments */}
+                                                {memo.files &&
+                                                    memo.files.length > 0 && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <span>
+                                                                {
+                                                                    memo.files
+                                                                        .length
+                                                                }{' '}
+                                                                attachment(s)
+                                                            </span>
+                                                            {memo.files_download_url && (
                                                                 <a
                                                                     href={
-                                                                        announcement
-                                                                            .file
-                                                                            .url
+                                                                        memo.files_download_url
                                                                     }
                                                                     className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download={
-                                                                        announcement
-                                                                            .file
-                                                                            .name
-                                                                    }
+                                                                    download
                                                                 >
-                                                                    {
-                                                                        announcement
-                                                                            .file
-                                                                            .name
-                                                                    }
+                                                                    Download All
                                                                 </a>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
+                                                    )}
 
-                                                    <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                        {announcement.date && (
-                                                            <span className="flex items-center gap-1">
-                                                                <CalendarIcon className="h-3 w-3" />
-                                                                {new Date(
-                                                                    announcement.date,
-                                                                ).toLocaleDateString()}
-                                                            </span>
-                                                        )}
-                                                        {announcement.time && (
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" />
-                                                                {
-                                                                    announcement.time
+                                                {memo.file &&
+                                                    !memo.files?.length && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <a
+                                                                href={
+                                                                    memo.file
+                                                                        .url
                                                                 }
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                                download={
+                                                                    memo.file
+                                                                        .name
+                                                                }
+                                                            >
+                                                                {memo.file.name}
+                                                            </a>
+                                                        </div>
+                                                    )}
+
+                                                <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                                                    {memo.date && (
+                                                        <span className="flex items-center gap-1">
+                                                            <CalendarIcon className="h-3 w-3" />
+                                                            {new Date(
+                                                                memo.date,
+                                                            ).toLocaleDateString()}
+                                                        </span>
+                                                    )}
+                                                    {memo.time && (
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            {memo.time}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            );
-                                        },
-                                    )
+                                            </div>
+                                        );
+                                    })
                                 ) : (
                                     <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-neutral-700">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
                                             {selectedDate
-                                                ? 'No announcements scheduled for this date.'
-                                                : 'No announcements available.'}
+                                                ? 'No memos scheduled for this date.'
+                                                : 'No memos available.'}
                                         </p>
                                     </div>
                                 )}
@@ -525,9 +493,8 @@ export default function AnnouncementPage() {
                                     const isSelected =
                                         selectedDate &&
                                         isSameDay(day, selectedDate);
-                                    const hasEvents = hasAnnouncements(day);
-                                    const eventCount =
-                                        getAnnouncementCount(day);
+                                    const hasEvents = hasMemos(day);
+                                    const eventCount = getMemoCount(day);
 
                                     return (
                                         <button
@@ -551,8 +518,8 @@ export default function AnnouncementPage() {
                             {/* Legend */}
                             <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
-                                    <span>Travel</span>
+                                    <FileText className="h-3 w-3" />
+                                    <span>Memo</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                     <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
@@ -568,10 +535,10 @@ export default function AnnouncementPage() {
                             <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-neutral-800">
                                 <div className="text-center">
                                     <div className="text-3xl font-bold text-[#163832] dark:text-[#235347]">
-                                        {announcements.length}
+                                        {memos.length}
                                     </div>
                                     <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                        Total Travel Information
+                                        Total Memos
                                     </div>
                                 </div>
                             </div>

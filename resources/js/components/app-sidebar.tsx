@@ -75,8 +75,8 @@ const data = {
                     url: '/noticeboard/event',
                 },
                 {
-                    title: 'Travel Information',
-                    url: '/noticeboard/travel',
+                    title: 'MEMO',
+                    url: '/noticeboard/memo',
                 },
             ],
         },
