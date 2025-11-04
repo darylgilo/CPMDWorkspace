@@ -453,7 +453,7 @@ export default function EmployeeDirectory() {
                                                 `/directory/${employee.id}`,
                                             )
                                         }
-                                        className="inline-flex items-center gap-1 rounded-md bg-[#1a4d3e] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832] dark:bg-[#235347] dark:hover:bg-[#1a4d3e] "
+                                        className="inline-flex items-center gap-1 rounded-md bg-[#1a4d3e] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832] dark:bg-[#235347] dark:hover:bg-[#1a4d3e]"
                                     >
                                         <Eye className="h-3.5 w-3.5" />
                                         <span>View</span>
