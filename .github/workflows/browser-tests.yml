@@ -8,7 +8,6 @@ on:
 
 jobs:
   test:
-    if: false  # Temporarily disabled until browser tests are added/configured
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -35,6 +34,18 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
       - name: Copy .env
         run: cp .env.example .env
 
@@ -49,8 +60,8 @@ jobs:
           DB_PASSWORD: root
           APP_ENV: testing
 
-      - name: Run migrations
-        run: php artisan migrate --env=testing
+      - name: Clear config and cache
+        run: php artisan config:clear
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -58,6 +69,18 @@ jobs:
           DB_DATABASE: laravel
           DB_USERNAME: root
           DB_PASSWORD: root
+          APP_ENV: testing
+
+      - name: Run migrations
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          APP_ENV: testing
 
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
@@ -70,9 +93,24 @@ jobs:
           APP_ENV: testing
           APP_URL: http://127.0.0.1:8000
           DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
           DB_DATABASE: laravel
           DB_USERNAME: root
           DB_PASSWORD: root
 
+      - name: Wait for server
+        run: |
+          timeout 30 bash -c 'until curl -s http://127.0.0.1:8000 > /dev/null; do sleep 1; done' || exit 1
+
       - name: Run unit tests
         run: php artisan test
+        env:
+          APP_ENV: testing
+          APP_URL: http://127.0.0.1:8000
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: laravel
+          DB_USERNAME: root
+          DB_PASSWORD: root

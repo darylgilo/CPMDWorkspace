@@ -1,25 +1,61 @@
-import { useState, useEffect, useRef } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import HeadingSmall from '@/components/heading-small';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
-import HeadingSmall from '@/components/heading-small';
 import { Separator } from '@/components/ui/separator';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHeader,
+    TableRow,
 } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+
+interface UserType {
+    id: number;
+    name: string;
+    email: string;
+    role: 'user' | 'admin' | 'superadmin';
+    status: 'active' | 'inactive';
+    employee_id?: string;
+    position?: string;
+    employment_status?: string;
+    office?: string;
+    cpmd?: string;
+    tin_number?: string;
+    gsis_number?: string;
+    address?: string;
+    date_of_birth?: string;
+    hiring_date?: string;
+    item_number?: string;
+    gender?: string;
+    mobile_number?: string;
+    contact_number?: string;
+    contact_person?: string;
+    profile_picture?: string;
+}
+
+interface PageProps {
+    user: UserType;
+    auth: {
+        user: UserType;
+    };
+    errors: Record<string, string>;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    [key: string]: unknown;
+}
 
 export default function EditUserManagement() {
-    const pageProps = usePage().props as any;
-    const { user, auth, errors } = pageProps;
-    
+    const { props } = usePage<PageProps>();
+    const { user, errors } = props;
+
     // Basic user fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -27,7 +63,7 @@ export default function EditUserManagement() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState<'user' | 'admin' | 'superadmin'>('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
-    
+
     // Profile information fields
     const [employee_id, setEmployeeId] = useState('');
     const [position, setPosition] = useState('');
@@ -44,15 +80,17 @@ export default function EditUserManagement() {
     const [mobile_number, setMobileNumber] = useState('');
     const [contact_number, setContactNumber] = useState('');
     const [contact_person, setContactPerson] = useState('');
-    
+
     // Profile picture and superadmin password
-    const [profile_picture, setProfilePicture] = useState<File | undefined>(undefined);
+    const [profile_picture, setProfilePicture] = useState<File | undefined>(
+        undefined,
+    );
     const [superadminPassword, setSuperadminPassword] = useState('');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting] = useState(false);
     const [passwordError, setPasswordError] = useState('');
-    
+
     // References
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,7 +125,7 @@ export default function EditUserManagement() {
         if (file) {
             setProfilePicture(file);
             setRemoveProfilePicture(false); // Reset remove flag when new image is selected
-            
+
             // Create a preview URL for the selected image
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -121,34 +159,36 @@ export default function EditUserManagement() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
-        
+
         console.log('Form submission started');
         console.log('User ID:', user?.id);
-        
+
         // Validate password confirmation
         if (password && password !== confirmPassword) {
             setPasswordError('Password and confirm password do not match');
             return;
         }
-        
+
         // Validate password length if password is being changed
         if (password && password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
             return;
         }
-        
+
         // If changing password, require superadmin password
         if (password && !superadminPassword) {
-            setPasswordError('Please enter your password to confirm the user password change');
+            setPasswordError(
+                'Please enter your password to confirm the user password change',
+            );
             return;
         }
-        
+
         // For regular form submission, we'll use Inertia router
         console.log('Form validation passed, submitting...');
-        
+
         // Create FormData for submission
         const formData = new FormData();
-        
+
         // Add all form fields
         formData.append('_method', 'PUT');
         formData.append('name', name);
@@ -170,32 +210,37 @@ export default function EditUserManagement() {
         formData.append('mobile_number', mobile_number);
         formData.append('contact_number', contact_number);
         formData.append('contact_person', contact_person);
-        
+
         // Add password fields if provided
         if (password) {
             formData.append('password', password);
             formData.append('confirm_password', confirmPassword);
             formData.append('superadmin_password', superadminPassword);
         }
-        
+
         // Add profile picture if selected
         if (profile_picture) {
             formData.append('profile_picture', profile_picture);
         }
-        
+
         // Add flag to remove existing profile picture
         if (removeProfilePicture) {
             formData.append('remove_profile_picture', '1');
         }
-        
+
         // Debug: Log form data being sent
         console.log('Form data being sent:', {
-            name, email, role, status, employee_id, position,
+            name,
+            email,
+            role,
+            status,
+            employee_id,
+            position,
             password: password ? '***' : 'not provided',
             removeProfilePicture,
-            profile_picture: profile_picture ? 'file selected' : 'no file'
+            profile_picture: profile_picture ? 'file selected' : 'no file',
         });
-        
+
         // Submit using Inertia router with POST method (required for file uploads)
         router.post(`/superadmin/users/${user?.id}`, formData, {
             preserveScroll: true,
@@ -211,7 +256,7 @@ export default function EditUserManagement() {
             },
             onError: (errors) => {
                 console.log('Form submission errors:', errors);
-            }
+            },
         });
     };
 
@@ -223,7 +268,7 @@ export default function EditUserManagement() {
     // Custom error message function for better user experience
     const getCustomErrorMessage = (field: string) => {
         const serverError = getErrorMessage(field);
-        
+
         if (field === 'superadmin_password') {
             switch (serverError) {
                 case 'Invalid superadmin password.':
@@ -234,38 +279,49 @@ export default function EditUserManagement() {
                     return serverError;
             }
         }
-        
+
         return serverError;
     };
 
     return (
-        <AppLayout breadcrumbs={[
-            { title: 'User Management', href: '/superadmin/usermanagement' }, 
-            { title: 'Edit User Profile', href: `/superadmin/usermanagement/${user?.id}/edit` }
-        ]}>            
+        <AppLayout
+            breadcrumbs={[
+                {
+                    title: 'User Management',
+                    href: '/superadmin/usermanagement',
+                },
+                {
+                    title: 'Edit User Profile',
+                    href: `/superadmin/usermanagement/${user?.id}/edit`,
+                },
+            ]}
+        >
             <Head title="Edit User Profile" />
             <div className="p-4">
                 {/* Main Content Layout - Profile Picture Card on Left, Form on Right */}
-                <div className="flex flex-col lg:flex-row gap-4">
-                    
+                <div className="flex flex-col gap-4 lg:flex-row">
                     {/* Left Side: Profile Picture Card */}
-                    <div className="lg:w-80 order-1">
-                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                         
-                            
+                    <div className="order-1 lg:w-80">
+                        <div
+                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
+                            style={{
+                                boxShadow:
+                                    '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
+                            }}
+                        >
                             {/* Profile Picture Section */}
                             <div className="flex flex-col items-center space-y-4">
                                 <div className="relative">
-                                    <div className="w-45 h-45 rounded-full bg-muted flex items-center justify-center overflow-hidden border-3 border-card shadow-lg">
+                                    <div className="flex h-45 w-45 items-center justify-center overflow-hidden rounded-full border-3 border-card bg-muted shadow-lg">
                                         {getProfilePictureUrl() ? (
                                             <img
                                                 src={getProfilePictureUrl()!}
                                                 alt="Profile"
-                                                className="w-full h-full object-cover"
+                                                className="h-full w-full object-cover"
                                             />
                                         ) : (
                                             <svg
-                                                className="w-16 h-16 text-muted-foreground"
+                                                className="h-16 w-16 text-muted-foreground"
                                                 fill="currentColor"
                                                 viewBox="0 0 20 20"
                                             >
@@ -287,21 +343,25 @@ export default function EditUserManagement() {
                                         name="profile_picture"
                                     />
                                 </div>
-                                <div className="flex flex-col space-y-2 w-full">
+                                <div className="flex w-full flex-col space-y-2">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="text-sm w-full"
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        className="w-full text-sm"
                                     >
                                         Upload Photo
                                     </Button>
-                                    {(getProfilePictureUrl() || (user?.profile_picture && !removeProfilePicture)) && (
+                                    {(getProfilePictureUrl() ||
+                                        (user?.profile_picture &&
+                                            !removeProfilePicture)) && (
                                         <Button
                                             type="button"
                                             variant="destructive"
                                             onClick={handleRemoveImage}
-                                            className="text-sm w-full"
+                                            className="w-full text-sm"
                                         >
                                             Remove
                                         </Button>
@@ -312,19 +372,33 @@ export default function EditUserManagement() {
                     </div>
 
                     {/* Right Side: Main Form Card */}
-                    <div className="flex-1 order-2">
-                        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-gray-200 dark:border-neutral-800 p-6" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)' }}>
-                            <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Edit User Profile</h2>
-                            
-                            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off" id={`edit-user-form-${user?.id}`}>
-                                
+                    <div className="order-2 flex-1">
+                        <div
+                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
+                            style={{
+                                boxShadow:
+                                    '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
+                            }}
+                        >
+                            <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">
+                                Edit User Profile
+                            </h2>
+
+                            <form
+                                onSubmit={handleSubmit}
+                                className="space-y-6"
+                                autoComplete="off"
+                                id={`edit-user-form-${user?.id}`}
+                            >
                                 {/* Main Form Sections - Table-based Layout */}
                                 <div className="space-y-8">
-                                    
                                     {/* Personal Information Table */}
                                     <div className="space-y-4">
-                                        <HeadingSmall title="Personal Information" description="" />
-                                        <div className="border rounded-lg">
+                                        <HeadingSmall
+                                            title="Personal Information"
+                                            description=""
+                                        />
+                                        <div className="rounded-lg border">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -334,29 +408,50 @@ export default function EditUserManagement() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="w-1/3 font-medium">Name *</TableCell>
+                                                        <TableCell className="w-1/3 font-medium">
+                                                            Name *
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="name"
                                                                 name="name"
                                                                 type="text"
                                                                 value={name}
-                                                                onChange={(e) => setName(e.target.value)}
+                                                                onChange={(e) =>
+                                                                    setName(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 required
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('name')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'name',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Employee ID No.</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Employee ID No.
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="employee_id"
                                                                 name="employee_id"
                                                                 type="text"
-                                                                value={employee_id}
-                                                                onChange={(e) => setEmployeeId(e.target.value)}
+                                                                value={
+                                                                    employee_id
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setEmployeeId(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 autoComplete="off"
                                                                 autoCorrect="off"
@@ -364,119 +459,260 @@ export default function EditUserManagement() {
                                                                 spellCheck="false"
                                                                 placeholder="Employee ID"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('employee_id')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'employee_id',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Position</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Position
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="position"
                                                                 name="position"
                                                                 type="text"
                                                                 value={position}
-                                                                onChange={(e) => setPosition(e.target.value)}
+                                                                onChange={(e) =>
+                                                                    setPosition(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="Position"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('position')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'position',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Employment Status</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Employment Status
+                                                        </TableCell>
                                                         <TableCell>
                                                             <select
                                                                 id="employment_status"
                                                                 name="employment_status"
-                                                                value={employment_status}
-                                                                onChange={(e) => setEmploymentStatus(e.target.value)}
-                                                                className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                value={
+                                                                    employment_status
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setEmploymentStatus(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="Regular">Regular</option>
-                                                                <option value="COS">COS</option>
-                                                                <option value="Job Order">Job Order</option>
-                                                                <option value="Others">Others</option>
+                                                                <option value="Regular">
+                                                                    Regular
+                                                                </option>
+                                                                <option value="COS">
+                                                                    COS
+                                                                </option>
+                                                                <option value="Job Order">
+                                                                    Job Order
+                                                                </option>
+                                                                <option value="Others">
+                                                                    Others
+                                                                </option>
                                                             </select>
-                                                            <InputError className="mt-1" message={getErrorMessage('employment_status')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'employment_status',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
-                                                    {employment_status === 'Regular' && (
+                                                    {employment_status ===
+                                                        'Regular' && (
                                                         <TableRow>
-                                                            <TableCell className="font-medium">Item Number</TableCell>
+                                                            <TableCell className="font-medium">
+                                                                Item Number
+                                                            </TableCell>
                                                             <TableCell>
                                                                 <Input
                                                                     id="item_number"
                                                                     name="item_number"
                                                                     type="text"
-                                                                    value={item_number}
-                                                                    onChange={(e) => setItemNumber(e.target.value)}
+                                                                    value={
+                                                                        item_number
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setItemNumber(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
                                                                     className="w-full"
                                                                     placeholder="Item Number"
                                                                 />
-                                                                <InputError className="mt-1" message={getErrorMessage('item_number')} />
+                                                                <InputError
+                                                                    className="mt-1"
+                                                                    message={getErrorMessage(
+                                                                        'item_number',
+                                                                    )}
+                                                                />
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Office</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Office
+                                                        </TableCell>
                                                         <TableCell>
                                                             <select
                                                                 id="office"
                                                                 name="office"
                                                                 value={office}
-                                                                onChange={(e) => setOffice(e.target.value)}
-                                                                className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                onChange={(e) =>
+                                                                    setOffice(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="DO">DO</option>
-                                                                <option value="ADO">ADO</option>
-                                                                <option value="CPMD">CPMD</option>
-                                                                <option value="AED">AED</option>
-                                                                <option value="NSQCS">NSQCS</option>
-                                                                <option value="NPQSD">NPQSD</option>
-                                                                <option value="NSIC">NSIC</option>
-                                                                <option value="CRPSD">CRPSD</option>
-                                                                <option value="PPSSD">PPSSD</option>
-                                                                <option value="ADMINISTRATIVE">ADMINISTRATIVE</option>
-                                                                <option value="Others">Others</option>
+                                                                <option value="DO">
+                                                                    DO
+                                                                </option>
+                                                                <option value="ADO">
+                                                                    ADO
+                                                                </option>
+                                                                <option value="CPMD">
+                                                                    CPMD
+                                                                </option>
+                                                                <option value="AED">
+                                                                    AED
+                                                                </option>
+                                                                <option value="NSQCS">
+                                                                    NSQCS
+                                                                </option>
+                                                                <option value="NPQSD">
+                                                                    NPQSD
+                                                                </option>
+                                                                <option value="NSIC">
+                                                                    NSIC
+                                                                </option>
+                                                                <option value="CRPSD">
+                                                                    CRPSD
+                                                                </option>
+                                                                <option value="PPSSD">
+                                                                    PPSSD
+                                                                </option>
+                                                                <option value="ADMINISTRATIVE">
+                                                                    ADMINISTRATIVE
+                                                                </option>
+                                                                <option value="Others">
+                                                                    Others
+                                                                </option>
                                                             </select>
-                                                            <InputError className="mt-1" message={getErrorMessage('office')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'office',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     {office === 'CPMD' && (
                                                         <TableRow>
-                                                            <TableCell className="font-medium">Section/Unit</TableCell>
+                                                            <TableCell className="font-medium">
+                                                                Section/Unit
+                                                            </TableCell>
                                                             <TableCell>
                                                                 <select
                                                                     id="cpmd"
                                                                     name="cpmd"
                                                                     value={cpmd}
-                                                                    onChange={(e) => setCpmd(e.target.value)}
-                                                                    className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setCpmd(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                                 >
-                                                                    <option value="BIOCON section">BIOCON section</option>
-                                                                    <option value="PFS section">PFS section</option>
-                                                                    <option value="PHPS SECTION">PHPS SECTION</option>
-                                                                    <option value="OC-Admin Support Unit">OC-Admin Support Unit</option>
-                                                                    <option value="OC-ICT Unit">OC-ICT Unit</option>
-                                                                    <option value="OC-Special Project">OC-Special Project</option>
-                                                                    <option value="Others">Others</option>
+                                                                    <option value="BIOCON section">
+                                                                        BIOCON
+                                                                        section
+                                                                    </option>
+                                                                    <option value="PFS section">
+                                                                        PFS
+                                                                        section
+                                                                    </option>
+                                                                    <option value="PHPS SECTION">
+                                                                        PHPS
+                                                                        SECTION
+                                                                    </option>
+                                                                    <option value="OC-Admin Support Unit">
+                                                                        OC-Admin
+                                                                        Support
+                                                                        Unit
+                                                                    </option>
+                                                                    <option value="OC-ICT Unit">
+                                                                        OC-ICT
+                                                                        Unit
+                                                                    </option>
+                                                                    <option value="OC-Special Project">
+                                                                        OC-Special
+                                                                        Project
+                                                                    </option>
+                                                                    <option value="Others">
+                                                                        Others
+                                                                    </option>
                                                                 </select>
-                                                                <InputError className="mt-1" message={getErrorMessage('cpmd')} />
+                                                                <InputError
+                                                                    className="mt-1"
+                                                                    message={getErrorMessage(
+                                                                        'cpmd',
+                                                                    )}
+                                                                />
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Hiring Date</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Hiring Date
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="hiring_date"
                                                                 name="hiring_date"
                                                                 type="date"
-                                                                value={hiring_date}
-                                                                onChange={(e) => setHiringDate(e.target.value)}
+                                                                value={
+                                                                    hiring_date
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setHiringDate(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('hiring_date')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'hiring_date',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                 </TableBody>
@@ -486,8 +722,11 @@ export default function EditUserManagement() {
 
                                     {/* Additional Details Table */}
                                     <div className="space-y-4">
-                                        <HeadingSmall title="Additional Details" description="" />
-                                        <div className="border rounded-lg">
+                                        <HeadingSmall
+                                            title="Additional Details"
+                                            description=""
+                                        />
+                                        <div className="rounded-lg border">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -497,89 +736,168 @@ export default function EditUserManagement() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className=" 1/3 font-medium">TIN Number</TableCell>
+                                                        <TableCell className="1/3 font-medium">
+                                                            TIN Number
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="tin_number"
                                                                 name="tin_number"
                                                                 type="text"
-                                                                value={tin_number}
-                                                                onChange={(e) => setTinNumber(e.target.value)}
+                                                                value={
+                                                                    tin_number
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setTinNumber(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="TIN Number"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('tin_number')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'tin_number',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">GSIS Number</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            GSIS Number
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="gsis_number"
                                                                 name="gsis_number"
                                                                 type="text"
-                                                                value={gsis_number}
-                                                                onChange={(e) => setGsisNumber(e.target.value)}
+                                                                value={
+                                                                    gsis_number
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setGsisNumber(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="GSIS Number"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('gsis_number')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'gsis_number',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Address</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Address
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="address"
                                                                 name="address"
                                                                 type="text"
                                                                 value={address}
-                                                                onChange={(e) => setAddress(e.target.value)}
+                                                                onChange={(e) =>
+                                                                    setAddress(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="Address"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('address')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'address',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Date of Birth</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Date of Birth
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="date_of_birth"
                                                                 name="date_of_birth"
                                                                 type="date"
-                                                                value={date_of_birth}
-                                                                onChange={(e) => setDateOfBirth(e.target.value)}
+                                                                value={
+                                                                    date_of_birth
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setDateOfBirth(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('date_of_birth')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'date_of_birth',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Gender</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Gender
+                                                        </TableCell>
                                                         <TableCell>
                                                             <select
                                                                 id="gender"
                                                                 name="gender"
                                                                 value={gender}
-                                                                onChange={(e) => setGender(e.target.value)}
-                                                                className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                onChange={(e) =>
+                                                                    setGender(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="Male">Male</option>
-                                                                <option value="Female">Female</option>
+                                                                <option value="Male">
+                                                                    Male
+                                                                </option>
+                                                                <option value="Female">
+                                                                    Female
+                                                                </option>
                                                             </select>
-                                                            <InputError className="mt-1" message={getErrorMessage('gender')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'gender',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Mobile Number</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Mobile Number
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="mobile_number"
                                                                 name="mobile_number"
                                                                 type="text"
-                                                                value={mobile_number}
-                                                                onChange={(e) => setMobileNumber(e.target.value)}
+                                                                value={
+                                                                    mobile_number
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setMobileNumber(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="Mobile Number"
                                                             />
@@ -592,8 +910,11 @@ export default function EditUserManagement() {
 
                                     {/* Emergency Contact & System Settings Table */}
                                     <div className="space-y-4">
-                                        <HeadingSmall title="Emergency Contact & System Settings" description="" />
-                                        <div className="border rounded-lg">
+                                        <HeadingSmall
+                                            title="Emergency Contact & System Settings"
+                                            description=""
+                                        />
+                                        <div className="rounded-lg border">
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
@@ -603,81 +924,164 @@ export default function EditUserManagement() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="w-1/3 font-medium">Contact Person</TableCell>
+                                                        <TableCell className="w-1/3 font-medium">
+                                                            Contact Person
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="contact_person"
                                                                 name="contact_person"
                                                                 type="text"
-                                                                value={contact_person}
-                                                                onChange={(e) => setContactPerson(e.target.value)}
+                                                                value={
+                                                                    contact_person
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setContactPerson(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="Emergency Contact Person"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('contact_person')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'contact_person',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Contact Number</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Contact Number
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="contact_number"
                                                                 name="contact_number"
                                                                 type="text"
-                                                                value={contact_number}
-                                                                onChange={(e) => setContactNumber(e.target.value)}
+                                                                value={
+                                                                    contact_number
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setContactNumber(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 placeholder="Contact Number"
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('contact_number')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'contact_number',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Email *</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Email *
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Input
                                                                 id="email"
                                                                 name="email"
                                                                 type="email"
                                                                 value={email}
-                                                                onChange={(e) => setEmail(e.target.value)}
+                                                                onChange={(e) =>
+                                                                    setEmail(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 className="w-full"
                                                                 required
                                                             />
-                                                            <InputError className="mt-1" message={getErrorMessage('email')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'email',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Role</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Role
+                                                        </TableCell>
                                                         <TableCell>
                                                             <select
                                                                 id="role"
                                                                 name="role"
                                                                 value={role}
-                                                                onChange={(e) => setRole(e.target.value as any)}
-                                                                className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                onChange={(
+                                                                    e,
+                                                                ) => {
+                                                                    const value =
+                                                                        e.target
+                                                                            .value as
+                                                                            | 'user'
+                                                                            | 'admin'
+                                                                            | 'superadmin';
+                                                                    setRole(
+                                                                        value,
+                                                                    );
+                                                                }}
+                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="user">User</option>
-                                                                <option value="admin">Admin</option>
-                                                                <option value="superadmin">Super Admin</option>
+                                                                <option value="user">
+                                                                    User
+                                                                </option>
+                                                                <option value="admin">
+                                                                    Admin
+                                                                </option>
+                                                                <option value="superadmin">
+                                                                    Super Admin
+                                                                </option>
                                                             </select>
-                                                            <InputError className="mt-1" message={getErrorMessage('role')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'role',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                     <TableRow>
-                                                        <TableCell className="font-medium">Status</TableCell>
+                                                        <TableCell className="font-medium">
+                                                            Status
+                                                        </TableCell>
                                                         <TableCell>
                                                             <select
                                                                 id="status"
                                                                 name="status"
                                                                 value={status}
-                                                                onChange={(e) => setStatus(e.target.value as any)}
-                                                                className="w-full border border-input rounded px-3 py-2 bg-background text-foreground"
+                                                                onChange={(e) =>
+                                                                    setStatus(
+                                                                        e.target
+                                                                            .value as
+                                                                            | 'active'
+                                                                            | 'inactive',
+                                                                    )
+                                                                }
+                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="active">Active</option>
-                                                                <option value="inactive">Inactive</option>
+                                                                <option value="active">
+                                                                    Active
+                                                                </option>
+                                                                <option value="inactive">
+                                                                    Inactive
+                                                                </option>
                                                             </select>
-                                                            <InputError className="mt-1" message={getErrorMessage('status')} />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'status',
+                                                                )}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                 </TableBody>
@@ -693,29 +1097,48 @@ export default function EditUserManagement() {
 
                                 {/* Password Section */}
                                 <div className="space-y-4">
-                                    <HeadingSmall title="Password Management" description="Change user password (optional)" />
-                                    
+                                    <HeadingSmall
+                                        title="Password Management"
+                                        description="Change user password (optional)"
+                                    />
+
                                     {/* Combined Password Error Messages */}
-                                    {(passwordError || getCustomErrorMessage('superadmin_password')) && (
-                                        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                                    {(passwordError ||
+                                        getCustomErrorMessage(
+                                            'superadmin_password',
+                                        )) && (
+                                        <div className="rounded-md border border-red-200 bg-red-50 p-4">
                                             <div className="flex">
                                                 <div className="flex-shrink-0">
-                                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                    <svg
+                                                        className="h-5 w-5 text-red-400"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                            clipRule="evenodd"
+                                                        />
                                                     </svg>
                                                 </div>
                                                 <div className="ml-3">
                                                     <p className="text-sm text-red-800">
-                                                        {passwordError || getCustomErrorMessage('superadmin_password')}
+                                                        {passwordError ||
+                                                            getCustomErrorMessage(
+                                                                'superadmin_password',
+                                                            )}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                         <div>
-                                            <Label htmlFor="password">New Password</Label>
+                                            <Label htmlFor="password">
+                                                New Password
+                                            </Label>
                                             <Input
                                                 id="password"
                                                 name="password"
@@ -723,7 +1146,8 @@ export default function EditUserManagement() {
                                                 value={password}
                                                 onChange={(e) => {
                                                     setPassword(e.target.value);
-                                                    if (passwordError) setPasswordError('');
+                                                    if (passwordError)
+                                                        setPasswordError('');
                                                 }}
                                                 className="mt-1"
                                                 autoComplete="new-password"
@@ -732,20 +1156,33 @@ export default function EditUserManagement() {
                                                 spellCheck="false"
                                                 placeholder="Leave blank to keep current password"
                                             />
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Leave blank to keep the current password</p>
-                                            <InputError className="mt-2" message={getErrorMessage('password')} />
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                Leave blank to keep the current
+                                                password
+                                            </p>
+                                            <InputError
+                                                className="mt-2"
+                                                message={getErrorMessage(
+                                                    'password',
+                                                )}
+                                            />
                                         </div>
-                                        
+
                                         <div>
-                                            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                                            <Label htmlFor="confirmPassword">
+                                                Confirm New Password
+                                            </Label>
                                             <Input
                                                 id="confirmPassword"
                                                 name="confirm_password"
                                                 type="password"
                                                 value={confirmPassword}
                                                 onChange={(e) => {
-                                                    setConfirmPassword(e.target.value);
-                                                    if (passwordError) setPasswordError('');
+                                                    setConfirmPassword(
+                                                        e.target.value,
+                                                    );
+                                                    if (passwordError)
+                                                        setPasswordError('');
                                                 }}
                                                 className="mt-1"
                                                 autoComplete="new-password"
@@ -756,25 +1193,31 @@ export default function EditUserManagement() {
                                             />
                                         </div>
                                     </div>
-                                    
+
                                     {password && (
                                         <div>
-                                            <Label htmlFor="superadminPassword">Admin Password</Label>
+                                            <Label htmlFor="superadminPassword">
+                                                Admin Password
+                                            </Label>
                                             <Input
                                                 id="superadminPassword"
                                                 name="superadmin_password"
                                                 type="password"
                                                 value={superadminPassword}
                                                 onChange={(e) => {
-                                                    setSuperadminPassword(e.target.value);
-                                                    if (passwordError) setPasswordError('');
+                                                    setSuperadminPassword(
+                                                        e.target.value,
+                                                    );
+                                                    if (passwordError)
+                                                        setPasswordError('');
                                                 }}
                                                 className="mt-1"
                                                 placeholder="Enter your password to confirm"
                                             />
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter your password to confirm the user password change</p>
-                                            
-                                            
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                Enter your password to confirm
+                                                the user password change
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -786,13 +1229,23 @@ export default function EditUserManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-4 pt-6">
-                                    <Button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white disabled:opacity-70">
-                                        {isSubmitting ? 'Updating...' : 'Update Profile'}
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 disabled:opacity-70 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                    >
+                                        {isSubmitting
+                                            ? 'Updating...'
+                                            : 'Update Profile'}
                                     </Button>
-                                    <Button 
-                                        type="button" 
+                                    <Button
+                                        type="button"
                                         variant="outline"
-                                        onClick={() => router.get('/superadmin/usermanagement')} 
+                                        onClick={() =>
+                                            router.get(
+                                                '/superadmin/usermanagement',
+                                            )
+                                        }
                                         className="px-6 py-2"
                                     >
                                         Cancel
@@ -806,4 +1259,3 @@ export default function EditUserManagement() {
         </AppLayout>
     );
 }
-

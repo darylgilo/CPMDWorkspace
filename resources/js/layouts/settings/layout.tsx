@@ -80,7 +80,6 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <div className="flex-1">
                     <section className="w-full space-y-12">{children}</section>
-                
                 </div>
             </div>
         </div>

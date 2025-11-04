@@ -17,13 +17,18 @@ export default function AppSidebarLayout({
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
             </AppContent>
-                {/* Floating NavUser in top right */}
-                <div
-                    style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 50 }}
-                    className="pointer-events-auto hidden md:block"
-                >
-                    <NavUser />
-                </div>
+            {/* Floating NavUser in top right */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    zIndex: 50,
+                }}
+                className="pointer-events-auto hidden md:block"
+            >
+                <NavUser />
+            </div>
         </AppShell>
     );
 }
