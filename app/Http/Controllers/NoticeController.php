@@ -64,7 +64,7 @@ class NoticeController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,Travel Information'],
+            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,MEMO'],
             'description' => ['required', 'string'],
             'file' => ['nullable', 'file', 'max:10240'],
             'files' => ['nullable', 'array'],
@@ -154,7 +154,7 @@ class NoticeController extends Controller
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,Travel Information'],
+            'category' => ['required', 'in:Announcement,Notice of Meeting,Notice of Event,MEMO'],
             'description' => ['required', 'string'],
             'files' => ['nullable', 'array'],
             'files.*' => ['file', 'max:10240'],
@@ -452,11 +452,12 @@ class NoticeController extends Controller
         ]);
     }
 
-        // Display travel page with calendar
-    public function travel()
+        // Display memo page with calendar
+    public function memo()
     {
         $notices = Notice::query()
             ->with('user')
+            ->where('category', 'MEMO')
             ->latest()
             ->get()
             ->map(function (Notice $notice) {
@@ -493,7 +494,7 @@ class NoticeController extends Controller
                 ];
             });
 
-        return Inertia::render('Noticeboard/travel', [
+        return Inertia::render('Noticeboard/memo', [
             'notices' => $notices,
         ]);
     }
