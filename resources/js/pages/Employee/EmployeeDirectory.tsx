@@ -1,10 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
-import {
-    CustomCard,
-    CustomCardAvatar,
-    CustomCardContent,
-} from '@/components/ui/CustomCard';
+// Custom card components removed as they're no longer used
 import {
     Select,
     SelectContent,
@@ -176,9 +172,9 @@ export default function EmployeeDirectory() {
 
             <div className="flex flex-col gap-4 p-4">
                 {/* Header actions (no Add button) */}
-                <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between md:p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-900">
                     {/* Filters on the left */}
-                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Select
                             value={office || 'all'}
                             onValueChange={(val) => {
@@ -188,7 +184,7 @@ export default function EmployeeDirectory() {
                                 setCurrentPage(1); // Reset to first page on filter change
                             }}
                         >
-                            <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
                                 <SelectValue placeholder="All Offices" />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -276,7 +272,7 @@ export default function EmployeeDirectory() {
                             }}
                             disabled={office !== 'CPMD'}
                         >
-                            <SelectTrigger className="w-[180px] border-gray-300 disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectTrigger className="w-full border-gray-300 disabled:opacity-60 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
                                 <SelectValue
                                     placeholder={
                                         office === 'CPMD'
@@ -345,7 +341,7 @@ export default function EmployeeDirectory() {
                                 setCurrentPage(1); // Reset to first page when changing items per page
                             }}
                         >
-                            <SelectTrigger className="w-[150px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[150px] dark:border-neutral-700 dark:bg-neutral-950">
                                 <SelectValue placeholder="Rows per page" />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -395,33 +391,54 @@ export default function EmployeeDirectory() {
                 </div>
 
                 {/* Employee Grid */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {paginatedEmployees.map((employee: User) => (
-                        <CustomCard key={employee.id}>
-                            <CustomCardAvatar
-                                src={
-                                    employee.profile_picture
-                                        ? `/storage/${employee.profile_picture}`
-                                        : undefined
-                                }
-                                alt={employee.name}
-                            />
-                            <CustomCardContent>
-                                <div className="truncate font-semibold text-gray-900 dark:text-white">
-                                    {employee.name || '—'}
+                        <div
+                            key={employee.id}
+                            className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
+                        >
+                            <div className="p-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 dark:border-neutral-700">
+                                        {employee.profile_picture ? (
+                                            <img
+                                                src={`/storage/${employee.profile_picture}`}
+                                                alt={employee.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-neutral-800">
+                                                <svg
+                                                    className="h-8 w-8 text-gray-400 dark:text-neutral-500"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                            {employee.name || '—'}
+                                        </h3>
+                                        <p className="truncate text-xs text-gray-500 dark:text-neutral-400">
+                                            {employee.position || '—'}
+                                        </p>
+                                        <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-neutral-400">
+                                            {employee.employee_id ||
+                                                employee.email ||
+                                                '—'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="truncate text-xs text-gray-500 dark:text-neutral-400">
-                                    {employee.position || '—'}
-                                </div>
-                                <div className="mt-1 truncate text-xs text-gray-500 dark:text-neutral-400">
-                                    {employee.employee_id ||
-                                        employee.email ||
-                                        '—'}
-                                </div>
-
                                 <div className="mt-3 flex items-center justify-between">
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-xs ${employee.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-gray-300'}`}
+                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${employee.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'}`}
                                     >
                                         {employee.status
                                             ? employee.status
@@ -436,13 +453,14 @@ export default function EmployeeDirectory() {
                                                 `/directory/${employee.id}`,
                                             )
                                         }
-                                        className="inline-flex items-center gap-1 rounded bg-[#163832] px-2.5 py-1 text-xs text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                        className="inline-flex items-center gap-1 rounded-md bg-[#1a4d3e] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832] dark:bg-[#235347] dark:hover:bg-[#1a4d3e] "
                                     >
-                                        <Eye className="h-3.5 w-3.5" /> View
+                                        <Eye className="h-3.5 w-3.5" />
+                                        <span>View</span>
                                     </button>
                                 </div>
-                            </CustomCardContent>
-                        </CustomCard>
+                            </div>
+                        </div>
                     ))}
                 </div>
 
