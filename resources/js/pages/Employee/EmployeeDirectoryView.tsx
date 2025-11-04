@@ -1,11 +1,62 @@
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
+import { type PageProps } from '@inertiajs/core';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    status?: string;
+    profile_picture?: string;
+    position?: string;
+    employment_status?: string;
+    hiring_date?: string;
+    office?: string;
+    cpmd?: string;
+    employee_id?: string;
+    item_number?: string;
+    gender?: string;
+    tin_number?: string;
+    gsis_number?: string;
+    address?: string;
+    date_of_birth?: string;
+    mobile_number?: string;
+    contact_person?: string | null;
+    contact_number?: string | null;
+    [key: string]: unknown;
+}
+
+interface EmployeeDirectoryViewProps extends PageProps {
+    auth: {
+        user?: User;
+    };
+    user: User | null;
+    [key: string]: unknown;
+}
 
 // Read-only employee profile view for the directory
 export default function EmployeeDirectoryView() {
-    const pageProps = usePage().props as any;
-    const { user } = pageProps;
+    const { props } = usePage<EmployeeDirectoryViewProps>();
+    const { user } = props;
+    
+    if (!user) {
+        return (
+            <AppLayout
+                breadcrumbs={[
+                    { title: 'Employee Directory', href: '/directory' },
+                    { title: 'Employee Not Found', href: '#' },
+                ]}
+            >
+                <div className="flex h-64 items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400">
+                        Employee not found or you don't have permission to view this profile.
+                    </p>
+                </div>
+            </AppLayout>
+        );
+    }
 
     return (
         <AppLayout
@@ -76,8 +127,13 @@ export default function EmployeeDirectoryView() {
                                         Office
                                     </div>
                                     <div className="text-base text-gray-900 dark:text-gray-100">
-                                        {user?.office || '—'}
+                                        {user.office || 'No office assigned'}
                                     </div>
+                                    {user.position && (
+                                        <p className="text-sm text-muted-foreground">
+                                            {user.position}
+                                        </p>
+                                    )}
                                     {user?.office === 'CPMD' && (
                                         <>
                                             <div className="mt-3 text-sm text-gray-500 dark:text-neutral-400">

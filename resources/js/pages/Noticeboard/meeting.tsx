@@ -60,8 +60,29 @@ function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 export default function AnnouncementPage() {
-    const pageProps = usePage().props as any;
-    const serverNotices = (pageProps?.notices as any[]) ?? [];
+    interface PageProps {
+        notices?: Array<{
+            id: number | string;
+            title: string;
+            description: string;
+            username: string;
+            created_at: string;
+            date?: string | null;
+            time?: string | null;
+            files_download_url?: string | null;
+            files?: Array<{
+                name?: string;
+                url: string;
+                mime?: string;
+                size?: number | string;
+            }>;
+            [key: string]: unknown;
+        }>;
+        [key: string]: unknown;
+    }
+
+    const { props } = usePage<PageProps>();
+    const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
 
     // Current date state for calendar navigation
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -83,9 +104,9 @@ export default function AnnouncementPage() {
 
     // Map backend props into typed notices
     const mappedNotices: Notice[] = useMemo(() => {
-        return (serverNotices as any[]).map((n) => {
+        return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
-                ? (n.files as any[]).map((f) => ({
+                ? n.files.map((f) => ({
                       name: f.name ?? 'file',
                       url: f.url,
                       type: f.mime ?? '',

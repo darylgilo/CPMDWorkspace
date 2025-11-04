@@ -1,7 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import ToggleButton from '@/components/ToggleButton';
-import FlashMessage from '@/components/flash-message';
 import {
     Select,
     SelectContent,
@@ -34,7 +33,36 @@ import {
     Users,
     UserX,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+// Define the User interface
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: 'user' | 'admin' | 'superadmin';
+    status: 'active' | 'inactive';
+    created_at?: string;
+    last_login_at?: string | null;
+    profile_photo_url?: string;
+    profile_picture?: string;
+    employee_id?: string;
+    position?: string;
+    employment_status?: string;
+    office?: string;
+    cpmd?: string;
+    tin_number?: string;
+    gsis_number?: string;
+    address?: string;
+    date_of_birth?: string;
+    hiring_date?: string;
+    item_number?: string;
+    gender?: string;
+    mobile_number?: string;
+    contact_number?: string;
+    contact_person?: string;
+    [key: string]: unknown; // For any additional properties
+}
 
 // Breadcrumb navigation items for the user management page
 const breadcrumbs: BreadcrumbItem[] = [
@@ -44,91 +72,110 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Available user roles for the system
-const roles = ['user', 'admin', 'superadmin'];
+interface AnalyticsData {
+    total: number;
+    active: number;
+    inactive: number;
+    newThisMonth: number;
+    online: number;
+    [key: string]: number; // Index signature for dynamic properties
+}
+
+interface PageProps {
+    users?: {
+        data: User[];
+        current_page?: number;
+        last_page?: number;
+        per_page?: number;
+        total?: number;
+        [key: string]: unknown;
+    };
+    search?: string;
+    perPage?: number | string;
+    status?: 'active' | 'inactive';
+    analytics?: {
+        totalUsers?: number;
+        activeUsers?: number;
+        newUsersThisMonth?: number;
+        onlineUsers?: number;
+        [key: string]: unknown;
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+        [key: string]: unknown;
+    };
+    [key: string]: unknown;
+}
 
 export default function UserManagement() {
+
     // Get users data and search term from page props
-    const pageProps = usePage().props as any;
+    const { props } = usePage<PageProps>();
     const {
         users = { data: [] },
         search = '',
         perPage: perPageProp = 10,
         status: statusProp = 'active',
-        analytics: analyticsProp,
-    } = pageProps;
+        analytics: analyticsProp
+    } = props;
 
-    // Debug: Log the props to see what's being received
-    console.log('Page props:', pageProps);
-    console.log('Flash messages:', pageProps.flash);
+    // Debug logging (commented out in production)
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Page props:', props);
+            console.log('Flash messages:', props.flash);
+        }
+    }, [props]);
 
-    // Search and filter state
+    // State for search, filter, and pagination
     const [searchValue, setSearchValue] = useState(search || '');
     const [perPage, setPerPage] = useState<number>(Number(perPageProp) || 10);
-    const [statusFilter, setStatusFilter] = useState<
-        'all' | 'active' | 'inactive'
-    >(statusProp === 'inactive' ? 'inactive' : 'active');
-    const [localUsers, setLocalUsers] = useState(users?.data || []);
-    const [filteredUsers, setFilteredUsers] = useState(users?.data || []);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>(
+        statusProp === 'inactive' ? 'inactive' : 'active'
+    );
     const [currentPage, setCurrentPage] = useState(1);
-
-    // Sorting state
-    const [sortField, setSortField] = useState<string>('name');
+    const [sortField, setSortField] = useState<keyof User>('name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-    // State for managing dropdown menus (if any)
-    const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
+    // Analytics calculation
+    const analytics = useMemo<AnalyticsData>(() => {
+        if (analyticsProp) {
+            return {
+                total: analyticsProp.totalUsers || 0,
+                active: analyticsProp.activeUsers || 0,
+                inactive: (analyticsProp.totalUsers || 0) - (analyticsProp.activeUsers || 0),
+                newThisMonth: analyticsProp.newUsersThisMonth || 0,
+                online: analyticsProp.onlineUsers || 0
+            };
+        }
 
-    // Calculate analytics data from the currently visible list (fallback only)
-    const calculateAnalytics = () => {
         const userData = users?.data || [];
-        const totalUsers = userData.length;
-        const activeUsers = userData.filter(
-            (user: any) => user.status === 'active',
-        ).length;
-        const inactiveUsers = userData.filter(
-            (user: any) => user.status === 'inactive',
-        ).length;
-
-        // Calculate new users this month
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const newUsersThisMonth = userData.filter((user: any) => {
-            if (!user.created_at) return false;
-            const createdDate = new Date(user.created_at);
-            return (
-                createdDate.getMonth() === currentMonth &&
-                createdDate.getFullYear() === currentYear
-            );
-        }).length;
-
-        // Calculate online users (users who logged in within last 15 minutes)
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-        const onlineUsers = userData.filter((user: any) => {
-            if (!user.last_login_at) return false;
-            const lastLogin = new Date(user.last_login_at);
-            return lastLogin > fifteenMinutesAgo;
-        }).length;
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
 
         return {
-            totalUsers,
-            activeUsers,
-            newUsersThisMonth,
-            onlineUsers,
+            total: userData.length,
+            active: userData.filter(user => user.status === 'active').length,
+            inactive: userData.filter(user => user.status === 'inactive').length,
+            newThisMonth: userData.filter(user => {
+                if (!user.created_at) return false;
+                const created = new Date(user.created_at);
+                return created.getMonth() === currentMonth && 
+                       created.getFullYear() === currentYear;
+            }).length,
+            online: userData.filter(user => {
+                if (!user.last_login_at) return false;
+                return new Date(user.last_login_at) > fifteenMinutesAgo;
+            }).length
         };
-    };
+    }, [users?.data, analyticsProp]);
 
-    // Prefer fixed analytics from server so they do not change with table filters
-    const analytics = analyticsProp ?? calculateAnalytics();
-
-    // Update local state when props change
-    useEffect(() => {
-        setLocalUsers(users?.data || []);
-    }, [users.data]);
-
-    // Apply all filters and sorting
-    useEffect(() => {
-        let results = [...localUsers];
+    // Filter and sort users
+    const filteredUsers = useMemo(() => {
+        let results = users?.data || [];
 
         // Apply search filter
         if (searchValue) {
@@ -147,7 +194,7 @@ export default function UserManagement() {
         }
 
         // Apply sorting
-        results.sort((a, b) => {
+        return [...results].sort((a, b) => {
             let aValue = a[sortField] || '';
             let bValue = b[sortField] || '';
 
@@ -163,76 +210,18 @@ export default function UserManagement() {
             if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
             return 0;
         });
+    }, [users?.data, searchValue, statusFilter, sortField, sortDirection]);
 
-        // Handle pagination when filters change
-        const newTotalPages = Math.ceil(results.length / perPage);
-        if (currentPage > newTotalPages && newTotalPages > 0) {
-            setCurrentPage(newTotalPages);
-        } else if (currentPage === 0 && newTotalPages > 0) {
-            setCurrentPage(1);
-        } else if (
-            searchValue ||
-            statusFilter !== 'all' ||
-            sortField !== 'name' ||
-            sortDirection !== 'asc'
-        ) {
-            setCurrentPage(1);
-        }
+    // Calculate pagination
+    const paginatedUsers = useMemo(() => {
+        const startIndex = (currentPage - 1) * perPage;
+        return filteredUsers.slice(startIndex, startIndex + perPage);
+    }, [filteredUsers, currentPage, perPage]);
 
-        setFilteredUsers(results);
-    }, [
-        searchValue,
-        localUsers,
-        statusFilter,
-        sortField,
-        sortDirection,
-        perPage,
-    ]);
-
-    // No longer updating URL with filter/sort parameters
-    const updateUrl = () => {
-        // Just update to clean URL without parameters
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, '', cleanUrl);
-    };
-
-    // Calculate pagination with bounds checking
-    const totalItems = filteredUsers.length;
-    const totalPages = Math.ceil(totalItems / perPage) || 1;
-    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
-    const startIndex = (safeCurrentPage - 1) * perPage;
-    const paginatedUsers = filteredUsers.slice(
-        startIndex,
-        startIndex + perPage,
-    );
-
-    // Update current page if it was out of bounds
-    if (currentPage !== safeCurrentPage && totalPages > 0) {
-        setCurrentPage(safeCurrentPage);
-    }
-
-    // Clean up URL on initial load
+    // Reset to first page when filters change
     useEffect(() => {
-        updateUrl();
-    }, []);
-
-    // Get sorting parameters from page props
-    const { sort: sortProp = 'name', direction: directionProp = 'asc' } =
-        usePage().props as any;
-
-    // Debug: Log sorting props
-    console.log('Sort props:', { sortProp, directionProp });
-
-    // Sync sorting state with backend props
-    useEffect(() => {
-        console.log('Syncing sorting state:', { sortProp, directionProp });
-        if (sortProp) {
-            setSortField(sortProp);
-        }
-        if (directionProp === 'asc' || directionProp === 'desc') {
-            setSortDirection(directionProp);
-        }
-    }, [sortProp, directionProp]);
+        setCurrentPage(1);
+    }, [searchValue, statusFilter, sortField, sortDirection, perPage]);
 
     // Handle user deletion with confirmation
     const handleDelete = (id: number) => {
@@ -246,11 +235,6 @@ export default function UserManagement() {
         setSearchValue(value);
     };
 
-    // Handle pagination navigation (links already include query via withQueryString)
-    const handlePageChange = (url: string) => {
-        router.get(url, {}, { preserveState: true, replace: true });
-    };
-
     // Handle user status change (activate/deactivate)
     const handleStatusChange = (userId: number, status: string) => {
         router.patch(
@@ -259,7 +243,6 @@ export default function UserManagement() {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    setDropdownOpen(null);
                     router.reload({ only: ['users'] });
                 },
             },
@@ -352,11 +335,6 @@ export default function UserManagement() {
             }))}
         >
             <Head title="User Management" />
-            <FlashMessage type="success" />
-            <FlashMessage type="error" />
-            <FlashMessage type="warning" />
-            <FlashMessage type="info" />
-
             <div className="flex flex-col gap-4 p-4">
                 {/* Page Header */}
 
@@ -370,7 +348,7 @@ export default function UserManagement() {
                                     Total Users
                                 </p>
                                 <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.totalUsers}
+                                    {analytics.total}
                                 </p>
                             </div>
                             <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
@@ -387,7 +365,7 @@ export default function UserManagement() {
                                     Active Users
                                 </p>
                                 <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.activeUsers}
+                                    {analytics.active}
                                 </p>
                             </div>
                             <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
@@ -404,7 +382,7 @@ export default function UserManagement() {
                                     New Users
                                 </p>
                                 <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.newUsersThisMonth}
+                                    {analytics.newThisMonth}
                                 </p>
                                 <p className="hidden text-xs text-white/70 md:block dark:text-gray-400">
                                     This month
@@ -424,7 +402,7 @@ export default function UserManagement() {
                                     Online Users
                                 </p>
                                 <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.onlineUsers}
+                                    {analytics.online}
                                 </p>
                                 <p className="flex hidden items-center gap-1 text-xs text-green-600 md:flex dark:text-green-400">
                                     <Activity className="h-3 w-3" />
@@ -714,11 +692,7 @@ export default function UserManagement() {
                                                   : sortField}
                                         </span>
                                         <span className="text-green-600 dark:text-green-400">
-                                            (
-                                            {sortDirection === 'asc'
-                                                ? 'A-Z'
-                                                : 'Z-A'}
-                                            )
+                                            {`(${sortDirection === 'asc' ? 'A-Z' : 'Z-A'})`}
                                         </span>
                                     </div>
                                 </div>
@@ -757,8 +731,8 @@ export default function UserManagement() {
                             </div>
                         </div>
 
-                        {Array.isArray(users?.data) && users.data.length > 0 ? (
-                            users.data.map((user: any) => (
+                        {Array.isArray(paginatedUsers) && paginatedUsers.length > 0 ? (
+                            paginatedUsers.map((user: User) => (
                                 <div
                                     key={user.id}
                                     className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800"
@@ -943,8 +917,8 @@ export default function UserManagement() {
                             </TableHeader>
                             <TableBody>
                                 {/* Render user rows or show "No users found" message */}
-                                {filteredUsers && filteredUsers.length > 0 ? (
-                                    filteredUsers.map((user: any) => (
+                                {paginatedUsers && paginatedUsers.length > 0 ? (
+                                    paginatedUsers.map((user: User) => (
                                         <TableRow
                                             key={user.id}
                                             className="cursor-default transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-neutral-800"

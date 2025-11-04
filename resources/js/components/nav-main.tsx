@@ -70,7 +70,7 @@ export function NavMain({
             };
         });
         navMainState.initialize(initialItems);
-    }, []);
+    }, [basePath, items]);
 
     // Update open state when base path changes (not query params)
     useEffect(() => {
@@ -90,7 +90,7 @@ export function NavMain({
                 navMainState.setState(item.title, true);
             }
         });
-    }, [basePath]);
+    }, [basePath, items]);
 
     // Handle state changes
     const handleOpenChange = (itemTitle: string, open: boolean) => {

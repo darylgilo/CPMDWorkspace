@@ -17,7 +17,7 @@ class SidebarStateManager {
             if (stored) {
                 this.state = JSON.parse(stored);
             }
-        } catch (e) {
+        } catch {
             // Ignore errors
         }
     }
@@ -29,7 +29,7 @@ class SidebarStateManager {
                 this.storageKey,
                 JSON.stringify(this.state),
             );
-        } catch (e) {
+        } catch {
             // Ignore errors
         }
     }

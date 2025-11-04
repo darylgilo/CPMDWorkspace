@@ -15,7 +15,7 @@ export default function AddEmployee() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const role = 'user';
-    const [status, setStatus] = useState<'active' | 'inactive'>('inactive');
+    const [status] = useState<'active' | 'inactive'>('inactive');
 
     // Employee profile fields
     const [employee_id, setEmployeeId] = useState('');

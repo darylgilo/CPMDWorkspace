@@ -5,12 +5,58 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
+import { FormEvent } from 'react';
 
 // Employee profile view/edit page component
 export default function EmployeeView() {
+    // Define types
+    type EmploymentStatus = 'Regular' | 'COS' | 'Job Order' | 'Others';
+    type Office = 'DO' | 'ADO' | 'CPMD' | 'AED' | 'NSQCS' | 'NPQSD' | 'NSIC' | 'CRPSD' | 'PPSSD' | 'ADMINISTRATIVE' | 'Others';
+    type CPMDSection = '' | 'BIOCON section' | 'PFS section' | 'PHPS SECTION' | 'OC-Admin Support Unit' | 'OC-ICT Unit' | 'OC-Special Project' | 'Others';
+    type Gender = 'Male' | 'Female';
+
+    interface User {
+        id: number;
+        name: string;
+        email: string;
+        employee_id: string;
+        position: string;
+        employment_status: EmploymentStatus;
+        office: Office;
+        cpmd: CPMDSection;
+        tin_number: string;
+        gsis_number: string;
+        address: string;
+        date_of_birth: string;
+        hiring_date: string;
+        item_number: string;
+        gender: Gender;
+        mobile_number: string;
+        contact_person: string;
+        contact_person_number: string;
+        [key: string]: unknown;
+    }
+
+    interface PageProps extends InertiaPageProps {
+        user: User & {
+            role?: string;
+            profile_picture?: string;
+            status?: 'active' | 'inactive';
+        };
+        auth: {
+            user?: {
+                id: number;
+                role?: string;
+                [key: string]: unknown;
+            };
+            [key: string]: unknown;
+        };
+    }
+
     // Grab server-provided user payload from Inertia page props
-    const pageProps = usePage().props as any;
-    const { user, auth } = pageProps;
+    const { props } = usePage<PageProps>();
+    const { user, auth } = props;
 
     interface FormData {
         name: string;
@@ -52,41 +98,96 @@ export default function EmployeeView() {
         status: 'active' | 'inactive';
     }
 
-    // Initialize form with user values
-    const initialData: FormData = {
-        name: user?.name || '',
-        email: user?.email || '',
-        employee_id: user?.employee_id || '',
-        position: user?.position || '',
-        employment_status: (user?.employment_status ||
-            'Regular') as FormData['employment_status'],
-        office: (user?.office || 'Others') as FormData['office'],
-        cpmd: (user?.cpmd || '') as FormData['cpmd'],
-        tin_number: user?.tin_number || '',
-        gsis_number: user?.gsis_number || '',
-        address: user?.address || '',
-        date_of_birth: user?.date_of_birth || '',
-        hiring_date: user?.hiring_date || '',
-        item_number: user?.item_number || '',
-        gender: (user?.gender || 'Male') as FormData['gender'],
-        mobile_number: user?.mobile_number || '',
-        contact_person: user?.contact_person || '',
-        contact_number: user?.contact_number || '',
-        status: (user?.status || 'inactive') as FormData['status'],
+    // Helper function to safely get string value with fallback
+    const getStringValue = (value: unknown, defaultValue: string = ''): string => {
+        return typeof value === 'string' ? value : defaultValue;
     };
 
-    // Inertia form helper for PUT updates
-    const { data, setData, put, processing, errors } =
-        useForm<FormData>(initialData);
+    // Helper function to safely get enum value with fallback
+    const getEnumValue = <T extends string>(
+        value: unknown,
+        validValues: readonly T[],
+        defaultValue: T
+    ): T => {
+        return validValues.some(v => v === value) 
+            ? value as T 
+            : defaultValue;
+    };
 
-    const isProtectedSuperadmin =
+    // Initialize form with user values
+    const getInitialData = (): FormData => {
+        // Define valid values for enums
+        const employmentStatuses = ['Regular', 'COS', 'Job Order', 'Others'] as const;
+        const offices = ['DO', 'ADO', 'CPMD', 'AED', 'NSQCS', 'NPQSD', 'NSIC', 'CRPSD', 'PPSSD', 'ADMINISTRATIVE', 'Others'] as const;
+        const cpmdSections = ['', 'BIOCON section', 'PFS section', 'PHPS SECTION', 'OC-Admin Support Unit', 'OC-ICT Unit', 'OC-Special Project', 'Others'] as const;
+        const genders = ['Male', 'Female'] as const;
+        const statuses = ['active', 'inactive'] as const;
+
+        return {
+            name: getStringValue(user?.name),
+            email: getStringValue(user?.email),
+            employee_id: getStringValue(user?.employee_id),
+            position: getStringValue(user?.position),
+            employment_status: getEnumValue(user?.employment_status, employmentStatuses, 'Regular'),
+            office: getEnumValue(user?.office, offices, 'Others'),
+            cpmd: getEnumValue(user?.cpmd, cpmdSections, ''),
+            tin_number: getStringValue(user?.tin_number),
+            gsis_number: getStringValue(user?.gsis_number),
+            address: getStringValue(user?.address),
+            date_of_birth: getStringValue(user?.date_of_birth),
+            hiring_date: getStringValue(user?.hiring_date),
+            item_number: getStringValue(user?.item_number),
+            gender: getEnumValue(user?.gender, genders, 'Male'),
+            mobile_number: getStringValue(user?.mobile_number),
+            contact_person: getStringValue(user?.contact_person),
+            contact_number: getStringValue(user?.contact_number),
+            status: getEnumValue(user?.status, statuses, 'inactive'),
+        };
+    };
+
+    const initialData = getInitialData();
+
+    // Inertia form helper for PUT updates with proper typing
+    const { data, setData, put, processing } = useForm<FormData>(initialData);
+
+    const isProtectedSuperadmin = 
         auth?.user?.role !== 'superadmin' && user?.role === 'superadmin';
 
+    // Type guard to ensure data is FormData
+    const isFormData = (data: unknown): data is FormData => {
+        return (
+            typeof data === 'object' && 
+            data !== null &&
+            'name' in data &&
+            'email' in data
+            // Add other required fields as needed
+        );
+    };
+
     // Submit updated employee details
-    const onSubmit = (e: React.FormEvent) => {
+    const onSubmit = (e: FormEvent) => {
         e.preventDefault();
-        if (isProtectedSuperadmin) return;
-        put(`/employees/${user?.id}`);
+        
+        if (isProtectedSuperadmin || !user?.id) {
+            return;
+        }
+
+        // Ensure data is properly typed before submission
+        if (!isFormData(data)) {
+            console.error('Invalid form data');
+            return;
+        }
+
+        put(`/employees/${user.id}`, {
+            onSuccess: () => {
+                // Handle success
+                console.log('Employee updated successfully');
+            },
+            onError: (errors) => {
+                // Handle errors
+                console.error('Error updating employee:', errors);
+            },
+        });
     };
 
     // Reset form back to initial user values and navigate back to employees list

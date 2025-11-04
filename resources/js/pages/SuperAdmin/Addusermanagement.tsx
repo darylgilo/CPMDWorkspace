@@ -667,12 +667,10 @@ export default function AddUserManagement() {
                                                         id="role"
                                                         name="role"
                                                         value={role}
-                                                        onChange={(e) =>
-                                                            setRole(
-                                                                e.target
-                                                                    .value as any,
-                                                            )
-                                                        }
+                                                        onChange={(e) => {
+                                                            const value = e.target.value as 'user' | 'admin' | 'superadmin';
+                                                            setRole(value);
+                                                        }}
                                                         className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                     >
                                                         <option value="user">
@@ -697,8 +695,7 @@ export default function AddUserManagement() {
                                                         value={status}
                                                         onChange={(e) =>
                                                             setStatus(
-                                                                e.target
-                                                                    .value as any,
+                                                                e.target.value as 'active' | 'inactive',
                                                             )
                                                         }
                                                         className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"

@@ -8,7 +8,7 @@ interface SearchBarProps {
     placeholder?: string;
     className?: string;
     searchRoute?: string;
-    additionalParams?: Record<string, any>;
+    additionalParams?: Record<string, string | number | boolean | null | undefined>;
 }
 
 export default function SearchBar({
@@ -40,7 +40,7 @@ export default function SearchBar({
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [localSearch, searchRoute, additionalParams]);
+    }, [localSearch, search, searchRoute, additionalParams]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && searchRoute) {

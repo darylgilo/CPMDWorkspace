@@ -54,15 +54,14 @@ export default function Profile({
     const getProfilePictureUrl = () => {
         if (imgBroken) return null;
         if (previewImage) return previewImage;
-        const stored = (auth as any)?.user?.profile_picture as
-            | string
-            | undefined;
-        if (!stored) return null;
-        if (stored.startsWith('http://') || stored.startsWith('https://'))
-            return stored;
-        if (stored.startsWith('/')) return stored; // already absolute path
-        if (stored.startsWith('storage/')) return `/${stored}`; // already in storage folder
-        return `/storage/${stored}`;
+        const stored = (auth as unknown as Record<string, unknown>)?.user as Record<string, unknown> | undefined;
+        const profilePicture = stored?.profile_picture as string | undefined;
+        if (!profilePicture) return null;
+        if (profilePicture?.startsWith('http://') || profilePicture?.startsWith('https://'))
+            return profilePicture;
+        if (profilePicture?.startsWith('/')) return profilePicture; // already absolute path
+        if (profilePicture?.startsWith('storage/')) return `/${profilePicture}`; // already in storage folder
+        return `/storage/${profilePicture}`;
     };
 
     // Handle local file selection to create a preview

@@ -14,13 +14,38 @@ import {
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Eye, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 // Employee Directory list page component (read-only)
 export default function EmployeeDirectory() {
-    const pageProps = usePage().props as any;
-    const { users = { data: [] }, auth } = pageProps;
+    interface User {
+        id: number;
+        name: string;
+        email: string;
+        position?: string;
+        office?: string;
+        cpmd_section?: string;
+        [key: string]: unknown;
+    }
+
+    interface PageProps extends InertiaPageProps {
+        users: {
+            data: User[];
+            [key: string]: unknown;
+        };
+        auth: {
+            user?: {
+                id: number;
+                [key: string]: unknown;
+            };
+            [key: string]: unknown;
+        };
+    }
+
+    const { props } = usePage<PageProps>();
+    const { users = { data: [] } } = props;
 
     // State for search and filters
     const [search, setSearch] = useState<string>('');
@@ -41,7 +66,7 @@ export default function EmployeeDirectory() {
 
     // Client-side filtering
     const filteredEmployees = useMemo(() => {
-        let result = [...allEmployees];
+        let result: User[] = [...allEmployees];
 
         // Apply office filter
         if (office) {
@@ -67,9 +92,6 @@ export default function EmployeeDirectory() {
         return result;
     }, [allEmployees, search, office, cpmd]);
 
-    // Calculate total pages
-    const totalPages = Math.ceil(filteredEmployees.length / perPage);
-
     // Get paginated employees
     const paginatedEmployees = useMemo(() => {
         const startIndex = (currentPage - 1) * perPage;
@@ -77,30 +99,48 @@ export default function EmployeeDirectory() {
     }, [filteredEmployees, currentPage, perPage]);
 
     // Update URL without page reload
-    const updateUrl = () => {
-        const params = new URLSearchParams();
-        if (search) params.set('search', search);
-        if (perPage !== 12) params.set('perPage', perPage.toString());
-        if (office) params.set('office', office);
-        if (cpmd) params.set('cpmd', cpmd);
-        if (currentPage > 1) params.set('page', currentPage.toString());
+    const updateUrl = useMemo(() => {
+        return () => {
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (perPage !== 12) params.set('perPage', perPage.toString());
+            if (office) params.set('office', office);
+            if (cpmd) params.set('cpmd', cpmd);
+            if (currentPage > 1) params.set('page', currentPage.toString());
 
-        const url = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, '', url);
-    };
+            const url = `${window.location.pathname}?${params.toString()}`;
+            window.history.replaceState({}, '', url);
+        };
+    }, [search, perPage, office, cpmd, currentPage]);
 
     // Handle page changes when filters or items per page changes
     useEffect(() => {
         const newTotalPages = Math.ceil(filteredEmployees.length / perPage);
+        let shouldUpdate = false;
+        let newPage = currentPage;
+
         if (currentPage > newTotalPages && newTotalPages > 0) {
-            setCurrentPage(newTotalPages);
+            newPage = newTotalPages;
+            shouldUpdate = true;
         } else if (currentPage === 0 && newTotalPages > 0) {
-            setCurrentPage(1);
+            newPage = 1;
+            shouldUpdate = true;
         } else if (search || office || cpmd) {
-            setCurrentPage(1);
+            newPage = 1;
+            shouldUpdate = true;
         }
+
+        if (shouldUpdate) {
+            setCurrentPage(newPage);
+        } else {
+            updateUrl();
+        }
+    }, [search, office, cpmd, perPage, filteredEmployees.length, currentPage, updateUrl]);
+
+    // Update URL when currentPage changes
+    useEffect(() => {
         updateUrl();
-    }, [search, office, cpmd, perPage, filteredEmployees.length]);
+    }, [currentPage, updateUrl]);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
@@ -108,7 +148,7 @@ export default function EmployeeDirectory() {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        updateUrl();
+        // updateUrl will be called by the effect below
     };
 
     const handleClearFilters = () => {
@@ -346,7 +386,7 @@ export default function EmployeeDirectory() {
 
                 {/* Employee Grid */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    {paginatedEmployees.map((employee: any) => (
+                    {paginatedEmployees.map((employee: User) => (
                         <CustomCard key={employee.id}>
                             <CustomCardAvatar
                                 src={

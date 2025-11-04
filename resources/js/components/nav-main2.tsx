@@ -49,8 +49,14 @@ export function NavMain2({
         const unsubscribe = navMain2State.subscribe((newState) => {
             setOpenItems(newState);
         });
-        return unsubscribe;
-    }, []);
+
+        // Initialize with current state
+        setOpenItems(navMain2State.getState());
+
+        return () => {
+            unsubscribe();
+        };
+    }, [basePath, items]);
 
     // Initialize state based on active routes on mount
     useEffect(() => {
@@ -70,7 +76,7 @@ export function NavMain2({
             };
         });
         navMain2State.initialize(initialItems);
-    }, []);
+    }, [basePath, items]);
 
     // Update open state when base path changes (not query params)
     useEffect(() => {
@@ -90,7 +96,7 @@ export function NavMain2({
                 navMain2State.setState(item.title, true);
             }
         });
-    }, [basePath]);
+    }, [basePath, items]);
 
     // Handle state changes
     const handleOpenChange = (itemTitle: string, open: boolean) => {

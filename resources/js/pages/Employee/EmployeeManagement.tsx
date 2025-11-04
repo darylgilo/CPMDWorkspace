@@ -14,13 +14,57 @@ import {
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
+import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Eye, RotateCcw, UserPlus } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+// Define types
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    position?: string;
+    office?: string;
+    cpmd?: string;
+    [key: string]: unknown;
+}
+
+interface PaginatedUsers {
+    data: User[];
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+interface PageProps extends InertiaPageProps {
+    users: PaginatedUsers;
+    auth: {
+        user?: {
+            id: number;
+            role?: string;
+            [key: string]: unknown;
+        };
+        [key: string]: unknown;
+    };
+}
 
 // Employee Management list page component
 export default function EmployeeManagement() {
-    const pageProps = usePage().props as any;
-    const { users = { data: [], links: [] }, auth } = pageProps;
+    const { props } = usePage<PageProps>();
+    const { users = { 
+        data: [], 
+        links: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: 12,
+        total: 0
+    } as PaginatedUsers, auth } = props;
 
     // Local state for search, filters, and employees
     const [search, setSearch] = useState<string>('');
@@ -66,11 +110,23 @@ export default function EmployeeManagement() {
     }, [allEmployees, search, office, cpmd]);
 
     // Pagination
-    const totalPages = Math.ceil(filteredEmployees.length / perPage);
     const paginatedEmployees = useMemo(() => {
         const startIndex = (currentPage - 1) * perPage;
         return filteredEmployees.slice(startIndex, startIndex + perPage);
     }, [filteredEmployees, currentPage, perPage]);
+
+    // Update URL without page reload
+    const updateUrl = useCallback(() => {
+        const params = new URLSearchParams();
+        if (search) params.set('search', search);
+        if (perPage !== 12) params.set('perPage', perPage.toString());
+        if (office) params.set('office', office);
+        if (cpmd) params.set('cpmd', cpmd);
+        if (currentPage > 1) params.set('page', currentPage.toString());
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', url);
+    }, [search, perPage, office, cpmd, currentPage]);
 
     // Handle page changes when filters or items per page changes
     useEffect(() => {
@@ -83,29 +139,16 @@ export default function EmployeeManagement() {
             setCurrentPage(1);
         }
         updateUrl();
-    }, [search, office, cpmd, perPage, filteredEmployees.length]);
-
-    // Update URL without page reload
-    const updateUrl = () => {
-        const params = new URLSearchParams();
-        if (search) params.set('search', search);
-        if (perPage !== 12) params.set('perPage', perPage.toString());
-        if (office) params.set('office', office);
-        if (cpmd) params.set('cpmd', cpmd);
-        if (currentPage > 1) params.set('page', currentPage.toString());
-
-        const url = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({}, '', url);
-    };
+    }, [search, office, cpmd, perPage, filteredEmployees.length, currentPage, updateUrl]);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
     };
 
-    // Handle page change for pagination
+    // Handle page change with proper type safety
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        updateUrl();
+        // updateUrl will be called by the effect below
     };
 
     return (
@@ -355,7 +398,7 @@ export default function EmployeeManagement() {
                 {/* Cards grid */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredEmployees.length > 0 ? (
-                        paginatedEmployees.map((employee: any) => (
+                        paginatedEmployees.map((employee: User) => (
                             <CustomCard key={employee.id}>
                                 <CustomCardAvatar
                                     src={

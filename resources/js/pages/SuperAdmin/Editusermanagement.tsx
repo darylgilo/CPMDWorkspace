@@ -15,9 +15,46 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
+interface UserType {
+    id: number;
+    name: string;
+    email: string;
+    role: 'user' | 'admin' | 'superadmin';
+    status: 'active' | 'inactive';
+    employee_id?: string;
+    position?: string;
+    employment_status?: string;
+    office?: string;
+    cpmd?: string;
+    tin_number?: string;
+    gsis_number?: string;
+    address?: string;
+    date_of_birth?: string;
+    hiring_date?: string;
+    item_number?: string;
+    gender?: string;
+    mobile_number?: string;
+    contact_number?: string;
+    contact_person?: string;
+    profile_picture?: string;
+}
+
+interface PageProps {
+    user: UserType;
+    auth: {
+        user: UserType;
+    };
+    errors: Record<string, string>;
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    [key: string]: unknown;
+}
+
 export default function EditUserManagement() {
-    const pageProps = usePage().props as any;
-    const { user, auth, errors } = pageProps;
+    const { props } = usePage<PageProps>();
+    const { user, errors } = props;
 
     // Basic user fields
     const [name, setName] = useState('');
@@ -51,7 +88,7 @@ export default function EditUserManagement() {
     const [superadminPassword, setSuperadminPassword] = useState('');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting] = useState(false);
     const [passwordError, setPasswordError] = useState('');
 
     // References
@@ -980,12 +1017,10 @@ export default function EditUserManagement() {
                                                                 id="role"
                                                                 name="role"
                                                                 value={role}
-                                                                onChange={(e) =>
-                                                                    setRole(
-                                                                        e.target
-                                                                            .value as any,
-                                                                    )
-                                                                }
+                                                                onChange={(e) => {
+                                                                    const value = e.target.value as 'user' | 'admin' | 'superadmin';
+                                                                    setRole(value);
+                                                                }}
                                                                 className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
                                                                 <option value="user">
@@ -1018,7 +1053,7 @@ export default function EditUserManagement() {
                                                                 onChange={(e) =>
                                                                     setStatus(
                                                                         e.target
-                                                                            .value as any,
+                                                                            .value as 'active' | 'inactive',
                                                                     )
                                                                 }
                                                                 className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"

@@ -28,12 +28,18 @@ type User = {
 };
 
 // Define the page props
-type PageProps = {
+interface PageProps {
     auth?: {
         user?: User;
+        [key: string]: unknown;
     };
-    [key: string]: any; // Allow additional properties
-};
+    flash?: {
+        success?: string;
+        error?: string;
+        [key: string]: unknown;
+    };
+    [key: string]: unknown;
+}
 
 export default function AIchatbot() {
     const page = usePage<PageProps>();
@@ -98,21 +104,38 @@ export default function AIchatbot() {
     const handleCopy = async (m: ChatMessage) => {
         try {
             await navigator.clipboard.writeText(getAssistantText(m));
-        } catch {}
+        } catch (error) {
+            console.error('Failed to copy text:', error);
+            // Optionally show a user-friendly error message
+        }
     };
 
     const handleShare = async (m: ChatMessage) => {
         const text = getAssistantText(m);
+        
+        // Use type assertion for web share API
+        const nav = navigator as Navigator & {
+            share?: (data: { title?: string; text?: string }) => Promise<void>;
+        };
+
         // Prefer Web Share API when available, otherwise fallback to copy
-        if ((navigator as any).share) {
+        if (nav.share) {
             try {
-                await (navigator as any).share({ text, title: 'AI Assistant' });
+                await nav.share({ text, title: 'AI Assistant' });
                 return;
-            } catch {}
+            } catch (error) {
+                console.error('Error sharing:', error);
+                // Continue to fallback if sharing fails
+            }
         }
+        
+        // Fallback to copy to clipboard
         try {
             await navigator.clipboard.writeText(text);
-        } catch {}
+        } catch (error) {
+            console.error('Failed to copy to clipboard:', error);
+            // Optionally show a user-friendly error message
+        }
     };
 
     const handleVariantNav = (mId: string, dir: 'prev' | 'next') => {
@@ -236,13 +259,14 @@ export default function AIchatbot() {
                         variantIndex: 0,
                     },
                 ]);
-            } catch (e: any) {
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
                 setMessages((prev) => [
                     ...prev,
                     {
                         id: crypto.randomUUID(),
-                        role: 'assistant',
-                        content: `Network error: ${e?.message || e}`,
+                        role: 'assistant' as const,
+                        content: `Error: ${errorMessage}`,
                     },
                 ]);
             } finally {
@@ -299,7 +323,9 @@ export default function AIchatbot() {
                         };
                     }),
                 );
-            } catch {
+            } catch (error) {
+                console.error('Error in redoAssistant:', error);
+                // Optionally show a user-friendly error message
             } finally {
                 setIsTyping(false);
             }

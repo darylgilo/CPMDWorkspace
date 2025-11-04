@@ -102,7 +102,9 @@ const timeOptions = generateTimeOptions();
 function convertTo24Hour(time12h: string): string {
     if (!time12h) return '';
     const [time, period] = time12h.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
+    const [hoursStr, minutesStr] = time.split(':');
+    let hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
 
     if (period === 'PM' && hours !== 12) {
         hours += 12;
@@ -122,9 +124,38 @@ function convertTo12Hour(time24h: string): string {
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
 
+interface ServerNotice {
+    id: number | string;
+    title: string;
+    description: string;
+    username: string;
+    created_at: string;
+    date?: string | null;
+    time?: string | null;
+    files_download_url?: string | null;
+    files?: Array<{
+        name?: string;
+        url: string;
+        mime?: string;
+        size?: number | string;
+    }>;
+    file_url?: string;
+    file_name?: string;
+    file_mime?: string;
+    file_size?: number | string;
+    category: Category;
+    [key: string]: unknown;
+}
+
+interface PageProps {
+    notices?: ServerNotice[];
+    [key: string]: unknown;
+}
+
 export default function Noticeboard() {
-    const pageProps = usePage().props as any;
-    const serverNotices = (pageProps?.notices as any[]) ?? [];
+
+    const { props } = usePage<PageProps>();
+    const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
 
     // Local form state for creating a notice
     const [title, setTitle] = useState('');
@@ -208,12 +239,9 @@ export default function Noticeboard() {
 
     // Map backend props into a typed, UI-friendly array of notices
     const mappedNotices: Notice[] = useMemo(() => {
-        return (serverNotices as any[]).map((n) => {
-            const isImage = n.file_mime
-                ? String(n.file_mime).startsWith('image/')
-                : false;
+        return (serverNotices as Array<Record<string, unknown>>).map((n) => {
             const filesArr = Array.isArray(n.files)
-                ? (n.files as any[]).map((f) => ({
+                ? (n.files as Array<Record<string, unknown>>).map((f) => ({
                       name: f.name ?? 'file',
                       url: f.url,
                       type: f.mime ?? '',
@@ -271,7 +299,6 @@ export default function Noticeboard() {
     }, [mappedNotices, filterCategory, search, pinnedNotices]);
 
     // Pagination calculations
-    const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedNotices = filteredNotices.slice(startIndex, endIndex);
@@ -293,6 +320,7 @@ export default function Noticeboard() {
     ]);
 
     // Programmatically download a file/blob given a URL and an optional filename
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async function downloadFile(url: string, filename?: string) {
         const isZip = url.includes('.zip') || url.includes('download-all');
         const downloadName =
@@ -649,7 +677,7 @@ export default function Noticeboard() {
                         <Select
                             value={filterCategory}
                             onValueChange={(value) =>
-                                setFilterCategory(value as any)
+                                setFilterCategory(value as 'All' | Category)
                             }
                         >
                             <SelectTrigger className="w-[180px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">

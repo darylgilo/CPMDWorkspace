@@ -164,9 +164,29 @@ const data = {
   ],*/
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const pageProps = usePage().props as any;
-    const { auth } = pageProps;
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    [key: string]: unknown;
+}
+
+interface Auth {
+    user?: User;
+    [key: string]: unknown;
+}
+
+interface PageProps {
+    auth?: Auth;
+    [key: string]: unknown;
+}
+
+type AppSidebarProps = React.ComponentProps<typeof Sidebar>;
+
+export function AppSidebar(componentProps: AppSidebarProps) {
+    const { props: pageProps } = usePage<PageProps>();
+    const auth = pageProps.auth || {};
 
     const filteredNavMain2 = React.useMemo(() => {
         return data.navMain2
@@ -183,7 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }, [auth?.user?.role]);
 
     return (
-        <Sidebar variant="inset" {...props}>
+        <Sidebar variant="inset" {...componentProps}>
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
