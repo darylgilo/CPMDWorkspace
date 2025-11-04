@@ -2,7 +2,10 @@
 // provided at runtime by Wayfinder or backend code generators.
 
 type RouteParams = Record<string, string | number | boolean>;
-type RouteQuery = Record<string, string | number | boolean | (string | number | boolean)[]>;
+type RouteQuery = Record<
+    string,
+    string | number | boolean | (string | number | boolean)[]
+>;
 
 interface RouteOptions {
     absolute?: boolean;

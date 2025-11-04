@@ -1,7 +1,7 @@
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, usePage } from '@inertiajs/react';
 import { type PageProps } from '@inertiajs/core';
+import { Head, router, usePage } from '@inertiajs/react';
 
 interface User {
     id: number;
@@ -40,7 +40,7 @@ interface EmployeeDirectoryViewProps extends PageProps {
 export default function EmployeeDirectoryView() {
     const { props } = usePage<EmployeeDirectoryViewProps>();
     const { user } = props;
-    
+
     if (!user) {
         return (
             <AppLayout
@@ -51,7 +51,8 @@ export default function EmployeeDirectoryView() {
             >
                 <div className="flex h-64 items-center justify-center">
                     <p className="text-gray-500 dark:text-gray-400">
-                        Employee not found or you don't have permission to view this profile.
+                        Employee not found or you don't have permission to view
+                        this profile.
                     </p>
                 </div>
             </AppLayout>

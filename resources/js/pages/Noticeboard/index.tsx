@@ -153,7 +153,6 @@ interface PageProps {
 }
 
 export default function Noticeboard() {
-
     const { props } = usePage<PageProps>();
     const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
 

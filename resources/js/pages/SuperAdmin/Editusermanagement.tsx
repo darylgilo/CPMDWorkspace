@@ -1017,9 +1017,18 @@ export default function EditUserManagement() {
                                                                 id="role"
                                                                 name="role"
                                                                 value={role}
-                                                                onChange={(e) => {
-                                                                    const value = e.target.value as 'user' | 'admin' | 'superadmin';
-                                                                    setRole(value);
+                                                                onChange={(
+                                                                    e,
+                                                                ) => {
+                                                                    const value =
+                                                                        e.target
+                                                                            .value as
+                                                                            | 'user'
+                                                                            | 'admin'
+                                                                            | 'superadmin';
+                                                                    setRole(
+                                                                        value,
+                                                                    );
                                                                 }}
                                                                 className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
@@ -1053,7 +1062,9 @@ export default function EditUserManagement() {
                                                                 onChange={(e) =>
                                                                     setStatus(
                                                                         e.target
-                                                                            .value as 'active' | 'inactive',
+                                                                            .value as
+                                                                            | 'active'
+                                                                            | 'inactive',
                                                                     )
                                                                 }
                                                                 className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"

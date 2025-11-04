@@ -4,16 +4,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent } from 'react';
 
 // Employee profile view/edit page component
 export default function EmployeeView() {
     // Define types
     type EmploymentStatus = 'Regular' | 'COS' | 'Job Order' | 'Others';
-    type Office = 'DO' | 'ADO' | 'CPMD' | 'AED' | 'NSQCS' | 'NPQSD' | 'NSIC' | 'CRPSD' | 'PPSSD' | 'ADMINISTRATIVE' | 'Others';
-    type CPMDSection = '' | 'BIOCON section' | 'PFS section' | 'PHPS SECTION' | 'OC-Admin Support Unit' | 'OC-ICT Unit' | 'OC-Special Project' | 'Others';
+    type Office =
+        | 'DO'
+        | 'ADO'
+        | 'CPMD'
+        | 'AED'
+        | 'NSQCS'
+        | 'NPQSD'
+        | 'NSIC'
+        | 'CRPSD'
+        | 'PPSSD'
+        | 'ADMINISTRATIVE'
+        | 'Others';
+    type CPMDSection =
+        | ''
+        | 'BIOCON section'
+        | 'PFS section'
+        | 'PHPS SECTION'
+        | 'OC-Admin Support Unit'
+        | 'OC-ICT Unit'
+        | 'OC-Special Project'
+        | 'Others';
     type Gender = 'Male' | 'Female';
 
     interface User {
@@ -99,7 +118,10 @@ export default function EmployeeView() {
     }
 
     // Helper function to safely get string value with fallback
-    const getStringValue = (value: unknown, defaultValue: string = ''): string => {
+    const getStringValue = (
+        value: unknown,
+        defaultValue: string = '',
+    ): string => {
         return typeof value === 'string' ? value : defaultValue;
     };
 
@@ -107,19 +129,45 @@ export default function EmployeeView() {
     const getEnumValue = <T extends string>(
         value: unknown,
         validValues: readonly T[],
-        defaultValue: T
+        defaultValue: T,
     ): T => {
-        return validValues.some(v => v === value) 
-            ? value as T 
+        return validValues.some((v) => v === value)
+            ? (value as T)
             : defaultValue;
     };
 
     // Initialize form with user values
     const getInitialData = (): FormData => {
         // Define valid values for enums
-        const employmentStatuses = ['Regular', 'COS', 'Job Order', 'Others'] as const;
-        const offices = ['DO', 'ADO', 'CPMD', 'AED', 'NSQCS', 'NPQSD', 'NSIC', 'CRPSD', 'PPSSD', 'ADMINISTRATIVE', 'Others'] as const;
-        const cpmdSections = ['', 'BIOCON section', 'PFS section', 'PHPS SECTION', 'OC-Admin Support Unit', 'OC-ICT Unit', 'OC-Special Project', 'Others'] as const;
+        const employmentStatuses = [
+            'Regular',
+            'COS',
+            'Job Order',
+            'Others',
+        ] as const;
+        const offices = [
+            'DO',
+            'ADO',
+            'CPMD',
+            'AED',
+            'NSQCS',
+            'NPQSD',
+            'NSIC',
+            'CRPSD',
+            'PPSSD',
+            'ADMINISTRATIVE',
+            'Others',
+        ] as const;
+        const cpmdSections = [
+            '',
+            'BIOCON section',
+            'PFS section',
+            'PHPS SECTION',
+            'OC-Admin Support Unit',
+            'OC-ICT Unit',
+            'OC-Special Project',
+            'Others',
+        ] as const;
         const genders = ['Male', 'Female'] as const;
         const statuses = ['active', 'inactive'] as const;
 
@@ -128,7 +176,11 @@ export default function EmployeeView() {
             email: getStringValue(user?.email),
             employee_id: getStringValue(user?.employee_id),
             position: getStringValue(user?.position),
-            employment_status: getEnumValue(user?.employment_status, employmentStatuses, 'Regular'),
+            employment_status: getEnumValue(
+                user?.employment_status,
+                employmentStatuses,
+                'Regular',
+            ),
             office: getEnumValue(user?.office, offices, 'Others'),
             cpmd: getEnumValue(user?.cpmd, cpmdSections, ''),
             tin_number: getStringValue(user?.tin_number),
@@ -150,13 +202,13 @@ export default function EmployeeView() {
     // Inertia form helper for PUT updates with proper typing
     const { data, setData, put, processing } = useForm<FormData>(initialData);
 
-    const isProtectedSuperadmin = 
+    const isProtectedSuperadmin =
         auth?.user?.role !== 'superadmin' && user?.role === 'superadmin';
 
     // Type guard to ensure data is FormData
     const isFormData = (data: unknown): data is FormData => {
         return (
-            typeof data === 'object' && 
+            typeof data === 'object' &&
             data !== null &&
             'name' in data &&
             'email' in data
@@ -167,7 +219,7 @@ export default function EmployeeView() {
     // Submit updated employee details
     const onSubmit = (e: FormEvent) => {
         e.preventDefault();
-        
+
         if (isProtectedSuperadmin || !user?.id) {
             return;
         }

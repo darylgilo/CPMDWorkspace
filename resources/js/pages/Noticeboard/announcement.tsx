@@ -72,7 +72,10 @@ function isSameDay(date1: Date, date2: Date): boolean {
 
 export default function AnnouncementPage() {
     const pageProps = usePage().props as Record<string, unknown>;
-    const serverNotices = useMemo(() => (pageProps?.notices as Array<Record<string, unknown>>) ?? [], [pageProps?.notices]);
+    const serverNotices = useMemo(
+        () => (pageProps?.notices as Array<Record<string, unknown>>) ?? [],
+        [pageProps?.notices],
+    );
 
     // Current date state for calendar navigation
     const [currentDate, setCurrentDate] = useState(new Date());

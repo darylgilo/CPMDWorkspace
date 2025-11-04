@@ -54,10 +54,15 @@ export default function Profile({
     const getProfilePictureUrl = () => {
         if (imgBroken) return null;
         if (previewImage) return previewImage;
-        const stored = (auth as unknown as Record<string, unknown>)?.user as Record<string, unknown> | undefined;
+        const stored = (auth as unknown as Record<string, unknown>)?.user as
+            | Record<string, unknown>
+            | undefined;
         const profilePicture = stored?.profile_picture as string | undefined;
         if (!profilePicture) return null;
-        if (profilePicture?.startsWith('http://') || profilePicture?.startsWith('https://'))
+        if (
+            profilePicture?.startsWith('http://') ||
+            profilePicture?.startsWith('https://')
+        )
             return profilePicture;
         if (profilePicture?.startsWith('/')) return profilePicture; // already absolute path
         if (profilePicture?.startsWith('storage/')) return `/${profilePicture}`; // already in storage folder

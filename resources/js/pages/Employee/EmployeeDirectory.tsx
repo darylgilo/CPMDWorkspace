@@ -13,8 +13,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, usePage } from '@inertiajs/react';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Eye, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -137,7 +137,15 @@ export default function EmployeeDirectory() {
         } else {
             updateUrl();
         }
-    }, [search, office, cpmd, perPage, filteredEmployees.length, currentPage, updateUrl]);
+    }, [
+        search,
+        office,
+        cpmd,
+        perPage,
+        filteredEmployees.length,
+        currentPage,
+        updateUrl,
+    ]);
 
     // Update URL when currentPage changes
     useEffect(() => {
@@ -406,14 +414,21 @@ export default function EmployeeDirectory() {
                                     {employee.position || '—'}
                                 </div>
                                 <div className="mt-1 truncate text-xs text-gray-500 dark:text-neutral-400">
-                                    {employee.employee_id || employee.email || '—'}
+                                    {employee.employee_id ||
+                                        employee.email ||
+                                        '—'}
                                 </div>
 
                                 <div className="mt-3 flex items-center justify-between">
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-xs ${employee.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-neutral-700 dark:text-gray-300'}`}
                                     >
-                                        {employee.status ? employee.status.charAt(0).toUpperCase() + employee.status.slice(1) : '—'}
+                                        {employee.status
+                                            ? employee.status
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                              employee.status.slice(1)
+                                            : '—'}
                                     </span>
                                     <button
                                         onClick={() =>

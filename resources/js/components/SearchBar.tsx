@@ -8,7 +8,10 @@ interface SearchBarProps {
     placeholder?: string;
     className?: string;
     searchRoute?: string;
-    additionalParams?: Record<string, string | number | boolean | null | undefined>;
+    additionalParams?: Record<
+        string,
+        string | number | boolean | null | undefined
+    >;
 }
 
 export default function SearchBar({

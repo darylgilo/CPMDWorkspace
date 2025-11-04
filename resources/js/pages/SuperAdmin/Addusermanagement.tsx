@@ -668,7 +668,12 @@ export default function AddUserManagement() {
                                                         name="role"
                                                         value={role}
                                                         onChange={(e) => {
-                                                            const value = e.target.value as 'user' | 'admin' | 'superadmin';
+                                                            const value = e
+                                                                .target
+                                                                .value as
+                                                                | 'user'
+                                                                | 'admin'
+                                                                | 'superadmin';
                                                             setRole(value);
                                                         }}
                                                         className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
@@ -695,7 +700,10 @@ export default function AddUserManagement() {
                                                         value={status}
                                                         onChange={(e) =>
                                                             setStatus(
-                                                                e.target.value as 'active' | 'inactive',
+                                                                e.target
+                                                                    .value as
+                                                                    | 'active'
+                                                                    | 'inactive',
                                                             )
                                                         }
                                                         className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"

@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router, usePage } from '@inertiajs/react';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     Activity,
     ChevronDown,
@@ -112,7 +112,6 @@ interface PageProps extends InertiaPageProps {
 }
 
 export default function UserManagement() {
-
     // Get users data and search term from page props
     const { props } = usePage<PageProps>();
     const {
@@ -120,7 +119,7 @@ export default function UserManagement() {
         search = '',
         perPage: perPageProp = 10,
         status: statusProp = 'active',
-        analytics: analyticsProp
+        analytics: analyticsProp,
     } = props;
 
     // Debug logging (commented out in production)
@@ -134,9 +133,9 @@ export default function UserManagement() {
     // State for search, filter, and pagination
     const [searchValue, setSearchValue] = useState(search || '');
     const [perPage, setPerPage] = useState<number>(Number(perPageProp) || 10);
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>(
-        statusProp === 'inactive' ? 'inactive' : 'active'
-    );
+    const [statusFilter, setStatusFilter] = useState<
+        'all' | 'active' | 'inactive'
+    >(statusProp === 'inactive' ? 'inactive' : 'active');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortField, setSortField] = useState<keyof User>('name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -147,9 +146,11 @@ export default function UserManagement() {
             return {
                 total: analyticsProp.totalUsers || 0,
                 active: analyticsProp.activeUsers || 0,
-                inactive: (analyticsProp.totalUsers || 0) - (analyticsProp.activeUsers || 0),
+                inactive:
+                    (analyticsProp.totalUsers || 0) -
+                    (analyticsProp.activeUsers || 0),
                 newThisMonth: analyticsProp.newUsersThisMonth || 0,
-                online: analyticsProp.onlineUsers || 0
+                online: analyticsProp.onlineUsers || 0,
             };
         }
 
@@ -161,18 +162,21 @@ export default function UserManagement() {
 
         return {
             total: userData.length,
-            active: userData.filter(user => user.status === 'active').length,
-            inactive: userData.filter(user => user.status === 'inactive').length,
-            newThisMonth: userData.filter(user => {
+            active: userData.filter((user) => user.status === 'active').length,
+            inactive: userData.filter((user) => user.status === 'inactive')
+                .length,
+            newThisMonth: userData.filter((user) => {
                 if (!user.created_at) return false;
                 const created = new Date(user.created_at);
-                return created.getMonth() === currentMonth && 
-                       created.getFullYear() === currentYear;
+                return (
+                    created.getMonth() === currentMonth &&
+                    created.getFullYear() === currentYear
+                );
             }).length,
-            online: userData.filter(user => {
+            online: userData.filter((user) => {
                 if (!user.last_login_at) return false;
                 return new Date(user.last_login_at) > fifteenMinutesAgo;
-            }).length
+            }).length,
         };
     }, [users?.data, analyticsProp]);
 
@@ -717,15 +721,21 @@ export default function UserManagement() {
                                         <span>
                                             Showing{' '}
                                             <span className="font-medium">
-                                                {users.from !== undefined ? users.from : 0}
+                                                {users.from !== undefined
+                                                    ? users.from
+                                                    : 0}
                                             </span>{' '}
                                             to{' '}
                                             <span className="font-medium">
-                                                {users.to !== undefined ? users.to : 0}
+                                                {users.to !== undefined
+                                                    ? users.to
+                                                    : 0}
                                             </span>{' '}
                                             of{' '}
                                             <span className="font-medium">
-                                                {users.total !== undefined ? users.total : 0}
+                                                {users.total !== undefined
+                                                    ? users.total
+                                                    : 0}
                                             </span>{' '}
                                             users
                                         </span>
@@ -734,7 +744,8 @@ export default function UserManagement() {
                             </div>
                         </div>
 
-                        {Array.isArray(paginatedUsers) && paginatedUsers.length > 0 ? (
+                        {Array.isArray(paginatedUsers) &&
+                        paginatedUsers.length > 0 ? (
                             paginatedUsers.map((user: User) => (
                                 <div
                                     key={user.id}

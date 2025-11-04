@@ -112,7 +112,7 @@ export default function AIchatbot() {
 
     const handleShare = async (m: ChatMessage) => {
         const text = getAssistantText(m);
-        
+
         // Use type assertion for web share API
         const nav = navigator as Navigator & {
             share?: (data: { title?: string; text?: string }) => Promise<void>;
@@ -128,7 +128,7 @@ export default function AIchatbot() {
                 // Continue to fallback if sharing fails
             }
         }
-        
+
         // Fallback to copy to clipboard
         try {
             await navigator.clipboard.writeText(text);
@@ -260,7 +260,10 @@ export default function AIchatbot() {
                     },
                 ]);
             } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+                const errorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : 'An unknown error occurred';
                 setMessages((prev) => [
                     ...prev,
                     {
