@@ -200,7 +200,23 @@ export default function EmployeeView() {
     const initialData = getInitialData();
 
     // Inertia form helper for PUT updates with proper typing
-    const { data, setData, put, processing } = useForm<FormData>(initialData);
+    const { data, setData, put, processing } = useForm({
+        ...initialData,
+    });
+
+    // Type assertion for setData to handle FormData keys
+    const typedSetData = setData as <K extends keyof FormData>(
+        key: K,
+        value: FormData[K],
+    ) => void;
+
+    // Helper function to properly type setData calls
+    const handleInputChange = <K extends keyof FormData>(
+        field: K,
+        value: FormData[K],
+    ) => {
+        typedSetData(field, value);
+    };
 
     const isProtectedSuperadmin =
         auth?.user?.role !== 'superadmin' && user?.role === 'superadmin';
@@ -365,7 +381,7 @@ export default function EmployeeView() {
                                                 id="name"
                                                 value={data.name}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'name',
                                                         e.target.value,
                                                     )
@@ -379,7 +395,7 @@ export default function EmployeeView() {
                                                 id="email"
                                                 value={data.email}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'email',
                                                         e.target.value,
                                                     )
@@ -395,7 +411,7 @@ export default function EmployeeView() {
                                                 id="employee_id"
                                                 value={data.employee_id}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'employee_id',
                                                         e.target.value,
                                                     )
@@ -411,7 +427,7 @@ export default function EmployeeView() {
                                                 id="position"
                                                 value={data.position}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'position',
                                                         e.target.value,
                                                     )
@@ -427,7 +443,7 @@ export default function EmployeeView() {
                                                 id="employment_status"
                                                 value={data.employment_status}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'employment_status',
                                                         e.target
                                                             .value as FormData['employment_status'],
@@ -457,7 +473,7 @@ export default function EmployeeView() {
                                                     id="item_number"
                                                     value={data.item_number}
                                                     onChange={(e) =>
-                                                        setData(
+                                                        handleInputChange(
                                                             'item_number',
                                                             e.target.value,
                                                         )
@@ -476,9 +492,12 @@ export default function EmployeeView() {
                                                 onChange={(e) => {
                                                     const val = e.target
                                                         .value as FormData['office'];
-                                                    setData('office', val);
+                                                    handleInputChange(
+                                                        'office',
+                                                        val,
+                                                    );
                                                     if (val !== 'CPMD') {
-                                                        setData(
+                                                        handleInputChange(
                                                             'cpmd',
                                                             'Others' as FormData['cpmd'],
                                                         );
@@ -524,7 +543,7 @@ export default function EmployeeView() {
                                                     id="cpmd"
                                                     value={data.cpmd}
                                                     onChange={(e) =>
-                                                        setData(
+                                                        handleInputChange(
                                                             'cpmd',
                                                             e.target
                                                                 .value as FormData['cpmd'],
@@ -575,7 +594,7 @@ export default function EmployeeView() {
                                                 type="date"
                                                 value={data.hiring_date}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'hiring_date',
                                                         e.target.value,
                                                     )
@@ -591,7 +610,7 @@ export default function EmployeeView() {
                                                 id="tin_number"
                                                 value={data.tin_number}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'tin_number',
                                                         e.target.value,
                                                     )
@@ -607,7 +626,7 @@ export default function EmployeeView() {
                                                 id="gsis_number"
                                                 value={data.gsis_number}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'gsis_number',
                                                         e.target.value,
                                                     )
@@ -623,7 +642,7 @@ export default function EmployeeView() {
                                                 id="address"
                                                 value={data.address}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'address',
                                                         e.target.value,
                                                     )
@@ -640,7 +659,7 @@ export default function EmployeeView() {
                                                 type="date"
                                                 value={data.date_of_birth}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'date_of_birth',
                                                         e.target.value,
                                                     )
@@ -656,7 +675,7 @@ export default function EmployeeView() {
                                                 id="gender"
                                                 value={data.gender}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'gender',
                                                         e.target
                                                             .value as FormData['gender'],
@@ -680,7 +699,7 @@ export default function EmployeeView() {
                                                 id="mobile_number"
                                                 value={data.mobile_number}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'mobile_number',
                                                         e.target.value,
                                                     )
@@ -706,7 +725,7 @@ export default function EmployeeView() {
                                                 id="contact_person"
                                                 value={data.contact_person}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'contact_person',
                                                         e.target.value,
                                                     )
@@ -722,7 +741,7 @@ export default function EmployeeView() {
                                                 id="contact_number"
                                                 value={data.contact_number}
                                                 onChange={(e) =>
-                                                    setData(
+                                                    handleInputChange(
                                                         'contact_number',
                                                         e.target.value,
                                                     )
