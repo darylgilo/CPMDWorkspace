@@ -348,7 +348,7 @@ export default function UserManagement() {
                 {/* Analytics Dashboard */}
                 <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
                     {/* Total Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
+                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
@@ -365,7 +365,7 @@ export default function UserManagement() {
                     </div>
 
                     {/* Active Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
+                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
@@ -382,7 +382,7 @@ export default function UserManagement() {
                     </div>
 
                     {/* New Users This Month Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
+                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
@@ -402,7 +402,7 @@ export default function UserManagement() {
                     </div>
 
                     {/* Online Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-[0_4px_20px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.06)] md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832]">
+                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
@@ -448,11 +448,7 @@ export default function UserManagement() {
                 </div>
                 {/* Users Table */}
                 <div
-                    className="overborder-sidebar-border/70 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 md:min-h-min dark:border-neutral-600 dark:border-neutral-800 dark:border-t-[#235347] dark:bg-neutral-900"
-                    style={{
-                        boxShadow:
-                            '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
-                    }}
+                    className="overborder-sidebar-border/70 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 md:min-h-min dark:border-neutral-600 dark:border-neutral-800 dark:border-t-[#235347] dark:bg-neutral-900 shadow-sm"
                 >
                     {/* DataTables-style Controls */}
                     <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

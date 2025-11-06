@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\Usercontrol\UserController;
-use App\Http\Controllers\EmployeeManagementController;
-use App\Http\Controllers\EmployeeDirectoryController;
+use App\Http\Controllers\Employee\EmployeeManagementController;
+use App\Http\Controllers\Employee\EmployeeDirectoryController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Middleware\RoleMiddleware;
 

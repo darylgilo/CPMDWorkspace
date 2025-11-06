@@ -23,3 +23,26 @@ In order to ensure that the Laravel community is welcoming to all, please review
 ## License
 
 The Laravel + React starter kit is open-sourced software licensed under the MIT license.
+
+##Prerequisites
+
+PHP 8.2 or higher
+Composer
+Node.js 18 or higher
+MySQL or PostgreSQL database
+
+##Installation Steps
+1. git clone
+
+#Install Additional Dependencies
+bashnpm install @headlessui/react @heroicons/react
+npm install
+
+#Configure Database
+Edit .env file:
+envDB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pesticide_inventory
+DB_USERNAME=your_username
+DB_PASSWORD=your_password

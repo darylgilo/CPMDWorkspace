@@ -143,11 +143,7 @@ export default function AddUserManagement() {
                     {/* Left Side: Profile Picture Card */}
                     <div className="order-1 lg:w-80">
                         <div
-                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
-                            style={{
-                                boxShadow:
-                                    '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
-                            }}
+                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 shadow-sm"
                         >
                             {/* Profile Picture Section */}
                             <div className="flex flex-col items-center space-y-4">
@@ -212,11 +208,8 @@ export default function AddUserManagement() {
                     {/* Right Side: Main Form Card */}
                     <div className="order-2 flex-1">
                         <div
-                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
-                            style={{
-                                boxShadow:
-                                    '0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)',
-                            }}
+                            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 shadow-sm
+                            "
                         >
                             <h2 className="mb-6 text-xl font-semibold text-gray-900 dark:text-white">
                                 Add New User
