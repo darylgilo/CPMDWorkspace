@@ -32,11 +32,7 @@ MySQL or PostgreSQL database
 
 ## Installation Steps
 1. git clone
-
-## Install Additional Dependencies
-bashnpm install @headlessui/react @heroicons/react
-npm install
-
+   
 ## Configure Database
 Edit .env file:
 envDB_CONNECTION=mysql
@@ -45,3 +41,12 @@ DB_PORT=3306
 DB_DATABASE=pesticide_inventory
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
+
+## Install Additional Dependencies
+bash npm install @headlessui/react @heroicons/react
+npm install
+php artisan migrate
+php artisan dbseed
+
+
+
