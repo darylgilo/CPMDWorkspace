@@ -10,7 +10,6 @@
         "lint": "eslint . --fix",
         "lint:ci": "eslint . --max-warnings=0",
         "test": "echo \"No tests configured\" && exit 0",
-        "test:ci": "echo \"No tests configured for CI\" && exit 0",
         "types": "tsc --noEmit"
     },
     "devDependencies": {
