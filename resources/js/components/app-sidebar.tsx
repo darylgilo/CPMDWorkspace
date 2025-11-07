@@ -101,8 +101,8 @@ const data = {
             icon: FolderArchive,
             items: [
                 {
-                    title: 'Pesticide Inventory',
-                    url: '#',
+                    title: 'Pesticide Management',
+                    url: '/pesticidesindex',
                 },
             ],
         },
