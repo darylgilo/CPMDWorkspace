@@ -1,0 +1,120 @@
+<?php
+
+namespace App\Http\Controllers\PesticideManagement;
+
+use App\Http\Controllers\Controller;
+use App\Models\Pesticide;
+use App\Models\Distribution;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+
+class PesticideIndexController extends Controller
+{
+    /**
+     * Display the pesticide management page with tabs.
+     */
+    public function index(Request $request)
+    {
+        $tab = $request->input('tab', 'inventory');
+        $search = $request->input('search', '');
+        $perPage = $request->input('perPage', 10);
+        
+        $data = [
+            'activeTab' => $tab,
+            'search' => $search,
+            'perPage' => $perPage,
+        ];
+
+        // Load BOTH tabs' data on initial load for instant switching
+        // Pesticide inventory data
+        $pesticideQuery = Pesticide::with('user')
+            ->when($search && $tab === 'inventory', function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('brand_name', 'like', "%{$search}%")
+                      ->orWhere('active_ingredient', 'like', "%{$search}%")
+                      ->orWhere('type_of_pesticide', 'like', "%{$search}%")
+                      ->orWhere('source_of_fund', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('created_at', 'desc');
+
+        $pesticides = $pesticideQuery->paginate($perPage);
+
+        // Calculate analytics by pesticide type
+        $typeStatistics = Pesticide::select('type_of_pesticide', DB::raw('COUNT(*) as count'), DB::raw('SUM(stock) as total_stock'))
+            ->groupBy('type_of_pesticide')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'type' => $item->type_of_pesticide,
+                    'count' => $item->count,
+                    'totalStock' => $item->total_stock,
+                ];
+            });
+
+        $pesticideAnalytics = [
+            'typeStatistics' => $typeStatistics,
+            'totalStock' => Pesticide::sum('stock'),
+            'lowStock' => Pesticide::where('stock', '<', 10)->count(),
+            'expiringSoon' => Pesticide::where('expiry_date', '<=', now()->addMonths(3))->count(),
+        ];
+
+        // Get unique types and sources for dropdowns
+        $pesticideTypes = Pesticide::distinct()->pluck('type_of_pesticide')->filter()->values();
+        $sourcesOfFund = Pesticide::distinct()->pluck('source_of_fund')->filter()->values();
+
+        // Distribution data
+        $distributionQuery = Distribution::with(['user', 'pesticide'])
+            ->when($search && $tab === 'distribution', function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('brand_name', 'like', "%{$search}%")
+                      ->orWhere('type_of_pesticide', 'like', "%{$search}%")
+                      ->orWhere('travel_purpose', 'like', "%{$search}%")
+                      ->orWhere('received_by', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('created_at', 'desc');
+
+        $distributions = $distributionQuery->paginate($perPage);
+
+        // Calculate analytics
+        $distributionAnalytics = [
+            'totalDistributions' => Distribution::count(),
+            'totalDistributed' => Distribution::sum('quantity'),
+            'thisMonth' => Distribution::whereMonth('created_at', now()->month)->count(),
+            'thisWeek' => Distribution::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+        ];
+
+        // Get pesticides grouped by type with combined stock
+        $availablePesticides = Pesticide::select(
+                'type_of_pesticide',
+                DB::raw('GROUP_CONCAT(id) as pesticide_ids'),
+                DB::raw('SUM(stock) as total_stock')
+            )
+            ->where('stock', '>', 0)
+            ->groupBy('type_of_pesticide')
+            ->orderBy('type_of_pesticide')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->pesticide_ids,
+                    'type_of_pesticide' => $item->type_of_pesticide,
+                    'stock' => $item->total_stock,
+                ];
+            });
+
+        // Merge all data
+        $data = array_merge($data, [
+            'pesticides' => $pesticides,
+            'pesticideAnalytics' => $pesticideAnalytics,
+            'pesticideTypes' => $pesticideTypes,
+            'sourcesOfFund' => $sourcesOfFund,
+            'distributions' => $distributions,
+            'distributionAnalytics' => $distributionAnalytics,
+            'availablePesticides' => $availablePesticides,
+        ]);
+
+        return Inertia::render('PesticideInventory/PesticideIndex', $data);
+    }
+}

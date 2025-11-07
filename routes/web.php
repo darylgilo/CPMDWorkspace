@@ -7,6 +7,9 @@ use App\Http\Controllers\Usercontrol\UserController;
 use App\Http\Controllers\Employee\EmployeeManagementController;
 use App\Http\Controllers\Employee\EmployeeDirectoryController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\PesticideManagement\PesticideController;
+use App\Http\Controllers\PesticideManagement\DistributionController;
+use App\Http\Controllers\PesticideManagement\PesticideIndexController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -27,6 +30,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // AI Chatbot
     Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+
+    // Pesticide Management (Parent page with tabs)
+    Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
+
+    // Pesticide Inventory Management
+    Route::get('/pesticides', [PesticideController::class, 'index'])->name('pesticides.index');
+    Route::post('/pesticides', [PesticideController::class, 'store'])->name('pesticides.store');
+    Route::put('/pesticides/{pesticide}', [PesticideController::class, 'update'])->name('pesticides.update');
+    Route::delete('/pesticides/{pesticide}', [PesticideController::class, 'destroy'])->name('pesticides.destroy');
+
+    // Pesticide Distribution Management
+    Route::get('/distributions', [DistributionController::class, 'index'])->name('distributions.index');
+    Route::post('/distributions', [DistributionController::class, 'store'])->name('distributions.store');
+    Route::put('/distributions/{distribution}', [DistributionController::class, 'update'])->name('distributions.update');
+    Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
     // Noticeboard - specific routes before parameterized routes
     Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
     Route::get('/noticeboard/memo', [NoticeController::class, 'memo'])->name('noticeboard.memo');
