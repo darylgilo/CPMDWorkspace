@@ -1,4 +1,20 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {}
+    "name": "Laravel React StarterKit",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "bmewburn.vscode-intelephense-client",
+                "esbenp.prettier-vscode"
+            ]
+        }
+    },
+    "postCreateCommand": "composer install && npm install && cp .env.example .env && php artisan key:generate && npm run build",
+    "forwardPorts": [8000],
+    "remoteUser": "root"
 }
