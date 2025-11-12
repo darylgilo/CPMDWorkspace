@@ -2,27 +2,27 @@ version: '3.8'
 
 services:
   app:
-      build:
-            context: .
-                  dockerfile: .devcontainer/Dockerfile
-                      volumes:
-                            - .:/workspace
-                                ports:
-                                      - "8000:8000"
-                                          depends_on:
-                                                - db
-                                                    environment:
-                                                          DB_HOST: db
-                                                                DB_PORT: 5432
-                                                                      DB_DATABASE: cpmd
-                                                                            DB_USERNAME: cpmdmyapp
-                                                                                  DB_PASSWORD: Pestemology1
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: cpmd
+      DB_USERNAME: cpmdmyapp
+      DB_PASSWORD: ""
 
-                                                                                    db:
-                                                                                        image: postgres:15
-                                                                                            environment:
-                                                                                                  POSTGRES_DB: cpmd
-                                                                                                        POSTGRES_USER: cpmdmyapp
-                                                                                                              POSTGRES_PASSWORD: Pestemology1
-                                                                                                                  ports:
-                                                                                                                        - "5432:5432"
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: cpmd
+      POSTGRES_USER: cpmdmyapp
+      POSTGRES_PASSWORD: ""
+    ports:
+      - "5432:5432"

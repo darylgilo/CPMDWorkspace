@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { router, usePage } from '@inertiajs/react';
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
@@ -26,7 +27,15 @@ import {
     Plus,
     Edit3,
     Trash2,
+    MoreVertical,
 } from 'lucide-react';
+import TableExport from '@/components/TableExport';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 
 interface PesticideType {
@@ -84,6 +93,8 @@ export default function Distribution() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedDistribution, setSelectedDistribution] = useState<Distribution | null>(null);
+    const [sortField, setSortField] = useState<string>('received_date');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
     // Form field configuration for distributions
     const distributionFormFields: FormField[] = [
@@ -119,7 +130,6 @@ export default function Distribution() {
         received_date: '',
     });
 
-
     const handleSelectChange = (name: string, value: string) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -139,6 +149,12 @@ export default function Distribution() {
         setIsAddDialogOpen(true);
     };
 
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    };
+
     const handleEdit = (distribution: Distribution) => {
         setSelectedDistribution(distribution);
         setFormData({
@@ -146,7 +162,7 @@ export default function Distribution() {
             quantity: distribution.quantity.toString(),
             travel_purpose: distribution.travel_purpose,
             received_by: distribution.received_by,
-            received_date: distribution.received_date,
+            received_date: formatDateForInput(distribution.received_date),
         });
         setIsEditDialogOpen(true);
     };
@@ -180,7 +196,83 @@ export default function Distribution() {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        router.get('/pesticidesindex', { tab: 'distribution', search: searchValue, perPage, page }, { preserveState: true, replace: true });
+        router.get('/pesticidesindex', { tab: 'distribution', search: searchValue, perPage, page, sort: sortField, direction: sortDirection }, { preserveState: true, replace: true });
+    };
+
+    const handleSearchChange = (value: string) => {
+        setSearchValue(value);
+        setCurrentPage(1);
+        router.get(
+            '/pesticidesindex',
+            { 
+                tab: 'distribution', 
+                search: value, 
+                perPage,
+                sort: sortField,
+                direction: sortDirection
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handleSort = (field: string) => {
+        const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortField(field);
+        setSortDirection(newDirection);
+        setCurrentPage(1);
+
+        // Update URL with sort parameters
+        router.get(
+            '/pesticidesindex',
+            {
+                tab: 'distribution',
+                search: searchValue,
+                perPage,
+                sort: field,
+                direction: newDirection,
+                page: 1
+            },
+            { preserveState: true, replace: true }
+        );
+    };
+
+    // Sort the data client-side
+    const sortedDistributions = useMemo(() => {
+        if (!distributions?.data) return [];
+        
+        return [...distributions.data].sort((a, b) => {
+            let aValue = a[sortField as keyof Distribution];
+            let bValue = b[sortField as keyof Distribution];
+            
+            // Handle dates
+            if (sortField === 'received_date' || sortField === 'created_at') {
+                aValue = aValue ? new Date(aValue as string).getTime() : 0;
+                bValue = bValue ? new Date(bValue as string).getTime() : 0;
+            }
+            
+            // Handle string comparison
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            
+            // Handle number comparison
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return sortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            }
+            
+            return 0;
+        });
+    }, [distributions, sortField, sortDirection]);
+
+    const SortIndicator = ({ field }: { field: string }) => {
+        if (sortField !== field) return <ChevronUp className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />;
+        return sortDirection === 'asc' ?
+            <ChevronUp className="ml-1 h-3 w-3" /> :
+            <ChevronDown className="ml-1 h-3 w-3" />;
     };
 
     const formatDate = (dateString: string) => {
@@ -262,7 +354,7 @@ export default function Distribution() {
                             </Button>
                             <div className="flex items-center gap-2">
                                 <label htmlFor="entries" className="font-medium">Show</label>
-                                <Select value={perPage.toString()} onValueChange={(value) => { const newPerPage = parseInt(value, 10); setPerPage(newPerPage); router.get('/pesticidesindex', { tab: 'distribution', search: searchValue, perPage: newPerPage }, { preserveState: true, replace: true }); }}>
+                                <Select value={perPage.toString()} onValueChange={(value) => { const newPerPage = parseInt(value, 10); setPerPage(newPerPage); router.get('/pesticidesindex', { tab: 'distribution', search: searchValue, perPage: newPerPage, sort: sortField, direction: sortDirection }, { preserveState: true, replace: true }); }}>
                                     <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
                                         <SelectValue placeholder="10" />
                                     </SelectTrigger>
@@ -277,7 +369,29 @@ export default function Distribution() {
                             </div>
                         </div>
                         <div className="flex w-full items-center gap-2 md:w-auto">
-                            <SearchBar search={searchValue} onSearchChange={setSearchValue} placeholder="Search distributions..." className="w-full md:max-w-md" searchRoute="/pesticidesindex" additionalParams={{ tab: 'distribution', perPage }} />
+                            <SearchBar 
+                                search={searchValue} 
+                                onSearchChange={handleSearchChange} 
+                                placeholder="Search distributions..." 
+                                className="w-full md:max-w-md" 
+                                searchRoute="/pesticidesindex" 
+                                additionalParams={{ tab: 'distribution', perPage, sort: sortField, direction: sortDirection }} 
+                            />
+                            <TableExport 
+                                data={distributions.data} 
+                                filename="distribution-records"
+                                headers={[
+                                    { key: 'brand_name', label: 'Brand Name' },
+                                    { key: 'type_of_pesticide', label: 'Type' },
+                                    { key: 'quantity', label: 'Quantity' },
+                                    { key: 'travel_purpose', label: 'Purpose' },
+                                    { key: 'received_by', label: 'Received By' },
+                                    { key: 'received_date', label: 'Date Received' }
+                                ]}
+                                variant="outline"
+                                size="sm"
+                                className="border-gray-300 bg-white hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                            />
                         </div>
                     </div>
 
@@ -286,18 +400,66 @@ export default function Distribution() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
-                                    <TableHead className="font-semibold">Brand Name</TableHead>
-                                    <TableHead className="font-semibold">Type of Pesticide</TableHead>
-                                    <TableHead className="font-semibold">Quantity</TableHead>
-                                    <TableHead className="font-semibold">Travel Purpose</TableHead>
-                                    <TableHead className="font-semibold">Received By</TableHead>
-                                    <TableHead className="font-semibold">Received Date</TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('brand_name')}
+                                    >
+                                        <div className="flex items-center">
+                                            Brand Name
+                                            <SortIndicator field="brand_name" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('type_of_pesticide')}
+                                    >
+                                        <div className="flex items-center">
+                                            Type of Pesticide
+                                            <SortIndicator field="type_of_pesticide" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('quantity')}
+                                    >
+                                        <div className="flex items-center">
+                                            Quantity
+                                            <SortIndicator field="quantity" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('travel_purpose')}
+                                    >
+                                        <div className="flex items-center">
+                                            Travel Purpose
+                                            <SortIndicator field="travel_purpose" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('received_by')}
+                                    >
+                                        <div className="flex items-center">
+                                            Received By
+                                            <SortIndicator field="received_by" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('received_date')}
+                                    >
+                                        <div className="flex items-center">
+                                            Received Date
+                                            <SortIndicator field="received_date" />
+                                        </div>
+                                    </TableHead>
                                     <TableHead className="text-center font-semibold">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data && distributions.data.length > 0 ? (
-                                    distributions.data.map((distribution) => (
+                                    sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>{distribution.brand_name}</TableCell>
                                             <TableCell>{distribution.type_of_pesticide}</TableCell>
@@ -306,13 +468,31 @@ export default function Distribution() {
                                             <TableCell>{distribution.received_by}</TableCell>
                                             <TableCell>{formatDate(distribution.received_date)}</TableCell>
                                             <TableCell>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(distribution)} className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950">
-                                                        <Edit3 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(distribution.id)} className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                <div className="flex justify-center">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon-sm" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleEdit(distribution)}
+                                                                className="cursor-pointer"
+                                                            >
+                                                                <Edit3 className="mr-2 h-4 w-4" />
+                                                                <span>Edit</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleDelete(distribution.id)}
+                                                                className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Delete</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

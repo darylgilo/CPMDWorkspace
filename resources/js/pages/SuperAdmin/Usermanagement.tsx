@@ -302,34 +302,12 @@ export default function UserManagement() {
         }
     };
 
-    // Sort icon component
-    const SortIcon = ({ field }: { field: string }) => {
-        console.log('SortIcon render:', { field, sortField, sortDirection });
-
-        if (sortField !== field) {
-            return (
-                <div className="ml-1 inline-flex flex-col text-gray-400">
-                    <ChevronUp size={12} />
-                    <ChevronDown size={12} />
-                </div>
-            );
-        }
-
-        return (
-            <div className="ml-1 inline-flex flex-col text-gray-600 dark:text-gray-300">
-                {sortDirection === 'asc' ? (
-                    <ChevronUp
-                        size={12}
-                        className="text-gray-600 dark:text-gray-300"
-                    />
-                ) : (
-                    <ChevronDown
-                        size={12}
-                        className="text-gray-600 dark:text-gray-300"
-                    />
-                )}
-            </div>
-        );
+    // Sort indicator component
+    const SortIndicator = ({ field }: { field: string }) => {
+        if (sortField !== field) return <ChevronUp className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />;
+        return sortDirection === 'asc' ? 
+            <ChevronUp className="ml-1 h-3 w-3" /> : 
+            <ChevronDown className="ml-1 h-3 w-3" />;
     };
 
     // Status filter toggle is controlled and synchronized with server via statusFilter
@@ -606,21 +584,39 @@ export default function UserManagement() {
                                         </select>
                                     </div>
 
-                                    {/* Sort Direction Toggle */}
+                                    {/* Sort By Field */}
                                     <div className="flex-1">
                                         <label
-                                            htmlFor="mobileSortDirection"
+                                            htmlFor="mobileSortField"
                                             className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300"
                                         >
+                                            Sort By
+                                        </label>
+                                        <select
+                                            id="mobileSortField"
+                                            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                            value={sortField}
+                                            onChange={(e) => handleSort(e.target.value)}
+                                        >
+                                            <option value="name">Name</option>
+                                            <option value="email">Email</option>
+                                            <option value="role">Role</option>
+                                            <option value="created_at">Date Registered</option>
+                                            <option value="last_login_at">Last Login</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Sort Direction Toggle */}
+                                    <div className="flex-1">
+                                        <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
                                             Order
                                         </label>
                                         <div className="flex">
                                             <button
+                                                type="button"
                                                 onClick={() => {
                                                     const newDirection = 'asc';
-                                                    setSortDirection(
-                                                        newDirection,
-                                                    );
+                                                    setSortDirection(newDirection);
                                                     router.get(
                                                         '/superadmin/usermanagement',
                                                         {
@@ -628,49 +624,16 @@ export default function UserManagement() {
                                                             perPage,
                                                             status: statusFilter,
                                                             sort: sortField,
-                                                            direction:
-                                                                newDirection,
+                                                            direction: newDirection,
                                                         },
                                                         {
                                                             preserveState: true,
                                                             replace: true,
-                                                        },
+                                                        }
                                                     );
                                                 }}
-                                                className={`flex-1 rounded-l-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                                                className={`flex-1 rounded-l-lg border border-r-0 px-3 py-2 text-sm font-medium transition-colors ${
                                                     sortDirection === 'asc'
-                                                        ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
-                                                        : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <ChevronUp size={14} />
-                                                </div>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    const newDirection = 'desc';
-                                                    setSortDirection(
-                                                        newDirection,
-                                                    );
-                                                    router.get(
-                                                        '/superadmin/usermanagement',
-                                                        {
-                                                            search: searchValue,
-                                                            perPage,
-                                                            status: statusFilter,
-                                                            sort: sortField,
-                                                            direction:
-                                                                newDirection,
-                                                        },
-                                                        {
-                                                            preserveState: true,
-                                                            replace: true,
-                                                        },
-                                                    );
-                                                }}
-                                                className={`flex-1 rounded-r-lg border border-l-0 px-3 py-2 text-sm font-medium transition-colors ${
-                                                    sortDirection === 'desc'
                                                         ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
                                                         : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
                                                 }`}
@@ -882,11 +845,17 @@ export default function UserManagement() {
                                     >
                                         <div className="flex items-center">
                                             Name
-                                            <SortIcon field="name" />
+                                            <SortIndicator field="name" />
                                         </div>
                                     </TableHead>
-                                    <TableHead className="px-4 py-2 text-left">
-                                        Email
+                                    <TableHead 
+                                        className="cursor-pointer px-4 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                        onClick={() => handleSort('email')}
+                                    >
+                                        <div className="flex items-center">
+                                            Email
+                                            <SortIndicator field="email" />
+                                        </div>
                                     </TableHead>
                                     <TableHead
                                         className="cursor-pointer px-4 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-neutral-800"
@@ -894,7 +863,7 @@ export default function UserManagement() {
                                     >
                                         <div className="flex items-center">
                                             Role
-                                            <SortIcon field="role" />
+                                            <SortIndicator field="role" />
                                         </div>
                                     </TableHead>
                                     <TableHead
@@ -903,7 +872,7 @@ export default function UserManagement() {
                                     >
                                         <div className="flex items-center">
                                             Date Registered
-                                            <SortIcon field="created_at" />
+                                            <SortIndicator field="created_at" />
                                         </div>
                                     </TableHead>
                                     <TableHead
@@ -914,7 +883,7 @@ export default function UserManagement() {
                                     >
                                         <div className="flex items-center">
                                             Last Login
-                                            <SortIcon field="last_login_at" />
+                                            <SortIndicator field="last_login_at" />
                                         </div>
                                     </TableHead>
                                     <TableHead className="px-4 py-2 text-center">
@@ -1066,4 +1035,4 @@ export default function UserManagement() {
             </div>
         </AppLayout>
     );
-}
+};
