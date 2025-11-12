@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -28,7 +29,15 @@ import {
     Trash2,
     ChevronLeft,
     ChevronRight,
+    MoreVertical,
 } from 'lucide-react';
+import TableExport from '@/components/TableExport';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 
 interface Pesticide {
@@ -92,6 +101,8 @@ export default function PesticideIndex() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedPesticide, setSelectedPesticide] = useState<Pesticide | null>(null);
     const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
+    const [sortField, setSortField] = useState<string>('brand_name');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
     // Form field configuration for pesticides
     const pesticideFormFields: FormField[] = [
@@ -141,6 +152,12 @@ export default function PesticideIndex() {
         setIsAddDialogOpen(true);
     };
 
+    const formatDateForInput = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    };
+
     const handleEdit = (pesticide: Pesticide) => {
         setSelectedPesticide(pesticide);
         setFormData({
@@ -149,9 +166,9 @@ export default function PesticideIndex() {
             mode_of_action: pesticide.mode_of_action,
             type_of_pesticide: pesticide.type_of_pesticide,
             unit: pesticide.unit,
-            received_date: pesticide.received_date,
-            production_date: pesticide.production_date,
-            expiry_date: pesticide.expiry_date,
+            received_date: formatDateForInput(pesticide.received_date),
+            production_date: formatDateForInput(pesticide.production_date),
+            expiry_date: formatDateForInput(pesticide.expiry_date),
             source_of_fund: pesticide.source_of_fund,
             quantity: pesticide.quantity.toString(),
         });
@@ -187,7 +204,65 @@ export default function PesticideIndex() {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-        router.get('/pesticidesindex', { tab: 'inventory', search: searchValue, perPage, page }, { preserveState: true, replace: true });
+        router.get('/pesticidesindex', { tab: 'inventory', search: searchValue, perPage, page, sort: sortField, direction: sortDirection }, { preserveState: true, replace: true });
+    };
+
+    // Handle sorting
+    const handleSort = (field: string) => {
+        const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+        setSortField(field);
+        setSortDirection(newDirection);
+        setCurrentPage(1);
+        
+        // Only update the URL with the sort parameters
+        router.get('/pesticidesindex', {
+            tab: 'inventory',
+            search: searchValue,
+            perPage,
+            sort: field,
+            direction: newDirection,
+            page: 1
+        }, { preserveState: true, replace: true });
+    };
+
+    // Sort the data client-side
+    const sortedPesticides = useMemo(() => {
+        if (!pesticides?.data) return [];
+        
+        return [...pesticides.data].sort((a, b) => {
+            let aValue = a[sortField as keyof Pesticide];
+            let bValue = b[sortField as keyof Pesticide];
+            
+            // Handle dates
+            if (sortField.includes('_date') || sortField === 'expiry_date') {
+                aValue = aValue ? new Date(aValue as string).getTime() : 0;
+                bValue = bValue ? new Date(bValue as string).getTime() : 0;
+            }
+            
+            // Handle string comparison
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortDirection === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            }
+            
+            // Handle number comparison
+            if (typeof aValue === 'number' && typeof bValue === 'number') {
+                return sortDirection === 'asc' 
+                    ? aValue - bValue
+                    : bValue - aValue;
+            }
+            
+            return 0;
+        });
+    }, [pesticides, sortField, sortDirection]);
+
+    // Sort indicator component
+    const SortIndicator = ({ field }: { field: string }) => {
+        if (sortField !== field) return <ChevronUp className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />;
+        return sortDirection === 'asc' ? 
+            <ChevronUp className="ml-1 h-3 w-3" /> : 
+            <ChevronDown className="ml-1 h-3 w-3" />;
     };
 
     const formatDate = (dateString: string) => {
@@ -320,7 +395,10 @@ export default function PesticideIndex() {
                     {/* Controls */}
                     <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-start">
-                            <Button onClick={handleAdd} className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90">
+                            <Button 
+                                onClick={handleAdd} 
+                                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            >
                                 <Plus className="h-4 w-4" />
                                 <span className="hidden md:inline">Add Pesticide</span>
                             </Button>
@@ -341,7 +419,30 @@ export default function PesticideIndex() {
                             </div>
                         </div>
                         <div className="flex w-full items-center gap-2 md:w-auto">
-                            <SearchBar search={searchValue} onSearchChange={setSearchValue} placeholder="Search pesticides..." className="w-full md:max-w-md" searchRoute="/pesticidesindex" additionalParams={{ tab: 'inventory', perPage }} />
+                            <SearchBar 
+                                search={searchValue} 
+                                onSearchChange={setSearchValue} 
+                                placeholder="Search pesticides..." 
+                                className="w-full md:max-w-md" 
+                                searchRoute="/pesticidesindex" 
+                                additionalParams={{ tab: 'inventory', perPage }} 
+                            />
+                            <TableExport 
+                                data={pesticides.data} 
+                                filename="pesticide-inventory"
+                                headers={[
+                                    { key: 'brand_name', label: 'Brand Name' },
+                                    { key: 'active_ingredient', label: 'Active Ingredient' },
+                                    { key: 'type_of_pesticide', label: 'Type' },
+                                    { key: 'quantity', label: 'Quantity' },
+                                    { key: 'unit', label: 'Unit' },
+                                    { key: 'expiry_date', label: 'Expiry Date' },
+                                    { key: 'source_of_fund', label: 'Source of Fund' }
+                                ]}
+                                variant="outline"
+                                size="sm"
+                                className="border-gray-300 bg-white hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                            />
                         </div>
                     </div>
 
@@ -350,22 +451,102 @@ export default function PesticideIndex() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
-                                    <TableHead className="font-semibold">Brand Name</TableHead>
-                                    <TableHead className="font-semibold">Active Ingredient</TableHead>
-                                    <TableHead className="font-semibold">Mode of Action</TableHead>
-                                    <TableHead className="font-semibold">Type</TableHead>
-                                    <TableHead className="font-semibold">Unit</TableHead>
-                                    <TableHead className="font-semibold">Received Date</TableHead>
-                                    <TableHead className="font-semibold">Expiry Date</TableHead>
-                                    <TableHead className="font-semibold">Source of Fund</TableHead>
-                                    <TableHead className="font-semibold">Quantity</TableHead>
-                                    <TableHead className="font-semibold">Stock</TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('brand_name')}
+                                    >
+                                        <div className="flex items-center">
+                                            Brand Name
+                                            <SortIndicator field="brand_name" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('active_ingredient')}
+                                    >
+                                        <div className="flex items-center">
+                                            Active Ingredient
+                                            <SortIndicator field="active_ingredient" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('mode_of_action')}
+                                    >
+                                        <div className="flex items-center">
+                                            Mode of Action
+                                            <SortIndicator field="mode_of_action" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('type_of_pesticide')}
+                                    >
+                                        <div className="flex items-center">
+                                            Type
+                                            <SortIndicator field="type_of_pesticide" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('unit')}
+                                    >
+                                        <div className="flex items-center">
+                                            Unit
+                                            <SortIndicator field="unit" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('received_date')}
+                                    >
+                                        <div className="flex items-center">
+                                            Received Date
+                                            <SortIndicator field="received_date" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('expiry_date')}
+                                    >
+                                        <div className="flex items-center">
+                                            Expiry Date
+                                            <SortIndicator field="expiry_date" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('source_of_fund')}
+                                    >
+                                        <div className="flex items-center">
+                                            Source of Fund
+                                            <SortIndicator field="source_of_fund" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('quantity')}
+                                    >
+                                        <div className="flex items-center">
+                                            Quantity
+                                            <SortIndicator field="quantity" />
+                                        </div>
+                                    </TableHead>
+                                    <TableHead 
+                                        className="group cursor-pointer select-none font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        onClick={() => handleSort('stock')}
+                                    >
+                                        <div className="flex items-center">
+                                            Stock
+                                            <SortIndicator field="stock" />
+                                        </div>
+                                    </TableHead>
                                     <TableHead className="text-center font-semibold">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {pesticides?.data && pesticides.data.length > 0 ? (
-                                    pesticides.data.map((pesticide) => (
+                                    sortedPesticides.map((pesticide: Pesticide) => (
                                         <TableRow key={pesticide.id}>
                                             <TableCell>{pesticide.brand_name}</TableCell>
                                             <TableCell>{pesticide.active_ingredient}</TableCell>
@@ -378,13 +559,31 @@ export default function PesticideIndex() {
                                             <TableCell>{pesticide.quantity}</TableCell>
                                             <TableCell className={pesticide.stock < 10 ? 'font-semibold text-red-600' : ''}>{pesticide.stock}</TableCell>
                                             <TableCell>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Button variant="ghost" size="icon-sm" onClick={() => handleEdit(pesticide)} className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950">
-                                                        <Edit3 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(pesticide.id)} className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                <div className="flex justify-center">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon-sm" className="h-8 w-8 p-0">
+                                                                <span className="sr-only">Open menu</span>
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40">
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleEdit(pesticide)}
+                                                                className="cursor-pointer"
+                                                            >
+                                                                <Edit3 className="mr-2 h-4 w-4" />
+                                                                <span>Edit</span>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem 
+                                                                onClick={() => handleDelete(pesticide.id)}
+                                                                className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                            >
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                <span>Delete</span>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
