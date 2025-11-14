@@ -12,8 +12,6 @@ class Distribution extends Model
 
     protected $fillable = [
         'pesticide_id',
-        'brand_name',
-        'type_of_pesticide',
         'quantity',
         'travel_purpose',
         'received_by',

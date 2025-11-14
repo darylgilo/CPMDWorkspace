@@ -60,9 +60,10 @@ class PesticideIndexController extends Controller
             'expiringSoon' => Pesticide::where('expiry_date', '<=', now()->addMonths(3))->count(),
         ];
 
-        // Get unique types and sources for dropdowns
+        // Get unique types, sources, and brand names for dropdowns
         $pesticideTypes = Pesticide::distinct()->pluck('type_of_pesticide')->filter()->values();
         $sourcesOfFund = Pesticide::distinct()->pluck('source_of_fund')->filter()->values();
+        $brandNames = Pesticide::distinct()->pluck('brand_name')->filter()->values();
 
         // Distribution data
         $distributionQuery = Distribution::with(['user', 'pesticide'])
@@ -86,21 +87,17 @@ class PesticideIndexController extends Controller
             'thisWeek' => Distribution::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
         ];
 
-        // Get pesticides grouped by type with combined stock
-        $availablePesticides = Pesticide::select(
-                'type_of_pesticide',
-                DB::raw('GROUP_CONCAT(id) as pesticide_ids'),
-                DB::raw('SUM(stock) as total_stock')
-            )
-            ->where('stock', '>', 0)
-            ->groupBy('type_of_pesticide')
+        // Get all available pesticides individually
+        $availablePesticides = Pesticide::where('stock', '>', 0)
             ->orderBy('type_of_pesticide')
             ->get()
-            ->map(function ($item) {
+            ->map(function ($pesticide) {
                 return [
-                    'id' => $item->pesticide_ids,
-                    'type_of_pesticide' => $item->type_of_pesticide,
-                    'stock' => $item->total_stock,
+                    'id' => $pesticide->id,
+                    'brand_name' => $pesticide->brand_name,
+                    'type_of_pesticide' => $pesticide->type_of_pesticide,
+                    'stock' => $pesticide->stock,
+                    'unit' => $pesticide->unit,
                 ];
             });
 
@@ -110,6 +107,7 @@ class PesticideIndexController extends Controller
             'pesticideAnalytics' => $pesticideAnalytics,
             'pesticideTypes' => $pesticideTypes,
             'sourcesOfFund' => $sourcesOfFund,
+            'brandNames' => $brandNames,
             'distributions' => $distributions,
             'distributionAnalytics' => $distributionAnalytics,
             'availablePesticides' => $availablePesticides,

@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('distributions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pesticide_id')->constrained()->onDelete('cascade');
-            $table->string('brand_name');
-            $table->string('type_of_pesticide');
             $table->decimal('quantity', 10, 2);
             $table->string('travel_purpose');
             $table->string('received_by');
