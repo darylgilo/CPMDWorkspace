@@ -31,7 +31,7 @@ import {
     ChevronRight,
     MoreVertical,
 } from 'lucide-react';
-import TableExport from '@/components/TableExport';
+import ExportPesticide from '@/components/export/ExportPesticide';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -80,6 +80,7 @@ interface PageProps {
     };
     pesticideTypes: string[];
     sourcesOfFund: string[];
+    brandNames: string[];
     [key: string]: unknown;
 }
 
@@ -92,6 +93,7 @@ export default function PesticideIndex() {
         pesticideAnalytics: analytics,
         pesticideTypes = [],
         sourcesOfFund = [],
+        brandNames = [],
     } = props;
 
     const [searchValue, setSearchValue] = useState(search);
@@ -106,7 +108,14 @@ export default function PesticideIndex() {
 
     // Form field configuration for pesticides
     const pesticideFormFields: FormField[] = [
-        { name: 'brand_name', label: 'Brand Name', type: 'text', required: true },
+        { 
+            name: 'brand_name', 
+            label: 'Brand Name', 
+            type: 'datalist', 
+            required: true, 
+            datalistOptions: brandNames,
+            datalistId: 'brand-names'
+        },
         { name: 'active_ingredient', label: 'Active Ingredient', type: 'text', required: true },
         { name: 'mode_of_action', label: 'Mode of Action', type: 'text', required: true },
         { name: 'type_of_pesticide', label: 'Type of Pesticide', type: 'datalist', required: true, datalistOptions: pesticideTypes },
@@ -181,22 +190,78 @@ export default function PesticideIndex() {
         }
     };
 
-    const handleSubmitAdd = () => {
-        router.post('/pesticides', formData, {
+    const handleSubmitAdd = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+        
+        // Format the form data before sending
+        const formattedData = {
+            ...formData,
+            quantity: parseFloat(formData.quantity) || 0,
+            received_date: formData.received_date ? new Date(formData.received_date).toISOString().split('T')[0] : '',
+            production_date: formData.production_date ? new Date(formData.production_date).toISOString().split('T')[0] : '',
+            expiry_date: formData.expiry_date ? new Date(formData.expiry_date).toISOString().split('T')[0] : ''
+        };
+
+        router.post('/pesticides', formattedData, {
             onSuccess: () => {
                 setIsAddDialogOpen(false);
                 resetForm();
+                // Refresh the data by re-fetching the current page
+                router.get('/pesticidesindex', {
+                    tab: 'inventory',
+                    search: searchValue,
+                    perPage,
+                    page: currentPage,
+                    sort: sortField,
+                    direction: sortDirection
+                }, { 
+                    preserveState: true,
+                    onSuccess: () => {
+                        // Force a hard refresh to ensure the UI updates
+                        router.visit(window.location.pathname, { 
+                            only: ['pesticides', 'pesticideAnalytics'],
+                            preserveState: true,
+                            preserveScroll: true
+                        });
+                    }
+                });
+            },
+            onError: (errors) => {
+                console.error('Error adding pesticide:', errors);
             },
         });
     };
 
-    const handleSubmitEdit = () => {
+    const handleSubmitEdit = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+        
         if (selectedPesticide) {
-            router.put(`/pesticides/${selectedPesticide.id}`, formData, {
+            // Format the form data before sending
+            const formattedData = {
+                ...formData,
+                quantity: parseFloat(formData.quantity) || 0,
+                received_date: formData.received_date ? new Date(formData.received_date).toISOString().split('T')[0] : '',
+                production_date: formData.production_date ? new Date(formData.production_date).toISOString().split('T')[0] : '',
+                expiry_date: formData.expiry_date ? new Date(formData.expiry_date).toISOString().split('T')[0] : ''
+            };
+
+            router.put(`/pesticides/${selectedPesticide.id}`, formattedData, {
                 onSuccess: () => {
                     setIsEditDialogOpen(false);
                     resetForm();
                     setSelectedPesticide(null);
+                    // Refresh the data
+                    router.get('/pesticidesindex', {
+                        tab: 'inventory',
+                        search: searchValue,
+                        perPage,
+                        page: currentPage,
+                        sort: sortField,
+                        direction: sortDirection
+                    }, { preserveState: true });
+                },
+                onError: (errors) => {
+                    console.error('Error updating pesticide:', errors);
                 },
             });
         }
@@ -419,6 +484,24 @@ export default function PesticideIndex() {
                             </div>
                         </div>
                         <div className="flex w-full items-center gap-2 md:w-auto">
+                            <ExportPesticide
+                                data={pesticides.data}
+                                filename="pesticide-inventory"
+                                headers={[
+                                  { key: 'id', label: 'ID' },
+                                  { key: 'brand_name', label: 'Brand Name' },
+                                  { key: 'type_of_pesticide', label: 'Type' },
+                                  { key: 'active_ingredient', label: 'Active Ingredient' },
+                                  { key: 'mode_of_action', label: 'Mode of Action' },
+                                  { key: 'unit', label: 'Unit' },
+                                  { key: 'received_date', label: 'Received Date' },
+                                  { key: 'expiry_date', label: 'Expiry Date' },
+                                  { key: 'quantity', label: 'Quantity' },
+                                ]}
+                                variant="outline"
+                                size="sm"
+                                className="mr-2"
+                            />
                             <SearchBar 
                                 search={searchValue} 
                                 onSearchChange={setSearchValue} 
@@ -426,22 +509,6 @@ export default function PesticideIndex() {
                                 className="w-full md:max-w-md" 
                                 searchRoute="/pesticidesindex" 
                                 additionalParams={{ tab: 'inventory', perPage }} 
-                            />
-                            <TableExport 
-                                data={pesticides.data} 
-                                filename="pesticide-inventory"
-                                headers={[
-                                    { key: 'brand_name', label: 'Brand Name' },
-                                    { key: 'active_ingredient', label: 'Active Ingredient' },
-                                    { key: 'type_of_pesticide', label: 'Type' },
-                                    { key: 'quantity', label: 'Quantity' },
-                                    { key: 'unit', label: 'Unit' },
-                                    { key: 'expiry_date', label: 'Expiry Date' },
-                                    { key: 'source_of_fund', label: 'Source of Fund' }
-                                ]}
-                                variant="outline"
-                                size="sm"
-                                className="border-gray-300 bg-white hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                             />
                         </div>
                     </div>

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export type FieldType = 'text' | 'number' | 'date' | 'select' | 'datalist';
+export type FieldType = 'text' | 'number' | 'date' | 'select' | 'datalist' | 'custom';
 
 export interface FormField {
     name: string;
@@ -19,7 +19,7 @@ export interface FormField {
     datalistId?: string;
     datalistOptions?: string[];
     gridCols?: number;
-    customRender?: (value: string) => ReactNode;
+    customRender?: ((value: string, onChange?: (value: string) => void) => ReactNode) | ((value: string) => ReactNode);
 }
 
 export interface FormDialogProps {
@@ -73,7 +73,18 @@ export default function FormDialog({
                                 ))}
                             </SelectContent>
                         </Select>
-                        {field.customRender && field.customRender(formData[field.name])}
+                        {field.customRender && field.customRender(
+                            formData[field.name],
+                            (value: string) => {
+                                if (onInputChange) {
+                                    // Create a synthetic event to match the expected type
+                                    const event = {
+                                        target: { name: field.name, value }
+                                    } as React.ChangeEvent<HTMLInputElement>;
+                                    onInputChange(event);
+                                }
+                            }
+                        )}
                     </div>
                 );
             

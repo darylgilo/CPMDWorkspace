@@ -29,7 +29,7 @@ import {
     Trash2,
     MoreVertical,
 } from 'lucide-react';
-import TableExport from '@/components/TableExport';
+import ExportPesticide from '@/components/export/ExportPesticide';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,15 +40,21 @@ import FormDialog, { type FormField } from '@/components/FormDialog';
 
 interface PesticideType {
     id: string;
+    brand_name: string;
     type_of_pesticide: string;
     stock: number;
+    unit: string;
 }
 
 interface Distribution {
     id: number;
     pesticide_id: number;
-    brand_name: string;
-    type_of_pesticide: string;
+    pesticide?: {
+        id: number;
+        brand_name: string;
+        type_of_pesticide: string;
+        unit: string;
+    };
     quantity: number;
     travel_purpose: string;
     received_by: string;
@@ -87,6 +93,9 @@ export default function Distribution() {
         distributionAnalytics: analytics,
     } = props;
 
+    // Debug: Log the pesticides data
+    console.log('Available Pesticides:', pesticides);
+
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
     const [currentPage, setCurrentPage] = useState(distributions?.current_page || 1);
@@ -99,31 +108,95 @@ export default function Distribution() {
     // Form field configuration for distributions
     const distributionFormFields: FormField[] = [
         {
-            name: 'pesticide_type',
-            label: 'Select Pesticide Type',
+            name: 'pesticide_id',
+            label: 'Select Pesticide',
             type: 'select',
             required: true,
-            options: (pesticides || []).map((p) => ({
-                value: p.type_of_pesticide,
-                label: `${p.type_of_pesticide} (Stock: ${p.stock})`,
-            })),
+            options: (pesticides || []).map((p) => {
+                // Debug: Log each pesticide item with full details
+                console.log('Pesticide item:', JSON.stringify(p, null, 2));
+                const displayName = p?.brand_name || p?.type_of_pesticide || `Pesticide #${p?.id || '?'}`;
+                const typeDisplay = p?.type_of_pesticide || 'N/A';
+                return {
+                    value: p?.id?.toString() || '',
+                    // Include ID in the display to ensure uniqueness
+                    label: `[${typeDisplay}] ${displayName} - ${p?.unit || 'N/A'} - STOCK: ${p?.stock || 0}`,
+                    rawData: p
+                };
+            }),
             customRender: (value: string) => {
-                const selectedPesticideType = (pesticides || []).find((p) => p.type_of_pesticide === value);
-                return selectedPesticideType ? (
-                    <p className="text-sm text-muted-foreground">
-                        Available stock: <span className="font-semibold">{selectedPesticideType.stock}</span>
-                    </p>
-                ) : null;
+                const selectedPesticide = (pesticides || []).find((p) => p.id.toString() === value);
+                if (!selectedPesticide) return null;
+                const displayName = selectedPesticide.brand_name || selectedPesticide.type_of_pesticide || 'Unknown';
+                return (
+                    <div className="text-sm text-muted-foreground">
+                        [{selectedPesticide.type_of_pesticide || 'N/A'}] {displayName} - {selectedPesticide.unit || 'N/A'} - STOCK: {selectedPesticide.stock || 0}
+                    </div>
+                );
             },
         },
-        { name: 'quantity', label: 'Quantity', type: 'number', required: true, step: '0.01', min: '0.01' },
-        { name: 'travel_purpose', label: 'Travel Purpose', type: 'text', required: true, placeholder: 'e.g., Field Visit, Training, Distribution' },
-        { name: 'received_by', label: 'Received By', type: 'text', required: true, placeholder: 'Name of recipient' },
-        { name: 'received_date', label: 'Received Date', type: 'date', required: true },
+        { 
+            name: 'quantity', 
+            label: 'Quantity', 
+            type: 'number', 
+            required: true, 
+            step: '0.01', 
+            min: '0.01',
+            customRender: (value: string, onChange?: (value: string) => void) => {
+                const selectedPesticide = (pesticides || []).find(p => p.id.toString() === formData.pesticide_id);
+                const maxQuantity = selectedPesticide ? selectedPesticide.stock : 0;
+                
+                const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                    if (onChange) {
+                        onChange(e.target.value);
+                    }
+                };
+
+                return (
+                    <div>
+                        <input
+                            type="number"
+                            value={value}
+                            onChange={handleChange}
+                            step="0.01"
+                            min="0.01"
+                            max={maxQuantity}
+                            className="w-full p-2 border rounded"
+                            required
+                        />
+                        {selectedPesticide && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Max: {maxQuantity} {selectedPesticide.unit}
+                            </p>
+                        )}
+                    </div>
+                );
+            }
+        },
+        { 
+            name: 'travel_purpose', 
+            label: 'Travel Purpose', 
+            type: 'text', 
+            required: true, 
+            placeholder: 'e.g., Field Visit, Training, Distribution' 
+        },
+        { 
+            name: 'received_by', 
+            label: 'Received By', 
+            type: 'text', 
+            required: true, 
+            placeholder: 'Name of recipient' 
+        },
+        { 
+            name: 'received_date', 
+            label: 'Received Date', 
+            type: 'date', 
+            required: true 
+        },
     ];
 
     const [formData, setFormData] = useState({
-        pesticide_type: '',
+        pesticide_id: '',
         quantity: '',
         travel_purpose: '',
         received_by: '',
@@ -131,12 +204,17 @@ export default function Distribution() {
     });
 
     const handleSelectChange = (name: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+            // Reset quantity when changing pesticide to prevent invalid values
+            ...(name === 'pesticide_id' ? { quantity: '' } : {})
+        }));
     };
 
     const resetForm = () => {
         setFormData({
-            pesticide_type: '',
+            pesticide_id: '',
             quantity: '',
             travel_purpose: '',
             received_by: '',
@@ -158,7 +236,7 @@ export default function Distribution() {
     const handleEdit = (distribution: Distribution) => {
         setSelectedDistribution(distribution);
         setFormData({
-            pesticide_type: distribution.type_of_pesticide,
+            pesticide_id: distribution.pesticide_id.toString(),
             quantity: distribution.quantity.toString(),
             travel_purpose: distribution.travel_purpose,
             received_by: distribution.received_by,
@@ -241,8 +319,17 @@ export default function Distribution() {
         if (!distributions?.data) return [];
         
         return [...distributions.data].sort((a, b) => {
-            let aValue = a[sortField as keyof Distribution];
-            let bValue = b[sortField as keyof Distribution];
+            let aValue: any;
+            let bValue: any;
+
+            // Handle nested properties
+            if (sortField === 'brand_name' || sortField === 'type_of_pesticide') {
+                aValue = a.pesticide ? a.pesticide[sortField as keyof typeof a.pesticide] : '';
+                bValue = b.pesticide ? b.pesticide[sortField as keyof typeof b.pesticide] : '';
+            } else {
+                aValue = a[sortField as keyof Distribution];
+                bValue = b[sortField as keyof Distribution];
+            }
             
             // Handle dates
             if (sortField === 'received_date' || sortField === 'created_at') {
@@ -369,6 +456,23 @@ export default function Distribution() {
                             </div>
                         </div>
                         <div className="flex w-full items-center gap-2 md:w-auto">
+                            <ExportPesticide
+                                data={distributions.data}
+                                filename="pesticide-distributions"
+                                headers={[
+                                  { key: 'id', label: 'ID' },
+                                  { key: 'pesticide.brand_name', label: 'Brand Name' },
+                                  { key: 'pesticide.type_of_pesticide', label: 'Type' },
+                                  { key: 'quantity', label: 'Quantity' },
+                                  { key: 'pesticide.unit', label: 'Unit' },
+                                  { key: 'received_date', label: 'Date Distributed' },
+                                  { key: 'received_by', label: 'Received By' },
+                                  { key: 'travel_purpose', label: 'Purpose' },
+                                ]}
+                                variant="outline"
+                                size="sm"
+                                className="mr-2"
+                            />
                             <SearchBar 
                                 search={searchValue} 
                                 onSearchChange={handleSearchChange} 
@@ -376,21 +480,6 @@ export default function Distribution() {
                                 className="w-full md:max-w-md" 
                                 searchRoute="/pesticidesindex" 
                                 additionalParams={{ tab: 'distribution', perPage, sort: sortField, direction: sortDirection }} 
-                            />
-                            <TableExport 
-                                data={distributions.data} 
-                                filename="distribution-records"
-                                headers={[
-                                    { key: 'brand_name', label: 'Brand Name' },
-                                    { key: 'type_of_pesticide', label: 'Type' },
-                                    { key: 'quantity', label: 'Quantity' },
-                                    { key: 'travel_purpose', label: 'Purpose' },
-                                    { key: 'received_by', label: 'Received By' },
-                                    { key: 'received_date', label: 'Date Received' }
-                                ]}
-                                variant="outline"
-                                size="sm"
-                                className="border-gray-300 bg-white hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                             />
                         </div>
                     </div>
@@ -461,8 +550,8 @@ export default function Distribution() {
                                 {distributions?.data && distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
-                                            <TableCell>{distribution.brand_name}</TableCell>
-                                            <TableCell>{distribution.type_of_pesticide}</TableCell>
+                                            <TableCell>{distribution.pesticide?.brand_name || 'N/A'}</TableCell>
+                                            <TableCell>{distribution.pesticide?.type_of_pesticide || 'N/A'}</TableCell>
                                             <TableCell>{distribution.quantity}</TableCell>
                                             <TableCell>{distribution.travel_purpose}</TableCell>
                                             <TableCell>{distribution.received_by}</TableCell>

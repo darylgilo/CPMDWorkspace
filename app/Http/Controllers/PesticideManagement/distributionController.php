@@ -22,10 +22,12 @@ class DistributionController extends Controller
         $query = Distribution::with(['user', 'pesticide'])
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
-                    $q->where('brand_name', 'like', "%{$search}%")
-                      ->orWhere('type_of_pesticide', 'like', "%{$search}%")
-                      ->orWhere('travel_purpose', 'like', "%{$search}%")
-                      ->orWhere('received_by', 'like', "%{$search}%");
+                    $q->whereHas('pesticide', function($q) use ($search) {
+                        $q->where('brand_name', 'like', "%{$search}%")
+                          ->orWhere('type_of_pesticide', 'like', "%{$search}%");
+                    })
+                    ->orWhere('travel_purpose', 'like', "%{$search}%")
+                    ->orWhere('received_by', 'like', "%{$search}%");
                 });
             })
             ->orderBy('created_at', 'desc');
@@ -40,21 +42,18 @@ class DistributionController extends Controller
             'thisWeek' => Distribution::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
         ];
 
-        // Get pesticides grouped by type with combined stock
-        $pesticides = Pesticide::select(
-                'type_of_pesticide',
-                DB::raw('GROUP_CONCAT(id) as pesticide_ids'),
-                DB::raw('SUM(stock) as total_stock')
-            )
-            ->where('stock', '>', 0)
-            ->groupBy('type_of_pesticide')
+        // Get available pesticides with stock
+        $pesticides = Pesticide::where('stock', '>', 0)
             ->orderBy('type_of_pesticide')
+            ->orderBy('brand_name')
             ->get()
-            ->map(function ($item) {
+            ->map(function ($pesticide) {
                 return [
-                    'id' => $item->pesticide_ids, // Comma-separated IDs
-                    'type_of_pesticide' => $item->type_of_pesticide,
-                    'stock' => $item->total_stock,
+                    'id' => $pesticide->id,
+                    'brand_name' => $pesticide->brand_name,
+                    'type_of_pesticide' => $pesticide->type_of_pesticide,
+                    'stock' => $pesticide->stock,
+                    'unit' => $pesticide->unit,
                 ];
             });
 
@@ -73,7 +72,7 @@ class DistributionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'pesticide_type' => 'required|string|max:255',
+            'pesticide_id' => 'required|exists:pesticides,id',
             'quantity' => 'required|numeric|min:0.01',
             'travel_purpose' => 'required|string|max:255',
             'received_by' => 'required|string|max:255',
@@ -82,44 +81,28 @@ class DistributionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Get all pesticides of this type with available stock
-            $pesticides = Pesticide::where('type_of_pesticide', $validated['pesticide_type'])
-                ->where('stock', '>', 0)
-                ->orderBy('expiry_date', 'asc') // Use oldest first (FIFO)
-                ->get();
-
-            // Check if enough total stock is available
-            $totalStock = $pesticides->sum('stock');
-            if ($totalStock < $validated['quantity']) {
-                return redirect('/pesticidesindex?tab=distribution')->with('error', 'Insufficient stock available. Current stock: ' . $totalStock);
-            }
-
-            $remainingQuantity = $validated['quantity'];
+            // Get the specific pesticide
+            $pesticide = Pesticide::findOrFail($validated['pesticide_id']);
             
-            // Distribute quantity across pesticides (FIFO - First In, First Out)
-            foreach ($pesticides as $pesticide) {
-                if ($remainingQuantity <= 0) break;
-
-                $quantityToDeduct = min($pesticide->stock, $remainingQuantity);
-
-                // Create distribution record for this pesticide
-                Distribution::create([
-                    'pesticide_id' => $pesticide->id,
-                    'brand_name' => $pesticide->brand_name,
-                    'type_of_pesticide' => $pesticide->type_of_pesticide,
-                    'quantity' => $quantityToDeduct,
-                    'travel_purpose' => $validated['travel_purpose'],
-                    'received_by' => $validated['received_by'],
-                    'received_date' => $validated['received_date'],
-                    'user_id' => auth()->id(),
-                ]);
-
-                // Update pesticide stock
-                $pesticide->stock -= $quantityToDeduct;
-                $pesticide->save();
-
-                $remainingQuantity -= $quantityToDeduct;
+            // Check if enough stock is available
+            if ($pesticide->stock < $validated['quantity']) {
+                return redirect('/pesticidesindex?tab=distribution')
+                    ->with('error', 'Insufficient stock available. Current stock: ' . $pesticide->stock . ' ' . $pesticide->unit);
             }
+
+            // Create distribution record
+            Distribution::create([
+                'pesticide_id' => $pesticide->id,
+                'quantity' => $validated['quantity'],
+                'travel_purpose' => $validated['travel_purpose'],
+                'received_by' => $validated['received_by'],
+                'received_date' => $validated['received_date'],
+                'user_id' => auth()->id(),
+            ]);
+
+            // Update pesticide stock
+            $pesticide->stock -= $validated['quantity'];
+            $pesticide->save();
 
             DB::commit();
 
@@ -136,7 +119,7 @@ class DistributionController extends Controller
     public function update(Request $request, Distribution $distribution)
     {
         $validated = $request->validate([
-            'pesticide_type' => 'required|string|max:255',
+            'pesticide_id' => 'required|exists:pesticides,id',
             'quantity' => 'required|numeric|min:0.01',
             'travel_purpose' => 'required|string|max:255',
             'received_by' => 'required|string|max:255',
@@ -145,45 +128,46 @@ class DistributionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Restore stock to old pesticide
-            $oldPesticide = $distribution->pesticide;
-            $oldPesticide->stock += $distribution->quantity;
-            $oldPesticide->save();
-
-            // Get pesticide of the selected type with highest stock
-            $newPesticide = Pesticide::where('type_of_pesticide', $validated['pesticide_type'])
-                ->where('stock', '>', 0)
-                ->orderBy('stock', 'desc')
-                ->first();
-
-            if (!$newPesticide) {
-                DB::rollBack();
-                return redirect('/pesticidesindex?tab=distribution')->with('error', 'No pesticide available for the selected type.');
+            // Get the new pesticide
+            $newPesticide = Pesticide::findOrFail($validated['pesticide_id']);
+            
+            // Check if the pesticide is being changed
+            if ($distribution->pesticide_id != $validated['pesticide_id']) {
+                // Restore stock to old pesticide
+                $oldPesticide = $distribution->pesticide;
+                $oldPesticide->stock += $distribution->quantity;
+                $oldPesticide->save();
+                
+                // Check if new pesticide has enough stock
+                if ($newPesticide->stock < $validated['quantity']) {
+                    return redirect('/pesticidesindex?tab=distribution')
+                        ->with('error', 'Insufficient stock available. Current stock: ' . $newPesticide->stock . ' ' . $newPesticide->unit);
+                }
+                
+                // Deduct from new pesticide
+                $newPesticide->stock -= $validated['quantity'];
+                $newPesticide->save();
+            } else {
+                // Same pesticide, adjust stock based on quantity difference
+                $quantityDiff = $validated['quantity'] - $distribution->quantity;
+                
+                if ($quantityDiff > $newPesticide->stock) {
+                    return redirect('/pesticidesindex?tab=distribution')
+                        ->with('error', 'Insufficient stock available. Current stock: ' . $newPesticide->stock . ' ' . $newPesticide->unit);
+                }
+                
+                $newPesticide->stock -= $quantityDiff;
+                $newPesticide->save();
             }
-
-            // Check total stock for this type
-            $totalStock = Pesticide::where('type_of_pesticide', $validated['pesticide_type'])
-                ->sum('stock');
-
-            if ($totalStock < $validated['quantity']) {
-                DB::rollBack();
-                return redirect('/pesticidesindex?tab=distribution')->with('error', 'Insufficient stock available. Current stock: ' . $totalStock);
-            }
-
-            // Update distribution with new pesticide
+            
+            // Update the distribution record
             $distribution->update([
-                'pesticide_id' => $newPesticide->id,
-                'brand_name' => $newPesticide->brand_name,
-                'type_of_pesticide' => $newPesticide->type_of_pesticide,
+                'pesticide_id' => $validated['pesticide_id'],
                 'quantity' => $validated['quantity'],
                 'travel_purpose' => $validated['travel_purpose'],
                 'received_by' => $validated['received_by'],
                 'received_date' => $validated['received_date'],
             ]);
-
-            // Deduct stock from new pesticide
-            $newPesticide->stock -= $validated['quantity'];
-            $newPesticide->save();
 
             DB::commit();
 
