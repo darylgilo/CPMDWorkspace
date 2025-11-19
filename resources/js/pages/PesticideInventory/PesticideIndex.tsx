@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type NavItem } from '@/types';
-import { Package, TruckIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
+import { type BreadcrumbItem, type NavItem } from '@/types';
+import { Head, usePage } from '@inertiajs/react';
+import { Package, TruckIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // Import child components
-import PesticideInventory from './Pesticide';
 import Distribution from './Distribution';
+import PesticideInventory from './Pesticide';
 
 interface PageProps {
     activeTab?: string;
@@ -61,22 +61,16 @@ export default function PesticideIndex() {
         return () => window.removeEventListener('popstate', handleHashChange);
     }, []);
 
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    const currentPath = window.location.hash.substring(1) || 'inventory';
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pesticide Management" />
-            <div className="px-4 py-6 space-y-6">
+            <div className="space-y-6 px-4 py-6">
                 {/* Header Navigation */}
                 <div className="border-b border-gray-200 dark:border-neutral-700">
                     <nav className="flex space-x-2">
                         {navItems.map((item, index) => {
-                            const isActive = activeTab === item.href.substring(1);
+                            const isActive =
+                                activeTab === item.href.substring(1);
                             return (
                                 <Button
                                     key={`${item.href}-${index}`}
@@ -87,11 +81,15 @@ export default function PesticideIndex() {
                                         'hover:bg-transparent hover:text-foreground',
                                         'focus-visible:ring-0 focus-visible:ring-offset-0',
                                         {
-                                            'border-primary text-foreground': isActive,
-                                            'text-muted-foreground hover:border-b-accent': !isActive,
-                                        }
+                                            'border-primary text-foreground':
+                                                isActive,
+                                            'text-muted-foreground hover:border-b-accent':
+                                                !isActive,
+                                        },
                                     )}
-                                    onClick={() => handleTabChange(item.href.substring(1))}
+                                    onClick={() =>
+                                        handleTabChange(item.href.substring(1))
+                                    }
                                 >
                                     <div className="flex items-center gap-2">
                                         {item.icon && (
@@ -110,7 +108,9 @@ export default function PesticideIndex() {
                     <section className="w-full">
                         {/* Tab Content */}
                         <div className="tab-content">
-                            {activeTab === 'inventory' && <PesticideInventory />}
+                            {activeTab === 'inventory' && (
+                                <PesticideInventory />
+                            )}
                             {activeTab === 'distribution' && <Distribution />}
                         </div>
                     </section>

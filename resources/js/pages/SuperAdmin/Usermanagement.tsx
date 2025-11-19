@@ -304,10 +304,15 @@ export default function UserManagement() {
 
     // Sort indicator component
     const SortIndicator = ({ field }: { field: string }) => {
-        if (sortField !== field) return <ChevronUp className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />;
-        return sortDirection === 'asc' ? 
-            <ChevronUp className="ml-1 h-3 w-3" /> : 
-            <ChevronDown className="ml-1 h-3 w-3" />;
+        if (sortField !== field)
+            return (
+                <ChevronUp className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-50" />
+            );
+        return sortDirection === 'asc' ? (
+            <ChevronUp className="ml-1 h-3 w-3" />
+        ) : (
+            <ChevronDown className="ml-1 h-3 w-3" />
+        );
     };
 
     // Status filter toggle is controlled and synchronized with server via statusFilter
@@ -425,9 +430,7 @@ export default function UserManagement() {
                     />
                 </div>
                 {/* Users Table */}
-                <div
-                    className="overborder-sidebar-border/70 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 md:min-h-min dark:border-neutral-600 dark:border-neutral-800 dark:border-t-[#235347] dark:bg-neutral-900 shadow-sm"
-                >
+                <div className="overborder-sidebar-border/70 relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 shadow-sm md:min-h-min dark:border-neutral-600 dark:border-neutral-800 dark:border-t-[#235347] dark:bg-neutral-900">
                     {/* DataTables-style Controls */}
                     <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         {/* Left: Show entries and Add User button */}
@@ -596,13 +599,19 @@ export default function UserManagement() {
                                             id="mobileSortField"
                                             className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
                                             value={sortField}
-                                            onChange={(e) => handleSort(e.target.value)}
+                                            onChange={(e) =>
+                                                handleSort(e.target.value)
+                                            }
                                         >
                                             <option value="name">Name</option>
                                             <option value="email">Email</option>
                                             <option value="role">Role</option>
-                                            <option value="created_at">Date Registered</option>
-                                            <option value="last_login_at">Last Login</option>
+                                            <option value="created_at">
+                                                Date Registered
+                                            </option>
+                                            <option value="last_login_at">
+                                                Last Login
+                                            </option>
                                         </select>
                                     </div>
 
@@ -616,7 +625,9 @@ export default function UserManagement() {
                                                 type="button"
                                                 onClick={() => {
                                                     const newDirection = 'asc';
-                                                    setSortDirection(newDirection);
+                                                    setSortDirection(
+                                                        newDirection,
+                                                    );
                                                     router.get(
                                                         '/superadmin/usermanagement',
                                                         {
@@ -624,12 +635,13 @@ export default function UserManagement() {
                                                             perPage,
                                                             status: statusFilter,
                                                             sort: sortField,
-                                                            direction: newDirection,
+                                                            direction:
+                                                                newDirection,
                                                         },
                                                         {
                                                             preserveState: true,
                                                             replace: true,
-                                                        }
+                                                        },
                                                     );
                                                 }}
                                                 className={`flex-1 rounded-l-lg border border-r-0 px-3 py-2 text-sm font-medium transition-colors ${
@@ -848,7 +860,7 @@ export default function UserManagement() {
                                             <SortIndicator field="name" />
                                         </div>
                                     </TableHead>
-                                    <TableHead 
+                                    <TableHead
                                         className="cursor-pointer px-4 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-neutral-800"
                                         onClick={() => handleSort('email')}
                                     >
@@ -1035,4 +1047,4 @@ export default function UserManagement() {
             </div>
         </AppLayout>
     );
-};
+}
