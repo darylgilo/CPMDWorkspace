@@ -19,7 +19,7 @@ interface UserType {
     id: number;
     name: string;
     email: string;
-    role: 'user' | 'admin' | 'superadmin';
+    role: 'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps';
     status: 'active' | 'inactive';
     employee_id?: string;
     position?: string;
@@ -61,7 +61,9 @@ export default function EditUserManagement() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [role, setRole] = useState<'user' | 'admin' | 'superadmin'>('user');
+    const [role, setRole] = useState<
+        'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps'
+    >('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
     // Profile information fields
@@ -1013,7 +1015,10 @@ export default function EditUserManagement() {
                                                                             .value as
                                                                             | 'user'
                                                                             | 'admin'
-                                                                            | 'superadmin';
+                                                                            | 'superadmin'
+                                                                            | 'biocon'
+                                                                            | 'psf'
+                                                                            | 'phps';
                                                                     setRole(
                                                                         value,
                                                                     );
@@ -1028,6 +1033,15 @@ export default function EditUserManagement() {
                                                                 </option>
                                                                 <option value="superadmin">
                                                                     Super Admin
+                                                                </option>
+                                                                <option value="biocon">
+                                                                    Biocon
+                                                                </option>
+                                                                <option value="psf">
+                                                                    PSF
+                                                                </option>
+                                                                <option value="phps">
+                                                                    PHPS
                                                                 </option>
                                                             </select>
                                                             <InputError
