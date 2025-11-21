@@ -1,5 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
+import SimpleStatistic from '@/components/SimpleStatistic';
 import ToggleButton from '@/components/ToggleButton';
 import {
     Select,
@@ -331,79 +332,39 @@ export default function UserManagement() {
                 {/* Analytics Dashboard */}
                 <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
                     {/* Total Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
-                                    Total Users
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.total}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <Users className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
+                    <SimpleStatistic
+                        label="Total Users"
+                        value={analytics.total}
+                        icon={Users}
+                    />
 
                     {/* Active Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
-                                    Active Users
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.active}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <UserCheck className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
+                    <SimpleStatistic
+                        label="Active Users"
+                        value={analytics.active}
+                        icon={UserCheck}
+                    />
 
                     {/* New Users This Month Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
-                                    New Users
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.newThisMonth}
-                                </p>
-                                <p className="hidden text-xs text-white/70 md:block dark:text-gray-400">
-                                    This month
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <UserPlus className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
+                    <SimpleStatistic
+                        label="New Users"
+                        value={analytics.newThisMonth}
+                        icon={UserPlus}
+                        subtitle="This month"
+                    />
 
                     {/* Online Users Card */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800 dark:bg-[#163832] dark:text-white">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm dark:text-gray-400">
-                                    Online Users
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl dark:text-white">
-                                    {analytics.online}
-                                </p>
-                                <p className="flex hidden items-center gap-1 text-xs text-green-600 md:flex dark:text-green-400">
-                                    <Activity className="h-3 w-3" />
-                                    Last 15 minutes
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center self-start rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500 md:h-3 md:w-3"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <SimpleStatistic
+                        label="Online Users"
+                        value={analytics.online}
+                        icon={Activity}
+                        additionalContent={
+                            <p className="flex hidden items-center gap-1 text-xs text-green-600 md:flex dark:text-green-400">
+                                <Activity className="h-3 w-3" />
+                                Last 15 minutes
+                            </p>
+                        }
+                    />
                 </div>
                 <div className="flex items-center justify-between">
                     <ToggleButton

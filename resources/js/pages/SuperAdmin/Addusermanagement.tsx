@@ -13,7 +13,9 @@ export default function AddUserManagement() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [role, setRole] = useState<'user' | 'admin' | 'superadmin'>('user');
+    const [role, setRole] = useState<
+        'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps'
+    >('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
     // Profile information fields
@@ -661,7 +663,10 @@ export default function AddUserManagement() {
                                                                 .value as
                                                                 | 'user'
                                                                 | 'admin'
-                                                                | 'superadmin';
+                                                                | 'superadmin'
+                                                                | 'biocon'
+                                                                | 'psf'
+                                                                | 'phps';
                                                             setRole(value);
                                                         }}
                                                         className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
@@ -674,6 +679,15 @@ export default function AddUserManagement() {
                                                         </option>
                                                         <option value="superadmin">
                                                             Super Admin
+                                                        </option>
+                                                        <option value="biocon">
+                                                            Biocon
+                                                        </option>
+                                                        <option value="psf">
+                                                            PSF
+                                                        </option>
+                                                        <option value="phps">
+                                                            PHPS
                                                         </option>
                                                     </select>
                                                 </div>

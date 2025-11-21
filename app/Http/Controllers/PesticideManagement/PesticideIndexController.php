@@ -57,7 +57,8 @@ class PesticideIndexController extends Controller
             'typeStatistics' => $typeStatistics,
             'totalStock' => Pesticide::sum('stock'),
             'lowStock' => Pesticide::where('stock', '<', 10)->count(),
-            'expiringSoon' => Pesticide::where('expiry_date', '<=', now()->addMonths(3))->count(),
+            // Total stock (quantity) received in the current year
+            'thisYearStock' => Pesticide::whereYear('received_date', now()->year)->sum('quantity'),
         ];
 
         // Get unique types, sources, and brand names for dropdowns
@@ -83,8 +84,8 @@ class PesticideIndexController extends Controller
         $distributionAnalytics = [
             'totalDistributions' => Distribution::count(),
             'totalDistributed' => Distribution::sum('quantity'),
-            'thisMonth' => Distribution::whereMonth('created_at', now()->month)->count(),
-            'thisWeek' => Distribution::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
+            // Total quantity distributed in the current year
+            'thisYear' => Distribution::whereYear('created_at', now()->year)->sum('quantity'),
         ];
 
         // Get all available pesticides individually
