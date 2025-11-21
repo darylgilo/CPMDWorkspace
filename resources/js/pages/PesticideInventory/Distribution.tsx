@@ -2,6 +2,7 @@ import CustomPagination from '@/components/CustomPagination';
 import ExportPesticide from '@/components/export/ExportPesticide';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
+import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -34,7 +35,6 @@ import {
     PackageMinus,
     Plus,
     Trash2,
-    TrendingUp,
     TruckIcon,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -78,8 +78,7 @@ interface PageProps {
     distributionAnalytics: {
         totalDistributions: number;
         totalDistributed: number;
-        thisMonth: number;
-        thisWeek: number;
+        thisYear: number;
     };
     [key: string]: unknown;
 }
@@ -440,67 +439,25 @@ export default function Distribution() {
         <>
             <div className="flex flex-col gap-4">
                 {/* Analytics Dashboard */}
-                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    Total Distributions
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.totalDistributions || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <TruckIcon className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    Total Distributed
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.totalDistributed || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <PackageMinus className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    This Month
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.thisMonth || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 md:h-12 md:w-12 dark:bg-blue-900/20">
-                                <Calendar className="h-4 w-4 text-blue-600 md:h-6 md:w-6 dark:text-blue-400" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    This Week
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.thisWeek || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 md:h-12 md:w-12 dark:bg-purple-900/20">
-                                <TrendingUp className="h-4 w-4 text-purple-600 md:h-6 md:w-6 dark:text-purple-400" />
-                            </div>
-                        </div>
-                    </div>
+                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+                    <SimpleStatistic
+                        label="Total Distributions"
+                        value={analytics?.totalDistributions || 0}
+                        icon={TruckIcon}
+                    />
+                    <SimpleStatistic
+                        label="Total Distributed"
+                        value={analytics?.totalDistributed || 0}
+                        icon={PackageMinus}
+                    />
+                    <SimpleStatistic
+                        label="Total Pesticide Distributed This Year"
+                        value={analytics?.thisYear || 0}
+                        icon={Calendar}
+                        subtitle="Based on quantity of pesticide distributed this year"
+                        iconBackgroundColor="bg-blue-100 dark:bg-blue-900/20"
+                        iconColor="text-blue-600 dark:text-blue-400"
+                    />
                 </div>
 
                 {/* Table Container */}

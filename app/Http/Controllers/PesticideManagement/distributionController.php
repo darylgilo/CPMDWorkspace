@@ -86,7 +86,7 @@ class DistributionController extends Controller
             
             // Check if enough stock is available
             if ($pesticide->stock < $validated['quantity']) {
-                return redirect('/pesticidesindex?tab=distribution')
+                return back()
                     ->with('error', 'Insufficient stock available. Current stock: ' . $pesticide->stock . ' ' . $pesticide->unit);
             }
 
@@ -106,10 +106,10 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return redirect('/pesticidesindex?tab=distribution')->with('success', 'Distribution recorded successfully!');
+            return Inertia::location('/pesticidesindex?tab=distribution');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect('/pesticidesindex?tab=distribution')->with('error', 'Failed to record distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to record distribution: ' . $e->getMessage());
         }
     }
 
@@ -140,7 +140,7 @@ class DistributionController extends Controller
                 
                 // Check if new pesticide has enough stock
                 if ($newPesticide->stock < $validated['quantity']) {
-                    return redirect('/pesticidesindex?tab=distribution')
+                    return back()
                         ->with('error', 'Insufficient stock available. Current stock: ' . $newPesticide->stock . ' ' . $newPesticide->unit);
                 }
                 
@@ -152,7 +152,7 @@ class DistributionController extends Controller
                 $quantityDiff = $validated['quantity'] - $distribution->quantity;
                 
                 if ($quantityDiff > $newPesticide->stock) {
-                    return redirect('/pesticidesindex?tab=distribution')
+                    return back()
                         ->with('error', 'Insufficient stock available. Current stock: ' . $newPesticide->stock . ' ' . $newPesticide->unit);
                 }
                 
@@ -171,10 +171,10 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return redirect('/pesticidesindex?tab=distribution')->with('success', 'Distribution updated successfully!');
+            return Inertia::location('/pesticidesindex?tab=distribution');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect('/pesticidesindex?tab=distribution')->with('error', 'Failed to update distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update distribution: ' . $e->getMessage());
         }
     }
 
@@ -194,10 +194,10 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return redirect('/pesticidesindex?tab=distribution')->with('success', 'Distribution deleted successfully!');
+            return Inertia::location('/pesticidesindex?tab=distribution');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect('/pesticidesindex?tab=distribution')->with('error', 'Failed to delete distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete distribution: ' . $e->getMessage());
         }
     }
 }

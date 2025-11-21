@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Package, TruckIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -43,22 +43,25 @@ export default function PesticideIndex() {
     }, [activeTabProp]);
 
     const handleTabChange = (tab: string) => {
-        setActiveTab(tab);
-        // Update the URL hash without causing a page reload
-        window.history.pushState({}, '', `#${tab}`);
+        // Use Inertia router to navigate with query parameters
+        router.get(
+            '/pesticidesindex',
+            { tab },
+            { preserveState: true, replace: true },
+        );
     };
 
-    // Handle browser back/forward buttons
+    // Handle browser back/forward buttons and initial hash navigation
     useEffect(() => {
-        const handleHashChange = () => {
-            const hash = window.location.hash.substring(1);
-            if (hash && (hash === 'inventory' || hash === 'distribution')) {
-                setActiveTab(hash);
-            }
-        };
-
-        window.addEventListener('popstate', handleHashChange);
-        return () => window.removeEventListener('popstate', handleHashChange);
+        const hash = window.location.hash.substring(1);
+        if (hash && (hash === 'inventory' || hash === 'distribution')) {
+            // If there's a hash in the URL, navigate to that tab using query params
+            router.get(
+                '/pesticidesindex',
+                { tab: hash },
+                { preserveState: true, replace: true },
+            );
+        }
     }, []);
 
     return (

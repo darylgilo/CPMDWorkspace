@@ -2,6 +2,8 @@ import CustomPagination from '@/components/CustomPagination';
 import ExportPesticide from '@/components/export/ExportPesticide';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
+import SimpleCarouselStat from '@/components/SimpleCarouselStat';
+import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -26,11 +28,7 @@ import {
 } from '@/components/ui/table';
 import { router, usePage } from '@inertiajs/react';
 import {
-    AlertTriangle,
-    Calendar,
     ChevronDown,
-    ChevronLeft,
-    ChevronRight,
     ChevronUp,
     Edit3,
     MoreVertical,
@@ -77,7 +75,7 @@ interface PageProps {
         typeStatistics: TypeStatistic[];
         totalStock: number;
         lowStock: number;
-        expiringSoon: number;
+        thisYearStock: number;
     };
     pesticideTypes: string[];
     sourcesOfFund: string[];
@@ -106,7 +104,6 @@ export default function PesticideIndex() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedPesticide, setSelectedPesticide] =
         useState<Pesticide | null>(null);
-    const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
     const [sortField, setSortField] = useState<string>('brand_name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -438,23 +435,15 @@ export default function PesticideIndex() {
         });
     };
 
-    const handlePrevType = () => {
-        setCurrentTypeIndex((prev) =>
-            prev === 0
-                ? (analytics?.typeStatistics?.length || 1) - 1
-                : prev - 1,
-        );
-    };
+    // Helper function to check if a date is within 2 months from now
+    const isExpiringWithinTwoMonths = (expiryDateString: string) => {
+        const expiryDate = new Date(expiryDateString);
+        const today = new Date();
+        const twoMonthsFromNow = new Date();
+        twoMonthsFromNow.setMonth(today.getMonth() + 2);
 
-    const handleNextType = () => {
-        setCurrentTypeIndex((prev) =>
-            prev === (analytics?.typeStatistics?.length || 1) - 1
-                ? 0
-                : prev + 1,
-        );
+        return expiryDate <= twoMonthsFromNow && expiryDate >= today;
     };
-
-    const currentTypeStat = analytics?.typeStatistics?.[currentTypeIndex];
 
     // Show loading state if data is not yet available
     if (!pesticides) {
@@ -469,121 +458,42 @@ export default function PesticideIndex() {
         <>
             <div className="flex flex-col gap-4">
                 {/* Analytics Dashboard */}
-                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
+                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
                     {/* Pesticide Type Carousel */}
                     {analytics?.typeStatistics &&
-                        analytics.typeStatistics.length > 0 &&
-                        currentTypeStat && (
-                            <div className="relative rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <p className="text-xs font-medium text-white/80 md:text-sm">
-                                            {currentTypeStat.type}
-                                        </p>
-                                        <p className="text-xl font-bold text-white">
-                                            Stock: {currentTypeStat.totalStock}
-                                        </p>
-                                    </div>
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                        <Package className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                                    </div>
-                                </div>
-                                {/* Carousel Controls */}
-                                {analytics.typeStatistics.length > 1 && (
-                                    <div className="mt-3 flex items-center justify-between border-t border-white/20 pt-3">
-                                        <button
-                                            onClick={handlePrevType}
-                                            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
-                                            aria-label="Previous type"
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </button>
-                                        <div className="flex gap-1">
-                                            {analytics.typeStatistics.map(
-                                                (_, index) => (
-                                                    <button
-                                                        key={index}
-                                                        onClick={() =>
-                                                            setCurrentTypeIndex(
-                                                                index,
-                                                            )
-                                                        }
-                                                        className={`h-1.5 w-1.5 rounded-full transition-all ${
-                                                            index ===
-                                                            currentTypeIndex
-                                                                ? 'w-4 bg-white'
-                                                                : 'bg-white/40 hover:bg-white/60'
-                                                        }`}
-                                                        aria-label={`Go to type ${index + 1}`}
-                                                    />
-                                                ),
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={handleNextType}
-                                            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
-                                            aria-label="Next type"
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </button>
-                                    </div>
+                        analytics.typeStatistics.length > 0 && (
+                            <SimpleCarouselStat
+                                items={analytics.typeStatistics.map(
+                                    (stat, index) => ({
+                                        id: index,
+                                        label: stat.type,
+                                        value: `Stock: ${stat.totalStock}`,
+                                        additionalContent:
+                                            stat.totalStock < 20 ? (
+                                                <p className="mt-1 text-xs font-semibold text-yellow-300">
+                                                    Low stock
+                                                </p>
+                                            ) : undefined,
+                                    }),
                                 )}
-                            </div>
+                                icon={Package}
+                            />
                         )}
 
                     {/* Total Stock */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    Total Stock
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.totalStock || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 md:h-12 md:w-12 dark:bg-green-900/20">
-                                <PackageCheck className="h-4 w-4 text-green-600 md:h-6 md:w-6 dark:text-[#DAF1DE]" />
-                            </div>
-                        </div>
-                    </div>
+                    <SimpleStatistic
+                        label="Total Stock"
+                        value={analytics?.totalStock || 0}
+                        icon={PackageCheck}
+                    />
 
-                    {/* Low Stock */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    Low Stock
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.lowStock || 0}
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-100 md:h-12 md:w-12 dark:bg-yellow-900/20">
-                                <AlertTriangle className="h-4 w-4 text-yellow-600 md:h-6 md:w-6 dark:text-yellow-400" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Expiring Soon */}
-                    <div className="rounded-lg border border-gray-200 bg-[#163832] p-3 text-white shadow-lg md:rounded-xl md:p-6 dark:border-neutral-800">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-white/80 md:text-sm">
-                                    Expiring Soon
-                                </p>
-                                <p className="text-xl font-bold text-white md:text-3xl">
-                                    {analytics?.expiringSoon || 0}
-                                </p>
-                                <p className="hidden text-xs text-white/70 md:block">
-                                    Within 3 months
-                                </p>
-                            </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 md:h-12 md:w-12 dark:bg-red-900/20">
-                                <Calendar className="h-4 w-4 text-red-600 md:h-6 md:w-6 dark:text-red-400" />
-                            </div>
-                        </div>
-                    </div>
+                    {/* Total Stock Added This Year */}
+                    <SimpleStatistic
+                        label="Total Stock Added This Year"
+                        value={analytics?.thisYearStock || 0}
+                        icon={Package}
+                        subtitle="Based on received date this year"
+                    />
                 </div>
 
                 {/* Table Container */}
@@ -823,7 +733,15 @@ export default function PesticideIndex() {
                                                         pesticide.received_date,
                                                     )}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell
+                                                    className={
+                                                        isExpiringWithinTwoMonths(
+                                                            pesticide.expiry_date,
+                                                        )
+                                                            ? 'font-semibold text-orange-600 dark:text-orange-400'
+                                                            : ''
+                                                    }
+                                                >
                                                     {formatDate(
                                                         pesticide.expiry_date,
                                                     )}
@@ -836,9 +754,12 @@ export default function PesticideIndex() {
                                                 </TableCell>
                                                 <TableCell
                                                     className={
-                                                        pesticide.stock < 10
-                                                            ? 'font-semibold text-red-600'
-                                                            : ''
+                                                        pesticide.stock === 0
+                                                            ? 'font-semibold text-gray-500 dark:text-gray-400'
+                                                            : pesticide.stock <
+                                                                10
+                                                              ? 'font-semibold text-red-600 dark:text-red-400'
+                                                              : ''
                                                     }
                                                 >
                                                     {pesticide.stock}
