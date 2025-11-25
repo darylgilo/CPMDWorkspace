@@ -56,6 +56,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/noticeboard', [NoticeController::class, 'store'])->name('noticeboard.store');
     Route::post('/noticeboard/{notice}', [NoticeController::class, 'update'])->name('noticeboard.update');
     Route::delete('/noticeboard/{notice}', [NoticeController::class, 'destroy'])->name('noticeboard.destroy');
+    // Whereabouts Routes
+    Route::get('/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'index'])->name('whereabouts.index');
+    Route::post('/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'store'])->name('whereabouts.store');
+    Route::post('/whereabouts/reorder', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'reorder'])->name('whereabouts.reorder');
+    Route::delete('/whereabouts/{id}', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'destroy'])->name('whereabouts.destroy');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
