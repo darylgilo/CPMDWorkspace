@@ -46,7 +46,7 @@ const data = {
         },
         {
             title: 'Whereabouts',
-            url: '#',
+            url: '/whereabouts',
             icon: Contact2Icon,
             isActive: true,
         },

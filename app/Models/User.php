@@ -41,6 +41,7 @@ class User extends Authenticatable
         'hiring_date',
         'item_number',
         'profile_picture', // Profile picture file path
+        'display_order', // Custom order for whereabouts display
     ];
 
     /**
@@ -65,5 +66,12 @@ class User extends Authenticatable
             'password' => 'hashed',
             'last_login_at' => 'datetime',
         ];
+    }
+    /**
+     * Get the whereabouts for the user.
+     */
+    public function whereabouts()
+    {
+        return $this->hasMany(Whereabout::class);
     }
 }
