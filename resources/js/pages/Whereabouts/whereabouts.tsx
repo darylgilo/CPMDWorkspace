@@ -136,14 +136,14 @@ function SortableRow({
         <tr
             ref={setNodeRef}
             style={style}
-            className={cn(isDragging ? 'opacity-50 bg-gray-50 shadow-lg' : '')}
+            className={cn(isDragging ? 'opacity-50 bg-gray-50 shadow-lg dark:bg-neutral-800' : '')}
         >
-            <td className="sticky left-0 z-10 border bg-white p-2 font-medium dark:bg-gray-900 flex items-center gap-2">
+            <td className="sticky left-0 z-10 border border-gray-300 bg-white p-2 font-medium dark:border-neutral-700 dark:bg-neutral-900 flex items-center gap-2">
                 {canReorder && (
                     <button
                         {...attributes}
                         {...listeners}
-                        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+                        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:text-gray-400"
                     >
                         <GripVertical className="h-4 w-4" />
                     </button>
@@ -159,7 +159,7 @@ function SortableRow({
                     <td
                         key={day.toString()}
                         className={cn(
-                            'group relative h-10 cursor-pointer border p-0 transition-opacity hover:opacity-80',
+                            'group relative h-10 cursor-pointer border border-gray-300 p-0 transition-opacity hover:opacity-80 dark:border-neutral-700',
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
@@ -406,6 +406,87 @@ export default function Whereabouts({
                     </div>
                 </div>
 
+                {/* Month and Year Filters */}
+                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                    <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Month:</Label>
+                        <Select
+                            value={String(date.getMonth())}
+                            onValueChange={(val) => {
+                                const newDate = new Date(
+                                    date.getFullYear(),
+                                    parseInt(val),
+                                    1
+                                );
+                                router.visit(
+                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`
+                                );
+                            }}
+                        >
+                            <SelectTrigger className="w-[140px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                <SelectItem value="0">January</SelectItem>
+                                <SelectItem value="1">February</SelectItem>
+                                <SelectItem value="2">March</SelectItem>
+                                <SelectItem value="3">April</SelectItem>
+                                <SelectItem value="4">May</SelectItem>
+                                <SelectItem value="5">June</SelectItem>
+                                <SelectItem value="6">July</SelectItem>
+                                <SelectItem value="7">August</SelectItem>
+                                <SelectItem value="8">September</SelectItem>
+                                <SelectItem value="9">October</SelectItem>
+                                <SelectItem value="10">November</SelectItem>
+                                <SelectItem value="11">December</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Year:</Label>
+                        <Select
+                            value={String(date.getFullYear())}
+                            onValueChange={(val) => {
+                                const newDate = new Date(
+                                    parseInt(val),
+                                    date.getMonth(),
+                                    1
+                                );
+                                router.visit(
+                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`
+                                );
+                            }}
+                        >
+                            <SelectTrigger className="w-[100px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                {Array.from({ length: 10 }, (_, i) => {
+                                    const year = new Date().getFullYear() - 5 + i;
+                                    return (
+                                        <SelectItem key={year} value={String(year)}>
+                                            {year}
+                                        </SelectItem>
+                                    );
+                                })}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            const today = new Date();
+                            router.visit(
+                                `/whereabouts?date=${format(today, 'yyyy-MM-dd')}`
+                            );
+                        }}
+                    >
+                        Today
+                    </Button>
+                </div>
+
                 <div className="mb-4 flex flex-wrap gap-4">
                     {Object.entries(STATUS_COLORS).map(
                         ([status, colorClass]) => (
@@ -430,18 +511,18 @@ export default function Whereabouts({
                     collisionDetection={closestCenter}
                     onDragEnd={handleDragEnd}
                 >
-                    <div className="overflow-auto rounded-lg border bg-white shadow dark:bg-gray-900">
+                    <div className="overflow-auto rounded-lg border border-gray-300 bg-white shadow dark:border-neutral-800 dark:bg-neutral-900">
                         <table className="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
-                                    <th className="sticky left-0 z-20 min-w-[200px] border bg-gray-100 p-2 text-left dark:bg-gray-800">
+                                    <th className="sticky left-0 z-20 min-w-[200px] border border-gray-300 bg-gray-100 p-2 text-left dark:border-neutral-700 dark:bg-neutral-800">
                                         CROP PEST MANAGEMENT DIVISION
                                     </th>
                                     {days.map((day: Date) => (
                                         <th
                                             key={day.toString()}
                                             className={cn(
-                                                'min-w-[40px] border p-1 text-center font-normal',
+                                                'min-w-[40px] border border-gray-300 p-1 text-center font-normal dark:border-neutral-700',
                                                 isWeekend(day)
                                                     ? 'bg-gray-50 dark:bg-gray-800/50'
                                                     : '',
@@ -450,7 +531,7 @@ export default function Whereabouts({
                                             <div className="font-bold">
                                                 {format(day, 'd')}
                                             </div>
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                                 {format(day, 'EEE')}
                                             </div>
                                         </th>
@@ -466,11 +547,11 @@ export default function Whereabouts({
                                             strategy={verticalListSortingStrategy}
                                         >
                                             <tr
-                                                className="bg-gray-100 dark:bg-gray-800"
+                                                className="bg-gray-100 dark:bg-neutral-800"
                                             >
                                                 <td
                                                     colSpan={days.length + 1}
-                                                    className="sticky left-0 z-10 border bg-gray-100 p-2 font-bold dark:bg-gray-800"
+                                                    className="sticky left-0 z-10 border border-gray-300 bg-gray-100 p-2 font-bold dark:border-neutral-700 dark:bg-neutral-800"
                                                 >
                                                     {office}
                                                 </td>
