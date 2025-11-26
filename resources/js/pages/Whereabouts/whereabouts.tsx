@@ -44,7 +44,7 @@ import {
     startOfMonth,
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface User {
     id: number;
@@ -72,7 +72,7 @@ interface PageProps {
     auth: {
         user: AuthUser;
     };
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface Props {
@@ -88,9 +88,9 @@ const STATUS_COLORS: Record<string, string> = {
     'ON DUTY': 'bg-green-500 text-white',
     'ON TRAVEL': 'bg-blue-500 text-white',
     'ON LEAVE': 'bg-red-500 text-white',
-    'ABSENT': 'bg-orange-500 text-white',
+    ABSENT: 'bg-orange-500 text-white',
     'HALF DAY': 'bg-yellow-500 text-black',
-    'WFH': 'bg-purple-500 text-white',
+    WFH: 'bg-purple-500 text-white',
 };
 
 const STATUS_OPTIONS = [
@@ -129,21 +129,25 @@ function SortableRow({
         transform: CSS.Transform.toString(transform),
         transition,
         zIndex: isDragging ? 50 : 'auto',
-        position: isDragging ? 'relative' as const : undefined,
+        position: isDragging ? ('relative' as const) : undefined,
     };
 
     return (
         <tr
             ref={setNodeRef}
             style={style}
-            className={cn(isDragging ? 'opacity-50 bg-gray-50 shadow-lg' : '')}
+            className={cn(
+                isDragging
+                    ? 'bg-gray-50 opacity-50 shadow-lg dark:bg-neutral-800'
+                    : '',
+            )}
         >
-            <td className="sticky left-0 z-10 border bg-white p-2 font-medium dark:bg-gray-900 flex items-center gap-2">
+            <td className="sticky left-0 z-10 flex items-center gap-2 border border-gray-300 bg-white p-2 font-medium dark:border-neutral-700 dark:bg-neutral-900">
                 {canReorder && (
                     <button
                         {...attributes}
                         {...listeners}
-                        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing"
+                        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:text-gray-400"
                     >
                         <GripVertical className="h-4 w-4" />
                     </button>
@@ -159,12 +163,12 @@ function SortableRow({
                     <td
                         key={day.toString()}
                         className={cn(
-                            'group relative h-10 cursor-pointer border p-0 transition-opacity hover:opacity-80',
+                            'group relative h-10 cursor-pointer border border-gray-300 p-0 transition-opacity hover:opacity-80 dark:border-neutral-700',
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
-                                    ? 'bg-gray-50 dark:bg-gray-800/50'
-                                    : '',
+                                  ? 'bg-gray-50 dark:bg-gray-800/50'
+                                  : '',
                         )}
                         onClick={() => handleCellClick(user, day)}
                         title={
@@ -172,8 +176,7 @@ function SortableRow({
                                 ? `${entry.status}${entry.reason ? `: ${entry.reason}` : ''}`
                                 : ''
                         }
-                    >
-                    </td>
+                    ></td>
                 );
             })}
         </tr>
@@ -186,7 +189,7 @@ export default function Whereabouts({
     currentDate,
 }: Props) {
     const { auth } = usePage<PageProps>().props;
-    const [date, setDate] = useState(parseISO(currentDate));
+    const [date] = useState(parseISO(currentDate));
     const [selectedCell, setSelectedCell] = useState<{
         user: User;
         date: Date;
@@ -238,8 +241,8 @@ export default function Whereabouts({
         if (active.id !== over?.id && over) {
             setLocalUsers((items) => {
                 // Find the section that contains both active and over items
-                const activeUser = items.find(u => u.id === active.id);
-                const overUser = items.find(u => u.id === over.id);
+                const activeUser = items.find((u) => u.id === active.id);
+                const overUser = items.find((u) => u.id === over.id);
 
                 if (!activeUser || !overUser) return items;
 
@@ -252,28 +255,43 @@ export default function Whereabouts({
                 }
 
                 // Get all users in this section
-                const sectionUsers = items.filter(u => (u.cpmd || 'Unassigned') === section);
-                const otherUsers = items.filter(u => (u.cpmd || 'Unassigned') !== section);
+                const sectionUsers = items.filter(
+                    (u) => (u.cpmd || 'Unassigned') === section,
+                );
 
                 // Find indices within the section
-                const oldIndex = sectionUsers.findIndex(u => u.id === active.id);
-                const newIndex = sectionUsers.findIndex(u => u.id === over.id);
+                const oldIndex = sectionUsers.findIndex(
+                    (u) => u.id === active.id,
+                );
+                const newIndex = sectionUsers.findIndex(
+                    (u) => u.id === over.id,
+                );
 
                 // Reorder within the section
-                const reorderedSection = arrayMove(sectionUsers, oldIndex, newIndex);
+                const reorderedSection = arrayMove(
+                    sectionUsers,
+                    oldIndex,
+                    newIndex,
+                );
 
                 // Merge back: keep other sections in their original order
                 // We need to maintain the overall structure
                 const result: User[] = [];
 
                 // Reconstruct the array maintaining section groupings
-                const allSections = Array.from(new Set(items.map(u => u.cpmd || 'Unassigned')));
+                const allSections = Array.from(
+                    new Set(items.map((u) => u.cpmd || 'Unassigned')),
+                );
 
-                allSections.forEach(sec => {
+                allSections.forEach((sec) => {
                     if (sec === section) {
                         result.push(...reorderedSection);
                     } else {
-                        result.push(...items.filter(u => (u.cpmd || 'Unassigned') === sec));
+                        result.push(
+                            ...items.filter(
+                                (u) => (u.cpmd || 'Unassigned') === sec,
+                            ),
+                        );
                     }
                 });
 
@@ -287,23 +305,34 @@ export default function Whereabouts({
                 console.log('Sending reorder data:', {
                     totalUsers: orderData.length,
                     orderData: orderData,
-                    result: result.map(u => ({ id: u.id, name: u.name, section: u.cpmd }))
+                    result: result.map((u) => ({
+                        id: u.id,
+                        name: u.name,
+                        section: u.cpmd,
+                    })),
                 });
 
                 // Call backend to save order
                 setTimeout(() => {
-                    router.post('/whereabouts/reorder', {
-                        items: orderData
-                    }, {
-                        preserveScroll: true,
-                        preserveState: true,
-                        onSuccess: (response) => {
-                            console.log('Order saved successfully', response);
+                    router.post(
+                        '/whereabouts/reorder',
+                        {
+                            items: orderData,
                         },
-                        onError: (errors) => {
-                            console.error("Failed to save order", errors);
-                        }
-                    });
+                        {
+                            preserveScroll: true,
+                            preserveState: true,
+                            onSuccess: (response) => {
+                                console.log(
+                                    'Order saved successfully',
+                                    response,
+                                );
+                            },
+                            onError: (errors) => {
+                                console.error('Failed to save order', errors);
+                            },
+                        },
+                    );
                 }, 0);
 
                 return result;
@@ -317,9 +346,7 @@ export default function Whereabouts({
             date.getMonth() + offset,
             1,
         );
-        router.visit(
-            `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
-        );
+        router.visit(`/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`);
     };
 
     const handleCellClick = (user: User, day: Date) => {
@@ -406,6 +433,91 @@ export default function Whereabouts({
                     </div>
                 </div>
 
+                {/* Month and Year Filters */}
+                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                    <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Month:</Label>
+                        <Select
+                            value={String(date.getMonth())}
+                            onValueChange={(val) => {
+                                const newDate = new Date(
+                                    date.getFullYear(),
+                                    parseInt(val),
+                                    1,
+                                );
+                                router.visit(
+                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                                );
+                            }}
+                        >
+                            <SelectTrigger className="w-[140px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                <SelectItem value="0">January</SelectItem>
+                                <SelectItem value="1">February</SelectItem>
+                                <SelectItem value="2">March</SelectItem>
+                                <SelectItem value="3">April</SelectItem>
+                                <SelectItem value="4">May</SelectItem>
+                                <SelectItem value="5">June</SelectItem>
+                                <SelectItem value="6">July</SelectItem>
+                                <SelectItem value="7">August</SelectItem>
+                                <SelectItem value="8">September</SelectItem>
+                                <SelectItem value="9">October</SelectItem>
+                                <SelectItem value="10">November</SelectItem>
+                                <SelectItem value="11">December</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Label className="text-sm font-medium">Year:</Label>
+                        <Select
+                            value={String(date.getFullYear())}
+                            onValueChange={(val) => {
+                                const newDate = new Date(
+                                    parseInt(val),
+                                    date.getMonth(),
+                                    1,
+                                );
+                                router.visit(
+                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                                );
+                            }}
+                        >
+                            <SelectTrigger className="w-[100px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                {Array.from({ length: 10 }, (_, i) => {
+                                    const year =
+                                        new Date().getFullYear() - 5 + i;
+                                    return (
+                                        <SelectItem
+                                            key={year}
+                                            value={String(year)}
+                                        >
+                                            {year}
+                                        </SelectItem>
+                                    );
+                                })}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            const today = new Date();
+                            router.visit(
+                                `/whereabouts?date=${format(today, 'yyyy-MM-dd')}`,
+                            );
+                        }}
+                    >
+                        Today
+                    </Button>
+                </div>
+
                 <div className="mb-4 flex flex-wrap gap-4">
                     {Object.entries(STATUS_COLORS).map(
                         ([status, colorClass]) => (
@@ -430,18 +542,18 @@ export default function Whereabouts({
                     collisionDetection={closestCenter}
                     onDragEnd={handleDragEnd}
                 >
-                    <div className="overflow-auto rounded-lg border bg-white shadow dark:bg-gray-900">
+                    <div className="overflow-auto rounded-lg border border-gray-300 bg-white shadow dark:border-neutral-800 dark:bg-neutral-900">
                         <table className="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
-                                    <th className="sticky left-0 z-20 min-w-[200px] border bg-gray-100 p-2 text-left dark:bg-gray-800">
+                                    <th className="sticky left-0 z-20 min-w-[200px] border border-gray-300 bg-gray-100 p-2 text-left dark:border-neutral-700 dark:bg-neutral-800">
                                         CROP PEST MANAGEMENT DIVISION
                                     </th>
                                     {days.map((day: Date) => (
                                         <th
                                             key={day.toString()}
                                             className={cn(
-                                                'min-w-[40px] border p-1 text-center font-normal',
+                                                'min-w-[40px] border border-gray-300 p-1 text-center font-normal dark:border-neutral-700',
                                                 isWeekend(day)
                                                     ? 'bg-gray-50 dark:bg-gray-800/50'
                                                     : '',
@@ -450,7 +562,7 @@ export default function Whereabouts({
                                             <div className="font-bold">
                                                 {format(day, 'd')}
                                             </div>
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                                 {format(day, 'EEE')}
                                             </div>
                                         </th>
@@ -462,15 +574,15 @@ export default function Whereabouts({
                                     ([office, officeUsers]) => (
                                         <SortableContext
                                             key={office}
-                                            items={officeUsers.map(u => u.id)}
-                                            strategy={verticalListSortingStrategy}
+                                            items={officeUsers.map((u) => u.id)}
+                                            strategy={
+                                                verticalListSortingStrategy
+                                            }
                                         >
-                                            <tr
-                                                className="bg-gray-100 dark:bg-gray-800"
-                                            >
+                                            <tr className="bg-gray-100 dark:bg-neutral-800">
                                                 <td
                                                     colSpan={days.length + 1}
-                                                    className="sticky left-0 z-10 border bg-gray-100 p-2 font-bold dark:bg-gray-800"
+                                                    className="sticky left-0 z-10 border border-gray-300 bg-gray-100 p-2 font-bold dark:border-neutral-700 dark:bg-neutral-800"
                                                 >
                                                     {office}
                                                 </td>
@@ -481,7 +593,9 @@ export default function Whereabouts({
                                                     user={user}
                                                     days={days}
                                                     whereabouts={whereabouts}
-                                                    handleCellClick={handleCellClick}
+                                                    handleCellClick={
+                                                        handleCellClick
+                                                    }
                                                     canReorder={canReorder}
                                                 />
                                             ))}
@@ -555,7 +669,6 @@ export default function Whereabouts({
                     </div>
 
                     <DialogFooter className="flex justify-between">
-
                         <div className="flex gap-2">
                             <Button
                                 variant="outline"
@@ -564,14 +677,17 @@ export default function Whereabouts({
                                 Cancel
                             </Button>
                             <div>
-                                {selectedCell && whereabouts[selectedCell.user.id]?.[format(selectedCell.date, 'yyyy-MM-dd')] && (
-                                    <Button
-                                        variant="destructive"
-                                        onClick={handleReset}
-                                    >
-                                        Reset
-                                    </Button>
-                                )}
+                                {selectedCell &&
+                                    whereabouts[selectedCell.user.id]?.[
+                                        format(selectedCell.date, 'yyyy-MM-dd')
+                                    ] && (
+                                        <Button
+                                            variant="destructive"
+                                            onClick={handleReset}
+                                        >
+                                            Reset
+                                        </Button>
+                                    )}
                             </div>
                             <Button onClick={handleSubmit}>Save</Button>
                         </div>
