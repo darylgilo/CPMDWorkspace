@@ -143,7 +143,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => ['required', Rule::in(['user', 'admin', 'superadmin'])],
+            'role' => ['required', Rule::in(['user', 'admin', 'superadmin', 'biocon', 'psf', 'phps'])],
             'status' => ['required', Rule::in(['active', 'inactive'])], // Admin can set initial status
             'employee_id' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
@@ -233,7 +233,7 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => ['required','string','email','max:255',Rule::unique('users')->ignore($user->id)],
                 'password' => 'nullable|string|min:8',
-                'role' => ['required', Rule::in(['user', 'admin', 'superadmin'])],
+                'role' => ['required', Rule::in(['user', 'admin', 'superadmin', 'biocon', 'psf', 'phps'])],
                 'status' => ['required', Rule::in(['active', 'inactive'])], // Admin can activate/deactivate user
                 'employee_id' => 'nullable|string|max:255',
                 'position' => 'nullable|string|max:255',

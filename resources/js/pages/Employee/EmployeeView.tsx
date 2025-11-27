@@ -84,26 +84,26 @@ export default function EmployeeView() {
         position: string;
         employment_status: 'Regular' | 'COS' | 'Job Order' | 'Others';
         office:
-            | 'DO'
-            | 'ADO'
-            | 'CPMD'
-            | 'AED'
-            | 'NSQCS'
-            | 'NPQSD'
-            | 'NSIC'
-            | 'CRPSD'
-            | 'PPSSD'
-            | 'ADMINISTRATIVE'
-            | 'Others';
+        | 'DO'
+        | 'ADO'
+        | 'CPMD'
+        | 'AED'
+        | 'NSQCS'
+        | 'NPQSD'
+        | 'NSIC'
+        | 'CRPSD'
+        | 'PPSSD'
+        | 'ADMINISTRATIVE'
+        | 'Others';
         cpmd:
-            | ''
-            | 'BIOCON section'
-            | 'PFS section'
-            | 'PHPS SECTION'
-            | 'OC-Admin Support Unit'
-            | 'OC-ICT Unit'
-            | 'OC-Special Project'
-            | 'Others';
+        | ''
+        | 'BIOCON section'
+        | 'PFS section'
+        | 'PHPS SECTION'
+        | 'OC-Admin Support Unit'
+        | 'OC-ICT Unit'
+        | 'OC-Special Project'
+        | 'Others';
         tin_number: string;
         gsis_number: string;
         address: string;
@@ -248,8 +248,8 @@ export default function EmployeeView() {
 
         put(`/employees/${user.id}`, {
             onSuccess: () => {
-                // Handle success
-                console.log('Employee updated successfully');
+                // Navigate back to employee management after successful update
+                router.get('/employees');
             },
             onError: (errors) => {
                 // Handle errors
@@ -465,23 +465,23 @@ export default function EmployeeView() {
                                         </div>
                                         {data.employment_status ===
                                             'Regular' && (
-                                            <div>
-                                                <Label htmlFor="item_number">
-                                                    Item Number
-                                                </Label>
-                                                <Input
-                                                    id="item_number"
-                                                    value={data.item_number}
-                                                    onChange={(e) =>
-                                                        handleInputChange(
-                                                            'item_number',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1"
-                                                />
-                                            </div>
-                                        )}
+                                                <div>
+                                                    <Label htmlFor="item_number">
+                                                        Item Number
+                                                    </Label>
+                                                    <Input
+                                                        id="item_number"
+                                                        value={data.item_number}
+                                                        onChange={(e) =>
+                                                            handleInputChange(
+                                                                'item_number',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="mt-1"
+                                                    />
+                                                </div>
+                                            )}
                                         <div>
                                             <Label htmlFor="office">
                                                 Office

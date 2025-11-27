@@ -467,7 +467,7 @@ export default function Distribution() {
                         <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-start">
                             <Button
                                 onClick={handleAdd}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                             >
                                 <Plus className="h-4 w-4" />
                                 <span className="hidden md:inline">
@@ -635,7 +635,7 @@ export default function Distribution() {
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data &&
-                                distributions.data.length > 0 ? (
+                                    distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>
