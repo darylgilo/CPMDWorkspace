@@ -311,23 +311,23 @@ export default function Profile({
                                             </div>
                                             {employmentStatusValue ===
                                                 'Regular' && (
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="item_number">
-                                                        Item Number
-                                                    </Label>
-                                                    <Input
-                                                        id="item_number"
-                                                        defaultValue={`${auth.user.item_number ?? ''}`}
-                                                        name="item_number"
-                                                        placeholder="Item Number"
-                                                    />
-                                                    <InputError
-                                                        message={
-                                                            errors.item_number
-                                                        }
-                                                    />
-                                                </div>
-                                            )}
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="item_number">
+                                                            Item Number
+                                                        </Label>
+                                                        <Input
+                                                            id="item_number"
+                                                            defaultValue={`${auth.user.item_number ?? ''}`}
+                                                            name="item_number"
+                                                            placeholder="Item Number"
+                                                        />
+                                                        <InputError
+                                                            message={
+                                                                errors.item_number
+                                                            }
+                                                        />
+                                                    </div>
+                                                )}
                                             <div className="space-y-2">
                                                 <Label htmlFor="office">
                                                     Office
@@ -343,35 +343,8 @@ export default function Profile({
                                                         <SelectValue placeholder="Select office" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="DO">
-                                                            DO
-                                                        </SelectItem>
-                                                        <SelectItem value="ADO">
-                                                            ADO
-                                                        </SelectItem>
                                                         <SelectItem value="CPMD">
                                                             CPMD
-                                                        </SelectItem>
-                                                        <SelectItem value="AED">
-                                                            AED
-                                                        </SelectItem>
-                                                        <SelectItem value="NSQCS">
-                                                            NSQCS
-                                                        </SelectItem>
-                                                        <SelectItem value="NPQSD">
-                                                            NPQSD
-                                                        </SelectItem>
-                                                        <SelectItem value="NSIC">
-                                                            NSIC
-                                                        </SelectItem>
-                                                        <SelectItem value="CRPSD">
-                                                            CRPSD
-                                                        </SelectItem>
-                                                        <SelectItem value="PPSSD">
-                                                            PPSSD
-                                                        </SelectItem>
-                                                        <SelectItem value="ADMINISTRATIVE">
-                                                            ADMINISTRATIVE
                                                         </SelectItem>
                                                         <SelectItem value="Others">
                                                             Others
@@ -400,25 +373,28 @@ export default function Profile({
                                                             <SelectValue placeholder="Select CPMD section" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="BIOCON section">
-                                                                BIOCON section
-                                                            </SelectItem>
-                                                            <SelectItem value="PFS section">
-                                                                PFS section
-                                                            </SelectItem>
-                                                            <SelectItem value="PHPS SECTION">
-                                                                PHPS SECTION
+                                                            <SelectItem value="Office of the Chief">
+                                                                Office of the Chief
                                                             </SelectItem>
                                                             <SelectItem value="OC-Admin Support Unit">
                                                                 OC-Admin Support
                                                                 Unit
                                                             </SelectItem>
+                                                            <SelectItem value="OC-Special Project Unit">
+                                                                OC-Special
+                                                                Project Unit
+                                                            </SelectItem>
                                                             <SelectItem value="OC-ICT Unit">
                                                                 OC-ICT Unit
                                                             </SelectItem>
-                                                            <SelectItem value="OC-Special Project">
-                                                                OC-Special
-                                                                Project
+                                                            <SelectItem value="BIOCON Section">
+                                                                BIOCON Section
+                                                            </SelectItem>
+                                                            <SelectItem value="PFS Section">
+                                                                PFS Section
+                                                            </SelectItem>
+                                                            <SelectItem value="PHPS Section">
+                                                                PHPS Section
                                                             </SelectItem>
                                                             <SelectItem value="Others">
                                                                 Others
@@ -620,7 +596,7 @@ export default function Profile({
 
                                     {mustVerifyEmail &&
                                         auth.user.email_verified_at ===
-                                            null && (
+                                        null && (
                                             <div>
                                                 <p className="text-sm text-muted-foreground">
                                                     Your email address is
@@ -637,12 +613,12 @@ export default function Profile({
 
                                                 {status ===
                                                     'verification-link-sent' && (
-                                                    <div className="mt-2 text-sm font-medium text-green-600">
-                                                        A new verification link
-                                                        has been sent to your
-                                                        email address.
-                                                    </div>
-                                                )}
+                                                        <div className="mt-2 text-sm font-medium text-green-600">
+                                                            A new verification link
+                                                            has been sent to your
+                                                            email address.
+                                                        </div>
+                                                    )}
                                             </div>
                                         )}
 

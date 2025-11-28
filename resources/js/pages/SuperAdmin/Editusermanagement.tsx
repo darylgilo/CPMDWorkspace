@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -353,15 +360,15 @@ export default function EditUserManagement() {
                                     {(getProfilePictureUrl() ||
                                         (user?.profile_picture &&
                                             !removeProfilePicture)) && (
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            onClick={handleRemoveImage}
-                                            className="w-full text-sm"
-                                        >
-                                            Remove
-                                        </Button>
-                                    )}
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                onClick={handleRemoveImage}
+                                                className="w-full text-sm"
+                                            >
+                                                Remove
+                                            </Button>
+                                        )}
                                 </div>
                             </div>
                         </div>
@@ -489,33 +496,28 @@ export default function EditUserManagement() {
                                                             Employment Status
                                                         </TableCell>
                                                         <TableCell>
-                                                            <select
-                                                                id="employment_status"
-                                                                name="employment_status"
-                                                                value={
-                                                                    employment_status
-                                                                }
-                                                                onChange={(e) =>
-                                                                    setEmploymentStatus(
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                            <Select
+                                                                value={employment_status}
+                                                                onValueChange={setEmploymentStatus}
                                                             >
-                                                                <option value="Regular">
-                                                                    Regular
-                                                                </option>
-                                                                <option value="COS">
-                                                                    COS
-                                                                </option>
-                                                                <option value="Job Order">
-                                                                    Job Order
-                                                                </option>
-                                                                <option value="Others">
-                                                                    Others
-                                                                </option>
-                                                            </select>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue placeholder="Select employment status" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Regular">
+                                                                        Regular
+                                                                    </SelectItem>
+                                                                    <SelectItem value="COS">
+                                                                        COS
+                                                                    </SelectItem>
+                                                                    <SelectItem value="Job Order">
+                                                                        Job Order
+                                                                    </SelectItem>
+                                                                    <SelectItem value="Others">
+                                                                        Others
+                                                                    </SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                             <InputError
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
@@ -526,90 +528,62 @@ export default function EditUserManagement() {
                                                     </TableRow>
                                                     {employment_status ===
                                                         'Regular' && (
-                                                        <TableRow>
-                                                            <TableCell className="font-medium">
-                                                                Item Number
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Input
-                                                                    id="item_number"
-                                                                    name="item_number"
-                                                                    type="text"
-                                                                    value={
-                                                                        item_number
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        setItemNumber(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                    className="w-full"
-                                                                    placeholder="Item Number"
-                                                                />
-                                                                <InputError
-                                                                    className="mt-1"
-                                                                    message={getErrorMessage(
-                                                                        'item_number',
-                                                                    )}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
+                                                            <TableRow>
+                                                                <TableCell className="font-medium">
+                                                                    Item Number
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Input
+                                                                        id="item_number"
+                                                                        name="item_number"
+                                                                        type="text"
+                                                                        value={
+                                                                            item_number
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            setItemNumber(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        className="w-full"
+                                                                        placeholder="Item Number"
+                                                                    />
+                                                                    <InputError
+                                                                        className="mt-1"
+                                                                        message={getErrorMessage(
+                                                                            'item_number',
+                                                                        )}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
                                                     <TableRow>
                                                         <TableCell className="font-medium">
                                                             Office
                                                         </TableCell>
                                                         <TableCell>
-                                                            <select
-                                                                id="office"
-                                                                name="office"
+                                                            <Select
                                                                 value={office}
-                                                                onChange={(e) =>
-                                                                    setOffice(
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                                onValueChange={setOffice}
                                                             >
-                                                                <option value="DO">
-                                                                    DO
-                                                                </option>
-                                                                <option value="ADO">
-                                                                    ADO
-                                                                </option>
-                                                                <option value="CPMD">
-                                                                    CPMD
-                                                                </option>
-                                                                <option value="AED">
-                                                                    AED
-                                                                </option>
-                                                                <option value="NSQCS">
-                                                                    NSQCS
-                                                                </option>
-                                                                <option value="NPQSD">
-                                                                    NPQSD
-                                                                </option>
-                                                                <option value="NSIC">
-                                                                    NSIC
-                                                                </option>
-                                                                <option value="CRPSD">
-                                                                    CRPSD
-                                                                </option>
-                                                                <option value="PPSSD">
-                                                                    PPSSD
-                                                                </option>
-                                                                <option value="ADMINISTRATIVE">
-                                                                    ADMINISTRATIVE
-                                                                </option>
-                                                                <option value="Others">
-                                                                    Others
-                                                                </option>
-                                                            </select>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue>
+                                                                        {office || "Select office"}
+                                                                    </SelectValue>
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="CPMD">
+                                                                        CPMD
+                                                                    </SelectItem>
+                                                                    <SelectItem value="Others">
+                                                                        Others
+                                                                    </SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                             <InputError
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
@@ -624,50 +598,42 @@ export default function EditUserManagement() {
                                                                 Section/Unit
                                                             </TableCell>
                                                             <TableCell>
-                                                                <select
-                                                                    id="cpmd"
-                                                                    name="cpmd"
+                                                                <Select
                                                                     value={cpmd}
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        setCpmd(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        )
-                                                                    }
-                                                                    className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                                    onValueChange={setCpmd}
                                                                 >
-                                                                    <option value="BIOCON section">
-                                                                        BIOCON
-                                                                        section
-                                                                    </option>
-                                                                    <option value="PFS section">
-                                                                        PFS
-                                                                        section
-                                                                    </option>
-                                                                    <option value="PHPS SECTION">
-                                                                        PHPS
-                                                                        SECTION
-                                                                    </option>
-                                                                    <option value="OC-Admin Support Unit">
-                                                                        OC-Admin
-                                                                        Support
-                                                                        Unit
-                                                                    </option>
-                                                                    <option value="OC-ICT Unit">
-                                                                        OC-ICT
-                                                                        Unit
-                                                                    </option>
-                                                                    <option value="OC-Special Project">
-                                                                        OC-Special
-                                                                        Project
-                                                                    </option>
-                                                                    <option value="Others">
-                                                                        Others
-                                                                    </option>
-                                                                </select>
+                                                                    <SelectTrigger className="w-full">
+                                                                        <SelectValue>
+                                                                            {cpmd || "Select section/unit"}
+                                                                        </SelectValue>
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="Office of the Chief">
+                                                                            Office of the Chief
+                                                                        </SelectItem>
+                                                                        <SelectItem value="OC-Admin Support Unit">
+                                                                            OC-Admin Support Unit
+                                                                        </SelectItem>
+                                                                        <SelectItem value="OC-Special Project Unit">
+                                                                            OC-Special Project Unit
+                                                                        </SelectItem>
+                                                                        <SelectItem value="OC-ICT Unit">
+                                                                            OC-ICT Unit
+                                                                        </SelectItem>
+                                                                        <SelectItem value="BIOCON Section">
+                                                                            BIOCON Section
+                                                                        </SelectItem>
+                                                                        <SelectItem value="PFS Section">
+                                                                            PFS Section
+                                                                        </SelectItem>
+                                                                        <SelectItem value="PHPS Section">
+                                                                            PHPS Section
+                                                                        </SelectItem>
+                                                                        <SelectItem value="Others">
+                                                                            Others
+                                                                        </SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
                                                                 <InputError
                                                                     className="mt-1"
                                                                     message={getErrorMessage(
@@ -843,25 +809,22 @@ export default function EditUserManagement() {
                                                             Gender
                                                         </TableCell>
                                                         <TableCell>
-                                                            <select
-                                                                id="gender"
-                                                                name="gender"
+                                                            <Select
                                                                 value={gender}
-                                                                onChange={(e) =>
-                                                                    setGender(
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                                onValueChange={setGender}
                                                             >
-                                                                <option value="Male">
-                                                                    Male
-                                                                </option>
-                                                                <option value="Female">
-                                                                    Female
-                                                                </option>
-                                                            </select>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue placeholder="Select gender" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="Male">
+                                                                        Male
+                                                                    </SelectItem>
+                                                                    <SelectItem value="Female">
+                                                                        Female
+                                                                    </SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                             <InputError
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
@@ -1003,47 +966,44 @@ export default function EditUserManagement() {
                                                             Role
                                                         </TableCell>
                                                         <TableCell>
-                                                            <select
-                                                                id="role"
-                                                                name="role"
+                                                            <Select
                                                                 value={role}
-                                                                onChange={(
-                                                                    e,
-                                                                ) => {
-                                                                    const value =
-                                                                        e.target
-                                                                            .value as
-                                                                            | 'user'
-                                                                            | 'admin'
-                                                                            | 'superadmin'
-                                                                            | 'biocon'
-                                                                            | 'psf'
-                                                                            | 'phps';
+                                                                onValueChange={(value) =>
                                                                     setRole(
-                                                                        value,
-                                                                    );
-                                                                }}
-                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                                        value as
+                                                                        | 'user'
+                                                                        | 'admin'
+                                                                        | 'superadmin'
+                                                                        | 'biocon'
+                                                                        | 'psf'
+                                                                        | 'phps',
+                                                                    )
+                                                                }
                                                             >
-                                                                <option value="user">
-                                                                    User
-                                                                </option>
-                                                                <option value="admin">
-                                                                    Admin
-                                                                </option>
-                                                                <option value="superadmin">
-                                                                    Super Admin
-                                                                </option>
-                                                                <option value="biocon">
-                                                                    Biocon
-                                                                </option>
-                                                                <option value="psf">
-                                                                    PSF
-                                                                </option>
-                                                                <option value="phps">
-                                                                    PHPS
-                                                                </option>
-                                                            </select>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue placeholder="Select role" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="user">
+                                                                        User
+                                                                    </SelectItem>
+                                                                    <SelectItem value="admin">
+                                                                        Admin
+                                                                    </SelectItem>
+                                                                    <SelectItem value="superadmin">
+                                                                        Super Admin
+                                                                    </SelectItem>
+                                                                    <SelectItem value="biocon">
+                                                                        Biocon
+                                                                    </SelectItem>
+                                                                    <SelectItem value="psf">
+                                                                        PSF
+                                                                    </SelectItem>
+                                                                    <SelectItem value="phps">
+                                                                        PHPS
+                                                                    </SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                             <InputError
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
@@ -1057,27 +1017,28 @@ export default function EditUserManagement() {
                                                             Status
                                                         </TableCell>
                                                         <TableCell>
-                                                            <select
-                                                                id="status"
-                                                                name="status"
+                                                            <Select
                                                                 value={status}
-                                                                onChange={(e) =>
+                                                                onValueChange={(value) =>
                                                                     setStatus(
-                                                                        e.target
-                                                                            .value as
-                                                                            | 'active'
-                                                                            | 'inactive',
+                                                                        value as
+                                                                        | 'active'
+                                                                        | 'inactive',
                                                                     )
                                                                 }
-                                                                className="w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                             >
-                                                                <option value="active">
-                                                                    Active
-                                                                </option>
-                                                                <option value="inactive">
-                                                                    Inactive
-                                                                </option>
-                                                            </select>
+                                                                <SelectTrigger className="w-full">
+                                                                    <SelectValue placeholder="Select status" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="active">
+                                                                        Active
+                                                                    </SelectItem>
+                                                                    <SelectItem value="inactive">
+                                                                        Inactive
+                                                                    </SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
                                                             <InputError
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
@@ -1109,32 +1070,32 @@ export default function EditUserManagement() {
                                         getCustomErrorMessage(
                                             'superadmin_password',
                                         )) && (
-                                        <div className="rounded-md border border-red-200 bg-red-50 p-4">
-                                            <div className="flex">
-                                                <div className="flex-shrink-0">
-                                                    <svg
-                                                        className="h-5 w-5 text-red-400"
-                                                        viewBox="0 0 20 20"
-                                                        fill="currentColor"
-                                                    >
-                                                        <path
-                                                            fillRule="evenodd"
-                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                                            clipRule="evenodd"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <div className="ml-3">
-                                                    <p className="text-sm text-red-800">
-                                                        {passwordError ||
-                                                            getCustomErrorMessage(
-                                                                'superadmin_password',
-                                                            )}
-                                                    </p>
+                                            <div className="rounded-md border border-red-200 bg-red-50 p-4">
+                                                <div className="flex">
+                                                    <div className="flex-shrink-0">
+                                                        <svg
+                                                            className="h-5 w-5 text-red-400"
+                                                            viewBox="0 0 20 20"
+                                                            fill="currentColor"
+                                                        >
+                                                            <path
+                                                                fillRule="evenodd"
+                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                                clipRule="evenodd"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="ml-3">
+                                                        <p className="text-sm text-red-800">
+                                                            {passwordError ||
+                                                                getCustomErrorMessage(
+                                                                    'superadmin_password',
+                                                                )}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
                                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                         <div>

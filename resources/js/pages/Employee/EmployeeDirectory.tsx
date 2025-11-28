@@ -192,67 +192,13 @@ export default function EmployeeDirectory() {
                                     value="all"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
-                                    All Offices
-                                </SelectItem>
-                                <SelectItem
-                                    value="DO"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    DO
-                                </SelectItem>
-                                <SelectItem
-                                    value="ADO"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    ADO
+                                    Office
                                 </SelectItem>
                                 <SelectItem
                                     value="CPMD"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
                                     CPMD
-                                </SelectItem>
-                                <SelectItem
-                                    value="AED"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    AED
-                                </SelectItem>
-                                <SelectItem
-                                    value="NSQCS"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    NSQCS
-                                </SelectItem>
-                                <SelectItem
-                                    value="NPQSD"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    NPQSD
-                                </SelectItem>
-                                <SelectItem
-                                    value="NSIC"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    NSIC
-                                </SelectItem>
-                                <SelectItem
-                                    value="CRPSD"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    CRPSD
-                                </SelectItem>
-                                <SelectItem
-                                    value="PPSSD"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PPSSD
-                                </SelectItem>
-                                <SelectItem
-                                    value="ADMINISTRATIVE"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    ADMINISTRATIVE
                                 </SelectItem>
                                 <SelectItem
                                     value="Others"
@@ -277,7 +223,7 @@ export default function EmployeeDirectory() {
                                     placeholder={
                                         office === 'CPMD'
                                             ? 'All Sections'
-                                            : 'Select CPMD First'
+                                            : 'Select Office First'
                                     }
                                 />
                             </SelectTrigger>
@@ -286,25 +232,15 @@ export default function EmployeeDirectory() {
                                     value="all"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
-                                    All Sections
+                                    {office === 'CPMD'
+                                        ? 'All Sections'
+                                        : 'Select Office First'}
                                 </SelectItem>
                                 <SelectItem
-                                    value="BIOCON section"
+                                    value="Office of the Chief"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
-                                    BIOCON section
-                                </SelectItem>
-                                <SelectItem
-                                    value="PFS section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PFS section
-                                </SelectItem>
-                                <SelectItem
-                                    value="PHPS SECTION"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PHPS SECTION
+                                    Office of the Chief
                                 </SelectItem>
                                 <SelectItem
                                     value="OC-Admin Support Unit"
@@ -313,16 +249,36 @@ export default function EmployeeDirectory() {
                                     OC-Admin Support Unit
                                 </SelectItem>
                                 <SelectItem
+                                    value="OC-Special Project Unit"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    OC-Special Project Unit
+                                </SelectItem>
+                                <SelectItem
                                     value="OC-ICT Unit"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
                                     OC-ICT Unit
                                 </SelectItem>
+
                                 <SelectItem
-                                    value="OC-Special Project"
+                                    value="BIOCON Section"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
-                                    OC-Special Project
+                                    BIOCON Section
+                                </SelectItem>
+
+                                <SelectItem
+                                    value="PFS Section"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    PFS Section
+                                </SelectItem>
+                                <SelectItem
+                                    value="PHPS Section"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    PHPS Section
                                 </SelectItem>
                                 <SelectItem
                                     value="Others"
@@ -442,9 +398,9 @@ export default function EmployeeDirectory() {
                                     >
                                         {employee.status
                                             ? employee.status
-                                                  .charAt(0)
-                                                  .toUpperCase() +
-                                              employee.status.slice(1)
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                            employee.status.slice(1)
                                             : '—'}
                                     </span>
                                     <button

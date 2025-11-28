@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { ChangeEvent, useRef, useState } from 'react';
@@ -288,141 +295,110 @@ export default function AddEmployee() {
                                                 <Label htmlFor="employment_status">
                                                     Employment Status
                                                 </Label>
-                                                <select
-                                                    id="employment_status"
-                                                    name="employment_status"
+                                                <Select
                                                     value={employment_status}
-                                                    onChange={(e) =>
-                                                        setEmploymentStatus(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                    onValueChange={setEmploymentStatus}
                                                 >
-                                                    <option value="Regular">
-                                                        Regular
-                                                    </option>
-                                                    <option value="COS">
-                                                        COS
-                                                    </option>
-                                                    <option value="Job Order">
-                                                        Job Order
-                                                    </option>
-                                                    <option value="Others">
-                                                        Others
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Select employment status" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Regular">
+                                                            Regular
+                                                        </SelectItem>
+                                                        <SelectItem value="COS">
+                                                            COS
+                                                        </SelectItem>
+                                                        <SelectItem value="Job Order">
+                                                            Job Order
+                                                        </SelectItem>
+                                                        <SelectItem value="Others">
+                                                            Others
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             {employment_status ===
                                                 'Regular' && (
-                                                <div>
-                                                    <Label htmlFor="item_number">
-                                                        Item Number
-                                                    </Label>
-                                                    <Input
-                                                        id="item_number"
-                                                        name="item_number"
-                                                        type="text"
-                                                        value={item_number}
-                                                        onChange={(e) =>
-                                                            setItemNumber(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="mt-1"
-                                                        placeholder="Item Number"
-                                                    />
-                                                </div>
-                                            )}
+                                                    <div>
+                                                        <Label htmlFor="item_number">
+                                                            Item Number
+                                                        </Label>
+                                                        <Input
+                                                            id="item_number"
+                                                            name="item_number"
+                                                            type="text"
+                                                            value={item_number}
+                                                            onChange={(e) =>
+                                                                setItemNumber(
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            className="mt-1"
+                                                            placeholder="Item Number"
+                                                        />
+                                                    </div>
+                                                )}
                                             <div>
                                                 <Label htmlFor="office">
                                                     Office
                                                 </Label>
-                                                <select
-                                                    id="office"
-                                                    name="office"
+                                                <Select
                                                     value={office}
-                                                    onChange={(e) =>
-                                                        setOffice(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                    onValueChange={setOffice}
                                                 >
-                                                    <option value="DO">
-                                                        DO
-                                                    </option>
-                                                    <option value="ADO">
-                                                        ADO
-                                                    </option>
-                                                    <option value="CPMD">
-                                                        CPMD
-                                                    </option>
-                                                    <option value="AED">
-                                                        AED
-                                                    </option>
-                                                    <option value="NSQCS">
-                                                        NSQCS
-                                                    </option>
-                                                    <option value="NPQSD">
-                                                        NPQSD
-                                                    </option>
-                                                    <option value="NSIC">
-                                                        NSIC
-                                                    </option>
-                                                    <option value="CRPSD">
-                                                        CRPSD
-                                                    </option>
-                                                    <option value="PPSSD">
-                                                        PPSSD
-                                                    </option>
-                                                    <option value="ADMINISTRATIVE">
-                                                        ADMINISTRATIVE
-                                                    </option>
-                                                    <option value="Others">
-                                                        Others
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Select office" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="CPMD">
+                                                            CPMD
+                                                        </SelectItem>
+                                                        <SelectItem value="Others">
+                                                            Others
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             {office === 'CPMD' && (
                                                 <div>
                                                     <Label htmlFor="cpmd">
                                                         Section/Unit
                                                     </Label>
-                                                    <select
-                                                        id="cpmd"
-                                                        name="cpmd"
+                                                    <Select
                                                         value={cpmd}
-                                                        onChange={(e) =>
-                                                            setCpmd(
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                        onValueChange={setCpmd}
                                                     >
-                                                        <option value="BIOCON section">
-                                                            BIOCON section
-                                                        </option>
-                                                        <option value="PFS section">
-                                                            PFS section
-                                                        </option>
-                                                        <option value="PHPS SECTION">
-                                                            PHPS SECTION
-                                                        </option>
-                                                        <option value="OC-Admin Support Unit">
-                                                            OC-Admin Support
-                                                            Unit
-                                                        </option>
-                                                        <option value="OC-ICT Unit">
-                                                            OC-ICT Unit
-                                                        </option>
-                                                        <option value="OC-Special Project">
-                                                            OC-Special Project
-                                                        </option>
-                                                        <option value="Others">
-                                                            Others
-                                                        </option>
-                                                    </select>
+                                                        <SelectTrigger className="mt-1">
+                                                            <SelectValue placeholder="Select section/unit" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Office of the Chief">
+                                                                Office of the Chief
+                                                            </SelectItem>
+                                                            <SelectItem value="OC-Admin Support Unit">
+                                                                OC-Admin Support Unit
+                                                            </SelectItem>
+                                                            <SelectItem value="OC-Special Project Unit">
+                                                                OC-Special Project Unit
+                                                            </SelectItem>
+                                                            <SelectItem value="OC-ICT Unit">
+                                                                OC-ICT Unit
+                                                            </SelectItem>
+                                                            <SelectItem value="BIOCON Section">
+                                                                BIOCON Section
+                                                            </SelectItem>
+                                                            <SelectItem value="PFS Section">
+                                                                PFS Section
+                                                            </SelectItem>
+                                                            <SelectItem value="PHPS Section">
+                                                                PHPS Section
+                                                            </SelectItem>
+                                                            <SelectItem value="Others">
+                                                                Others
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             )}
                                             <div>
@@ -527,24 +503,22 @@ export default function AddEmployee() {
                                                 <Label htmlFor="gender">
                                                     Gender
                                                 </Label>
-                                                <select
-                                                    id="gender"
-                                                    name="gender"
+                                                <Select
                                                     value={gender}
-                                                    onChange={(e) =>
-                                                        setGender(
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
+                                                    onValueChange={setGender}
                                                 >
-                                                    <option value="Male">
-                                                        Male
-                                                    </option>
-                                                    <option value="Female">
-                                                        Female
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Select gender" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Male">
+                                                            Male
+                                                        </SelectItem>
+                                                        <SelectItem value="Female">
+                                                            Female
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                             <div>
                                                 <Label htmlFor="mobile_number">

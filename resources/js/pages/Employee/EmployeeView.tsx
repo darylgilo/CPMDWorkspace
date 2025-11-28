@@ -3,6 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -83,26 +90,16 @@ export default function EmployeeView() {
         employee_id: string;
         position: string;
         employment_status: 'Regular' | 'COS' | 'Job Order' | 'Others';
-        office:
-        | 'DO'
-        | 'ADO'
-        | 'CPMD'
-        | 'AED'
-        | 'NSQCS'
-        | 'NPQSD'
-        | 'NSIC'
-        | 'CRPSD'
-        | 'PPSSD'
-        | 'ADMINISTRATIVE'
-        | 'Others';
+        office: 'CPMD' | 'Others';
         cpmd:
         | ''
-        | 'BIOCON section'
-        | 'PFS section'
-        | 'PHPS SECTION'
+        | 'Office of the Chief'
         | 'OC-Admin Support Unit'
+        | 'OC-Special Project Unit'
         | 'OC-ICT Unit'
-        | 'OC-Special Project'
+        | 'BIOCON Section'
+        | 'PFS Section'
+        | 'PHPS Section'
         | 'Others';
         tin_number: string;
         gsis_number: string;
@@ -145,27 +142,16 @@ export default function EmployeeView() {
             'Job Order',
             'Others',
         ] as const;
-        const offices = [
-            'DO',
-            'ADO',
-            'CPMD',
-            'AED',
-            'NSQCS',
-            'NPQSD',
-            'NSIC',
-            'CRPSD',
-            'PPSSD',
-            'ADMINISTRATIVE',
-            'Others',
-        ] as const;
+        const offices = ['CPMD', 'Others'] as const;
         const cpmdSections = [
             '',
-            'BIOCON section',
-            'PFS section',
-            'PHPS SECTION',
+            'Office of the Chief',
             'OC-Admin Support Unit',
+            'OC-Special Project Unit',
             'OC-ICT Unit',
-            'OC-Special Project',
+            'BIOCON Section',
+            'PFS Section',
+            'PHPS Section',
             'Others',
         ] as const;
         const genders = ['Male', 'Female'] as const;
@@ -439,29 +425,31 @@ export default function EmployeeView() {
                                             <Label htmlFor="employment_status">
                                                 Employment Status
                                             </Label>
-                                            <select
-                                                id="employment_status"
+                                            <Select
                                                 value={data.employment_status}
-                                                onChange={(e) =>
+                                                onValueChange={(value) =>
                                                     handleInputChange(
                                                         'employment_status',
-                                                        e.target
-                                                            .value as FormData['employment_status'],
+                                                        value as FormData['employment_status'],
                                                     )
                                                 }
-                                                className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                             >
-                                                <option value="Regular">
-                                                    Regular
-                                                </option>
-                                                <option value="COS">COS</option>
-                                                <option value="Job Order">
-                                                    Job Order
-                                                </option>
-                                                <option value="Others">
-                                                    Others
-                                                </option>
-                                            </select>
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue placeholder="Select employment status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Regular">
+                                                        Regular
+                                                    </SelectItem>
+                                                    <SelectItem value="COS">COS</SelectItem>
+                                                    <SelectItem value="Job Order">
+                                                        Job Order
+                                                    </SelectItem>
+                                                    <SelectItem value="Others">
+                                                        Others
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         {data.employment_status ===
                                             'Regular' && (
@@ -486,15 +474,12 @@ export default function EmployeeView() {
                                             <Label htmlFor="office">
                                                 Office
                                             </Label>
-                                            <select
-                                                id="office"
+                                            <Select
                                                 value={data.office}
-                                                onChange={(e) => {
-                                                    const val = e.target
-                                                        .value as FormData['office'];
+                                                onValueChange={(val) => {
                                                     handleInputChange(
                                                         'office',
-                                                        val,
+                                                        val as FormData['office'],
                                                     );
                                                     if (val !== 'CPMD') {
                                                         handleInputChange(
@@ -503,76 +488,68 @@ export default function EmployeeView() {
                                                         );
                                                     }
                                                 }}
-                                                className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                             >
-                                                <option value="DO">DO</option>
-                                                <option value="ADO">ADO</option>
-                                                <option value="CPMD">
-                                                    CPMD
-                                                </option>
-                                                <option value="AED">AED</option>
-                                                <option value="NSQCS">
-                                                    NSQCS
-                                                </option>
-                                                <option value="NPQSD">
-                                                    NPQSD
-                                                </option>
-                                                <option value="NSIC">
-                                                    NSIC
-                                                </option>
-                                                <option value="CRPSD">
-                                                    CRPSD
-                                                </option>
-                                                <option value="PPSSD">
-                                                    PPSSD
-                                                </option>
-                                                <option value="ADMINISTRATIVE">
-                                                    ADMINISTRATIVE
-                                                </option>
-                                                <option value="Others">
-                                                    Others
-                                                </option>
-                                            </select>
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue>
+                                                        {data.office || "Select office"}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="CPMD">
+                                                        CPMD
+                                                    </SelectItem>
+                                                    <SelectItem value="Others">
+                                                        Others
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         {data.office === 'CPMD' && (
                                             <div>
                                                 <Label htmlFor="cpmd">
                                                     Section/Unit
                                                 </Label>
-                                                <select
-                                                    id="cpmd"
+                                                <Select
                                                     value={data.cpmd}
-                                                    onChange={(e) =>
+                                                    onValueChange={(value) =>
                                                         handleInputChange(
                                                             'cpmd',
-                                                            e.target
-                                                                .value as FormData['cpmd'],
+                                                            value as FormData['cpmd'],
                                                         )
                                                     }
-                                                    className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                                 >
-                                                    <option value="BIOCON section">
-                                                        BIOCON section
-                                                    </option>
-                                                    <option value="PFS section">
-                                                        PFS section
-                                                    </option>
-                                                    <option value="PHPS SECTION">
-                                                        PHPS SECTION
-                                                    </option>
-                                                    <option value="OC-Admin Support Unit">
-                                                        OC-Admin Support Unit
-                                                    </option>
-                                                    <option value="OC-ICT Unit">
-                                                        OC-ICT Unit
-                                                    </option>
-                                                    <option value="OC-Special Project">
-                                                        OC-Special Project
-                                                    </option>
-                                                    <option value="Others">
-                                                        Others
-                                                    </option>
-                                                </select>
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue>
+                                                            {data.cpmd || "Select section/unit"}
+                                                        </SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Office of the Chief">
+                                                            Office of the Chief
+                                                        </SelectItem>
+                                                        <SelectItem value="OC-Admin Support Unit">
+                                                            OC-Admin Support Unit
+                                                        </SelectItem>
+                                                        <SelectItem value="OC-Special Project Unit">
+                                                            OC-Special Project Unit
+                                                        </SelectItem>
+                                                        <SelectItem value="OC-ICT Unit">
+                                                            OC-ICT Unit
+                                                        </SelectItem>
+                                                        <SelectItem value="BIOCON Section">
+                                                            BIOCON Section
+                                                        </SelectItem>
+                                                        <SelectItem value="PFS Section">
+                                                            PFS Section
+                                                        </SelectItem>
+                                                        <SelectItem value="PHPS Section">
+                                                            PHPS Section
+                                                        </SelectItem>
+                                                        <SelectItem value="Others">
+                                                            Others
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         )}
                                     </div>
@@ -671,25 +648,27 @@ export default function EmployeeView() {
                                             <Label htmlFor="gender">
                                                 Gender
                                             </Label>
-                                            <select
-                                                id="gender"
+                                            <Select
                                                 value={data.gender}
-                                                onChange={(e) =>
+                                                onValueChange={(value) =>
                                                     handleInputChange(
                                                         'gender',
-                                                        e.target
-                                                            .value as FormData['gender'],
+                                                        value as FormData['gender'],
                                                     )
                                                 }
-                                                className="mt-1 block w-full rounded border border-input bg-background px-3 py-2 text-foreground"
                                             >
-                                                <option value="Male">
-                                                    Male
-                                                </option>
-                                                <option value="Female">
-                                                    Female
-                                                </option>
-                                            </select>
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue placeholder="Select gender" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Male">
+                                                        Male
+                                                    </SelectItem>
+                                                    <SelectItem value="Female">
+                                                        Female
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <div>
                                             <Label htmlFor="mobile_number">
