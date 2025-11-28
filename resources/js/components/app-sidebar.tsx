@@ -1,13 +1,23 @@
 'use client';
 
 import {
+    AlignHorizontalSpaceAroundIcon,
     BookOpen,
     Bot,
     BotMessageSquareIcon,
+    CalendarCheckIcon,
     Contact2Icon,
+    ContactRoundIcon,
+    DockIcon,
     FolderArchive,
     FolderSymlink,
     HomeIcon,
+    LucideContact,
+    LucideNotebookPen,
+    MessageSquareTextIcon,
+    NotebookPen,
+    NotebookTabsIcon,
+    NotebookTextIcon,
     Send,
     Settings2,
 } from 'lucide-react';
@@ -39,7 +49,7 @@ const data = {
 
     navMain: [
         {
-            title: 'Home',
+            title: 'Dashboard',
             url: '/dashboard',
             icon: HomeIcon,
             isActive: true,
@@ -47,20 +57,20 @@ const data = {
         {
             title: 'Whereabouts',
             url: '/whereabouts',
-            icon: Contact2Icon,
+            icon: CalendarCheckIcon,
             isActive: true,
         },
         {
             title: 'Employee Directory',
             url: '/directory',
-            icon: Contact2Icon,
+            icon: LucideContact,
             isActive: true,
         },
 
         {
             title: 'Noticeboard',
             url: '/noticeboard',
-            icon: Bot,
+            icon: MessageSquareTextIcon,
             items: [
                 {
                     title: 'Announcement',
@@ -83,7 +93,7 @@ const data = {
         {
             title: 'Documentation',
             url: '#',
-            icon: BookOpen,
+            icon: LucideNotebookPen,
             items: [
                 {
                     title: 'Writeups',

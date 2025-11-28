@@ -142,14 +142,14 @@ function SortableRow({
                     : '',
             )}
         >
-            <td className="sticky left-0 z-10 flex items-center gap-2 border border-gray-300 bg-white p-2 font-medium dark:border-neutral-700 dark:bg-neutral-900">
+            <td className="sticky left-0 z-10 flex items-center gap-1 border border-gray-300 bg-white p-1.5 text-xs font-medium sm:gap-2 sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900">
                 {canReorder && (
                     <button
                         {...attributes}
                         {...listeners}
                         className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:text-gray-400"
                     >
-                        <GripVertical className="h-4 w-4" />
+                        <GripVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                 )}
                 {user.name}
@@ -167,8 +167,8 @@ function SortableRow({
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
-                                  ? 'bg-gray-50 dark:bg-gray-800/50'
-                                  : '',
+                                    ? 'bg-gray-50 dark:bg-gray-800/50'
+                                    : '',
                         )}
                         onClick={() => handleCellClick(user, day)}
                         title={
@@ -410,9 +410,9 @@ export default function Whereabouts({
         >
             <Head title="Whereabouts" />
 
-            <div className="flex h-full flex-col gap-4 p-4">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">
+            <div className="flex h-full flex-col gap-4 p-2 sm:p-4">
+                <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <h1 className="text-xl font-bold sm:text-2xl">
                         Whereabouts - {format(date, 'MMMM yyyy')}
                     </h1>
                     <div className="flex gap-2">
@@ -434,7 +434,7 @@ export default function Whereabouts({
                 </div>
 
                 {/* Month and Year Filters */}
-                <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                <div className="flex flex-col items-stretch gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:p-4 dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex items-center gap-2">
                         <Label className="text-sm font-medium">Month:</Label>
                         <Select
@@ -450,7 +450,7 @@ export default function Whereabouts({
                                 );
                             }}
                         >
-                            <SelectTrigger className="w-[140px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[140px] dark:border-neutral-700 dark:bg-neutral-950">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -485,7 +485,7 @@ export default function Whereabouts({
                                 );
                             }}
                         >
-                            <SelectTrigger className="w-[100px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[100px] dark:border-neutral-700 dark:bg-neutral-950">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -507,6 +507,7 @@ export default function Whereabouts({
 
                     <Button
                         variant="outline"
+                        className="w-full sm:w-auto"
                         onClick={() => {
                             const today = new Date();
                             router.visit(
@@ -518,20 +519,20 @@ export default function Whereabouts({
                     </Button>
                 </div>
 
-                <div className="mb-4 flex flex-wrap gap-4">
+                <div className="mb-2 flex flex-wrap gap-2 sm:mb-4 sm:gap-4">
                     {Object.entries(STATUS_COLORS).map(
                         ([status, colorClass]) => (
                             <div
                                 key={status}
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1.5 sm:gap-2"
                             >
                                 <div
                                     className={cn(
-                                        'h-4 w-4 rounded',
+                                        'h-3 w-3 rounded sm:h-4 sm:w-4',
                                         colorClass,
                                     )}
                                 ></div>
-                                <span className="text-sm">{status}</span>
+                                <span className="text-xs sm:text-sm">{status}</span>
                             </div>
                         ),
                     )}
@@ -546,23 +547,23 @@ export default function Whereabouts({
                         <table className="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
-                                    <th className="sticky left-0 z-20 min-w-[200px] border border-gray-300 bg-gray-100 p-2 text-left dark:border-neutral-700 dark:bg-neutral-800">
+                                    <th className="sticky left-0 z-20 min-w-[120px] border border-gray-300 bg-gray-100 p-1.5 text-left text-xs sm:min-w-[200px] sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-800">
                                         CROP PEST MANAGEMENT DIVISION
                                     </th>
                                     {days.map((day: Date) => (
                                         <th
                                             key={day.toString()}
                                             className={cn(
-                                                'min-w-[40px] border border-gray-300 p-1 text-center font-normal dark:border-neutral-700',
+                                                'min-w-[30px] border border-gray-300 p-0.5 text-center text-xs font-normal sm:min-w-[40px] sm:p-1 sm:text-sm dark:border-neutral-700',
                                                 isWeekend(day)
                                                     ? 'bg-gray-50 dark:bg-gray-800/50'
                                                     : '',
                                             )}
                                         >
-                                            <div className="font-bold">
+                                            <div className="text-xs font-bold sm:text-sm">
                                                 {format(day, 'd')}
                                             </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            <div className="text-[10px] text-gray-500 sm:text-xs dark:text-gray-400">
                                                 {format(day, 'EEE')}
                                             </div>
                                         </th>
@@ -582,7 +583,7 @@ export default function Whereabouts({
                                             <tr className="bg-gray-100 dark:bg-neutral-800">
                                                 <td
                                                     colSpan={days.length + 1}
-                                                    className="sticky left-0 z-10 border border-gray-300 bg-gray-100 p-2 font-bold dark:border-neutral-700 dark:bg-neutral-800"
+                                                    className="sticky left-0 z-10 border border-gray-300 bg-gray-100 p-1.5 text-xs font-bold sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-800"
                                                 >
                                                     {office}
                                                 </td>
@@ -679,7 +680,7 @@ export default function Whereabouts({
                             <div>
                                 {selectedCell &&
                                     whereabouts[selectedCell.user.id]?.[
-                                        format(selectedCell.date, 'yyyy-MM-dd')
+                                    format(selectedCell.date, 'yyyy-MM-dd')
                                     ] && (
                                         <Button
                                             variant="destructive"

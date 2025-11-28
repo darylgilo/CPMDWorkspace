@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             
-            $table->enum('role',['user','admin','superadmin','biocon','psf','phps'])->default ('user');
+            $table->enum('role',['user','admin','superadmin','BIOCON','PFS','PHPS'])->default ('user');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->string('employee_id')->unique()->nullable();
             $table->string('position')->nullable();
@@ -30,8 +30,8 @@ return new class extends Migration
             $table->string('contact_person')->nullable();
             $table->string('name');
             $table->enum('employment_status', ['Regular', 'COS','Job Order','Others'])->default('Regular');
-            $table->enum('office', ['DO','ADO','CPMD','AED','NSQCS','NPQSD','NSIC','CRPSD','PPSSD','ADMINISTRATIVE','Others'])->default('Others');
-            $table->enum('cpmd', ['BIOCON section','PFS section','PHPS SECTION','OC-Admin Support Unit','OC-ICT Unit','OC-Special Project','Others'])->default('Others');
+            $table->enum('office', ['CPMD','Others'])->default('CPMD');
+            $table->enum('cpmd', ['Office of the Chief','OC-Admin Support Unit','OC-Special Project Unit','OC-ICT Unit','BIOCON Section','PFS Section','PHPS Section','Others'])->default('Others');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');

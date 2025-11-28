@@ -69,7 +69,7 @@ Route::middleware(['auth', 'verified','role:admin,superadmin,biocon'])->group(fu
 });
 
 // PSF user management route, accessible to admin, superadmin, and pfs roles
-Route::middleware(['auth', 'verified','role:admin,superadmin,pfs'])->group(function () {
+Route::middleware(['auth', 'verified','role:admin,superadmin,psf'])->group(function () {
     // Add PSF-specific routes here
 });
 
