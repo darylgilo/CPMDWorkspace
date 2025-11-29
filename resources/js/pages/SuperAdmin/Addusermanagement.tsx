@@ -2,7 +2,6 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -293,7 +293,9 @@ export default function AddUserManagement() {
                                                 </Label>
                                                 <Select
                                                     value={employment_status}
-                                                    onValueChange={setEmploymentStatus}
+                                                    onValueChange={
+                                                        setEmploymentStatus
+                                                    }
                                                 >
                                                     <SelectTrigger className="mt-1">
                                                         <SelectValue placeholder="Select employment status" />
@@ -316,25 +318,25 @@ export default function AddUserManagement() {
                                             </div>
                                             {employment_status ===
                                                 'Regular' && (
-                                                    <div>
-                                                        <Label htmlFor="item_number">
-                                                            Item Number
-                                                        </Label>
-                                                        <Input
-                                                            id="item_number"
-                                                            name="item_number"
-                                                            type="text"
-                                                            value={item_number}
-                                                            onChange={(e) =>
-                                                                setItemNumber(
-                                                                    e.target.value,
-                                                                )
-                                                            }
-                                                            className="mt-1"
-                                                            placeholder="Item Number"
-                                                        />
-                                                    </div>
-                                                )}
+                                                <div>
+                                                    <Label htmlFor="item_number">
+                                                        Item Number
+                                                    </Label>
+                                                    <Input
+                                                        id="item_number"
+                                                        name="item_number"
+                                                        type="text"
+                                                        value={item_number}
+                                                        onChange={(e) =>
+                                                            setItemNumber(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="mt-1"
+                                                        placeholder="Item Number"
+                                                    />
+                                                </div>
+                                            )}
 
                                             <div>
                                                 <Label htmlFor="office">
@@ -372,7 +374,8 @@ export default function AddUserManagement() {
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Office of the Chief">
-                                                                Office of the Chief
+                                                                Office of the
+                                                                Chief
                                                             </SelectItem>
                                                             <SelectItem value="OC-Admin Support Unit">
                                                                 OC-Admin Support
@@ -631,15 +634,17 @@ export default function AddUserManagement() {
                                                     </Label>
                                                     <Select
                                                         value={role}
-                                                        onValueChange={(value) =>
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
                                                             setRole(
                                                                 value as
-                                                                | 'user'
-                                                                | 'admin'
-                                                                | 'superadmin'
-                                                                | 'biocon'
-                                                                | 'psf'
-                                                                | 'phps',
+                                                                    | 'user'
+                                                                    | 'admin'
+                                                                    | 'superadmin'
+                                                                    | 'biocon'
+                                                                    | 'psf'
+                                                                    | 'phps',
                                                             )
                                                         }
                                                     >
@@ -675,11 +680,13 @@ export default function AddUserManagement() {
                                                     </Label>
                                                     <Select
                                                         value={status}
-                                                        onValueChange={(value) =>
+                                                        onValueChange={(
+                                                            value,
+                                                        ) =>
                                                             setStatus(
                                                                 value as
-                                                                | 'active'
-                                                                | 'inactive',
+                                                                    | 'active'
+                                                                    | 'inactive',
                                                             )
                                                         }
                                                     >

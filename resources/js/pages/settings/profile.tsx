@@ -311,23 +311,23 @@ export default function Profile({
                                             </div>
                                             {employmentStatusValue ===
                                                 'Regular' && (
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="item_number">
-                                                            Item Number
-                                                        </Label>
-                                                        <Input
-                                                            id="item_number"
-                                                            defaultValue={`${auth.user.item_number ?? ''}`}
-                                                            name="item_number"
-                                                            placeholder="Item Number"
-                                                        />
-                                                        <InputError
-                                                            message={
-                                                                errors.item_number
-                                                            }
-                                                        />
-                                                    </div>
-                                                )}
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="item_number">
+                                                        Item Number
+                                                    </Label>
+                                                    <Input
+                                                        id="item_number"
+                                                        defaultValue={`${auth.user.item_number ?? ''}`}
+                                                        name="item_number"
+                                                        placeholder="Item Number"
+                                                    />
+                                                    <InputError
+                                                        message={
+                                                            errors.item_number
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
                                             <div className="space-y-2">
                                                 <Label htmlFor="office">
                                                     Office
@@ -374,7 +374,8 @@ export default function Profile({
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Office of the Chief">
-                                                                Office of the Chief
+                                                                Office of the
+                                                                Chief
                                                             </SelectItem>
                                                             <SelectItem value="OC-Admin Support Unit">
                                                                 OC-Admin Support
@@ -596,7 +597,7 @@ export default function Profile({
 
                                     {mustVerifyEmail &&
                                         auth.user.email_verified_at ===
-                                        null && (
+                                            null && (
                                             <div>
                                                 <p className="text-sm text-muted-foreground">
                                                     Your email address is
@@ -613,12 +614,12 @@ export default function Profile({
 
                                                 {status ===
                                                     'verification-link-sent' && (
-                                                        <div className="mt-2 text-sm font-medium text-green-600">
-                                                            A new verification link
-                                                            has been sent to your
-                                                            email address.
-                                                        </div>
-                                                    )}
+                                                    <div className="mt-2 text-sm font-medium text-green-600">
+                                                        A new verification link
+                                                        has been sent to your
+                                                        email address.
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 

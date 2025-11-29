@@ -185,8 +185,8 @@ function SortableRow({
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
-                                    ? 'bg-gray-50 dark:bg-gray-800/50'
-                                    : '',
+                                  ? 'bg-gray-50 dark:bg-gray-800/50'
+                                  : '',
                         )}
                         onClick={() =>
                             !isWknd && isEditable && handleCellClick(user, day)
@@ -519,13 +519,9 @@ export default function Whereabouts({
                         </SelectTrigger>
                         <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                             {Array.from({ length: 10 }, (_, i) => {
-                                const year =
-                                    new Date().getFullYear() - 5 + i;
+                                const year = new Date().getFullYear() - 5 + i;
                                 return (
-                                    <SelectItem
-                                        key={year}
-                                        value={String(year)}
-                                    >
+                                    <SelectItem key={year} value={String(year)}>
                                         {year}
                                     </SelectItem>
                                 );
@@ -535,7 +531,7 @@ export default function Whereabouts({
 
                     <Button
                         variant="outline"
-                        className="w-full sm:w-auto bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90 hover:text-white"
+                        className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 hover:text-white sm:w-auto md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                         onClick={() => {
                             const today = new Date();
                             router.visit(
@@ -579,7 +575,9 @@ export default function Whereabouts({
                                         colorClass,
                                     )}
                                 ></div>
-                                <span className="text-xs sm:text-sm">{status}</span>
+                                <span className="text-xs sm:text-sm">
+                                    {status}
+                                </span>
                             </div>
                         ),
                     )}
@@ -730,7 +728,7 @@ export default function Whereabouts({
                             <div>
                                 {selectedCell &&
                                     whereabouts[selectedCell.user.id]?.[
-                                    format(selectedCell.date, 'yyyy-MM-dd')
+                                        format(selectedCell.date, 'yyyy-MM-dd')
                                     ] && (
                                         <Button
                                             variant="destructive"
@@ -741,8 +739,11 @@ export default function Whereabouts({
                                     )}
                             </div>
                             <Button
-                                className=" bg-[#163832] text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                onClick={handleSubmit}>Save</Button>
+                                className="bg-[#163832] text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                onClick={handleSubmit}
+                            >
+                                Save
+                            </Button>
                         </div>
                     </DialogFooter>
                 </DialogContent>

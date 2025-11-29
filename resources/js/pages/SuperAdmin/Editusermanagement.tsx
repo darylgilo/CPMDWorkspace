@@ -3,7 +3,6 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
     Select,
     SelectContent,
@@ -11,6 +10,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
     Table,
     TableBody,
@@ -360,15 +360,15 @@ export default function EditUserManagement() {
                                     {(getProfilePictureUrl() ||
                                         (user?.profile_picture &&
                                             !removeProfilePicture)) && (
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                onClick={handleRemoveImage}
-                                                className="w-full text-sm"
-                                            >
-                                                Remove
-                                            </Button>
-                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={handleRemoveImage}
+                                            className="w-full text-sm"
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -497,8 +497,12 @@ export default function EditUserManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Select
-                                                                value={employment_status}
-                                                                onValueChange={setEmploymentStatus}
+                                                                value={
+                                                                    employment_status
+                                                                }
+                                                                onValueChange={
+                                                                    setEmploymentStatus
+                                                                }
                                                             >
                                                                 <SelectTrigger className="w-full">
                                                                     <SelectValue placeholder="Select employment status" />
@@ -511,7 +515,8 @@ export default function EditUserManagement() {
                                                                         COS
                                                                     </SelectItem>
                                                                     <SelectItem value="Job Order">
-                                                                        Job Order
+                                                                        Job
+                                                                        Order
                                                                     </SelectItem>
                                                                     <SelectItem value="Others">
                                                                         Others
@@ -528,39 +533,39 @@ export default function EditUserManagement() {
                                                     </TableRow>
                                                     {employment_status ===
                                                         'Regular' && (
-                                                            <TableRow>
-                                                                <TableCell className="font-medium">
-                                                                    Item Number
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Input
-                                                                        id="item_number"
-                                                                        name="item_number"
-                                                                        type="text"
-                                                                        value={
-                                                                            item_number
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            setItemNumber(
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        className="w-full"
-                                                                        placeholder="Item Number"
-                                                                    />
-                                                                    <InputError
-                                                                        className="mt-1"
-                                                                        message={getErrorMessage(
-                                                                            'item_number',
-                                                                        )}
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )}
+                                                        <TableRow>
+                                                            <TableCell className="font-medium">
+                                                                Item Number
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Input
+                                                                    id="item_number"
+                                                                    name="item_number"
+                                                                    type="text"
+                                                                    value={
+                                                                        item_number
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        setItemNumber(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="w-full"
+                                                                    placeholder="Item Number"
+                                                                />
+                                                                <InputError
+                                                                    className="mt-1"
+                                                                    message={getErrorMessage(
+                                                                        'item_number',
+                                                                    )}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     <TableRow>
                                                         <TableCell className="font-medium">
                                                             Office
@@ -568,11 +573,14 @@ export default function EditUserManagement() {
                                                         <TableCell>
                                                             <Select
                                                                 value={office}
-                                                                onValueChange={setOffice}
+                                                                onValueChange={
+                                                                    setOffice
+                                                                }
                                                             >
                                                                 <SelectTrigger className="w-full">
                                                                     <SelectValue>
-                                                                        {office || "Select office"}
+                                                                        {office ||
+                                                                            'Select office'}
                                                                     </SelectValue>
                                                                 </SelectTrigger>
                                                                 <SelectContent>
@@ -600,34 +608,48 @@ export default function EditUserManagement() {
                                                             <TableCell>
                                                                 <Select
                                                                     value={cpmd}
-                                                                    onValueChange={setCpmd}
+                                                                    onValueChange={
+                                                                        setCpmd
+                                                                    }
                                                                 >
                                                                     <SelectTrigger className="w-full">
                                                                         <SelectValue>
-                                                                            {cpmd || "Select section/unit"}
+                                                                            {cpmd ||
+                                                                                'Select section/unit'}
                                                                         </SelectValue>
                                                                     </SelectTrigger>
                                                                     <SelectContent>
                                                                         <SelectItem value="Office of the Chief">
-                                                                            Office of the Chief
+                                                                            Office
+                                                                            of
+                                                                            the
+                                                                            Chief
                                                                         </SelectItem>
                                                                         <SelectItem value="OC-Admin Support Unit">
-                                                                            OC-Admin Support Unit
+                                                                            OC-Admin
+                                                                            Support
+                                                                            Unit
                                                                         </SelectItem>
                                                                         <SelectItem value="OC-Special Project Unit">
-                                                                            OC-Special Project Unit
+                                                                            OC-Special
+                                                                            Project
+                                                                            Unit
                                                                         </SelectItem>
                                                                         <SelectItem value="OC-ICT Unit">
-                                                                            OC-ICT Unit
+                                                                            OC-ICT
+                                                                            Unit
                                                                         </SelectItem>
                                                                         <SelectItem value="BIOCON Section">
-                                                                            BIOCON Section
+                                                                            BIOCON
+                                                                            Section
                                                                         </SelectItem>
                                                                         <SelectItem value="PFS Section">
-                                                                            PFS Section
+                                                                            PFS
+                                                                            Section
                                                                         </SelectItem>
                                                                         <SelectItem value="PHPS Section">
-                                                                            PHPS Section
+                                                                            PHPS
+                                                                            Section
                                                                         </SelectItem>
                                                                         <SelectItem value="Others">
                                                                             Others
@@ -811,7 +833,9 @@ export default function EditUserManagement() {
                                                         <TableCell>
                                                             <Select
                                                                 value={gender}
-                                                                onValueChange={setGender}
+                                                                onValueChange={
+                                                                    setGender
+                                                                }
                                                             >
                                                                 <SelectTrigger className="w-full">
                                                                     <SelectValue placeholder="Select gender" />
@@ -968,15 +992,17 @@ export default function EditUserManagement() {
                                                         <TableCell>
                                                             <Select
                                                                 value={role}
-                                                                onValueChange={(value) =>
+                                                                onValueChange={(
+                                                                    value,
+                                                                ) =>
                                                                     setRole(
                                                                         value as
-                                                                        | 'user'
-                                                                        | 'admin'
-                                                                        | 'superadmin'
-                                                                        | 'biocon'
-                                                                        | 'psf'
-                                                                        | 'phps',
+                                                                            | 'user'
+                                                                            | 'admin'
+                                                                            | 'superadmin'
+                                                                            | 'biocon'
+                                                                            | 'psf'
+                                                                            | 'phps',
                                                                     )
                                                                 }
                                                             >
@@ -991,7 +1017,8 @@ export default function EditUserManagement() {
                                                                         Admin
                                                                     </SelectItem>
                                                                     <SelectItem value="superadmin">
-                                                                        Super Admin
+                                                                        Super
+                                                                        Admin
                                                                     </SelectItem>
                                                                     <SelectItem value="biocon">
                                                                         Biocon
@@ -1019,11 +1046,13 @@ export default function EditUserManagement() {
                                                         <TableCell>
                                                             <Select
                                                                 value={status}
-                                                                onValueChange={(value) =>
+                                                                onValueChange={(
+                                                                    value,
+                                                                ) =>
                                                                     setStatus(
                                                                         value as
-                                                                        | 'active'
-                                                                        | 'inactive',
+                                                                            | 'active'
+                                                                            | 'inactive',
                                                                     )
                                                                 }
                                                             >
@@ -1070,32 +1099,32 @@ export default function EditUserManagement() {
                                         getCustomErrorMessage(
                                             'superadmin_password',
                                         )) && (
-                                            <div className="rounded-md border border-red-200 bg-red-50 p-4">
-                                                <div className="flex">
-                                                    <div className="flex-shrink-0">
-                                                        <svg
-                                                            className="h-5 w-5 text-red-400"
-                                                            viewBox="0 0 20 20"
-                                                            fill="currentColor"
-                                                        >
-                                                            <path
-                                                                fillRule="evenodd"
-                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                                                clipRule="evenodd"
-                                                            />
-                                                        </svg>
-                                                    </div>
-                                                    <div className="ml-3">
-                                                        <p className="text-sm text-red-800">
-                                                            {passwordError ||
-                                                                getCustomErrorMessage(
-                                                                    'superadmin_password',
-                                                                )}
-                                                        </p>
-                                                    </div>
+                                        <div className="rounded-md border border-red-200 bg-red-50 p-4">
+                                            <div className="flex">
+                                                <div className="flex-shrink-0">
+                                                    <svg
+                                                        className="h-5 w-5 text-red-400"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                                <div className="ml-3">
+                                                    <p className="text-sm text-red-800">
+                                                        {passwordError ||
+                                                            getCustomErrorMessage(
+                                                                'superadmin_password',
+                                                            )}
+                                                    </p>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                                         <div>

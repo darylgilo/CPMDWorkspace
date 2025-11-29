@@ -398,9 +398,9 @@ export default function EmployeeDirectory() {
                                     >
                                         {employee.status
                                             ? employee.status
-                                                .charAt(0)
-                                                .toUpperCase() +
-                                            employee.status.slice(1)
+                                                  .charAt(0)
+                                                  .toUpperCase() +
+                                              employee.status.slice(1)
                                             : '—'}
                                     </span>
                                     <button
