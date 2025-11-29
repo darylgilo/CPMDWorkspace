@@ -102,6 +102,15 @@ const STATUS_OPTIONS = [
     'WFH',
 ];
 
+const SECTION_FILTERS = [
+    { label: 'All Sections', value: 'all' },
+    { label: 'Office of the Chief', value: 'office_of_the_chief_group' },
+    { label: 'BIOCON Section', value: 'BIOCON Section' },
+    { label: 'PFS Section', value: 'PFS Section' },
+    { label: 'PHPS Section', value: 'PHPS Section' },
+    { label: 'Others', value: 'Others' },
+];
+
 // Sortable Row Component
 function SortableRow({
     user,
@@ -109,12 +118,14 @@ function SortableRow({
     whereabouts,
     handleCellClick,
     canReorder,
+    authUser,
 }: {
     user: User;
     days: Date[];
     whereabouts: Record<number, Record<string, Whereabout>>;
     handleCellClick: (user: User, day: Date) => void;
     canReorder: boolean;
+    authUser: AuthUser;
 }) {
     const {
         attributes,
@@ -158,19 +169,28 @@ function SortableRow({
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const entry = whereabouts[user.id]?.[dateStr];
                 const isWknd = isWeekend(day);
+                const isEditable =
+                    authUser.role === 'admin' ||
+                    authUser.role === 'superadmin' ||
+                    authUser.id === user.id;
 
                 return (
                     <td
                         key={day.toString()}
                         className={cn(
-                            'group relative h-10 cursor-pointer border border-gray-300 p-0 transition-opacity hover:opacity-80 dark:border-neutral-700',
+                            'group relative h-10 border border-gray-300 p-0 transition-opacity dark:border-neutral-700',
+                            !isWknd && isEditable
+                                ? 'cursor-pointer hover:opacity-80'
+                                : '',
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
                                     ? 'bg-gray-50 dark:bg-gray-800/50'
                                     : '',
                         )}
-                        onClick={() => handleCellClick(user, day)}
+                        onClick={() =>
+                            !isWknd && isEditable && handleCellClick(user, day)
+                        }
                         title={
                             entry
                                 ? `${entry.status}${entry.reason ? `: ${entry.reason}` : ''}`
@@ -199,6 +219,7 @@ export default function Whereabouts({
         reason: '',
         location: '',
     });
+    const [selectedSection, setSelectedSection] = useState('all');
 
     // Local state for users to handle optimistic UI updates during drag
     const [localUsers, setLocalUsers] = useState(users);
@@ -404,6 +425,19 @@ export default function Whereabouts({
     const canReorder =
         auth.user.role === 'admin' || auth.user.role === 'superadmin';
 
+    const matchesFilter = (sectionName: string, filterValue: string) => {
+        if (filterValue === 'all') return true;
+        if (filterValue === 'office_of_the_chief_group') {
+            return [
+                'Office of the Chief',
+                'OC-Admin Support Unit',
+                'OC-Special Project Unit',
+                'OC-ICT Unit',
+            ].includes(sectionName);
+        }
+        return sectionName === filterValue;
+    };
+
     return (
         <AppLayout
             breadcrumbs={[{ title: 'Whereabouts', href: '/whereabouts' }]}
@@ -433,81 +467,75 @@ export default function Whereabouts({
                     </div>
                 </div>
 
-                {/* Month and Year Filters */}
+                {/* Filters */}
                 <div className="flex flex-col items-stretch gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                    <div className="flex items-center gap-2">
-                        <Label className="text-sm font-medium">Month:</Label>
-                        <Select
-                            value={String(date.getMonth())}
-                            onValueChange={(val) => {
-                                const newDate = new Date(
-                                    date.getFullYear(),
-                                    parseInt(val),
-                                    1,
-                                );
-                                router.visit(
-                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
-                                );
-                            }}
-                        >
-                            <SelectTrigger className="w-full border-gray-300 sm:w-[140px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                <SelectItem value="0">January</SelectItem>
-                                <SelectItem value="1">February</SelectItem>
-                                <SelectItem value="2">March</SelectItem>
-                                <SelectItem value="3">April</SelectItem>
-                                <SelectItem value="4">May</SelectItem>
-                                <SelectItem value="5">June</SelectItem>
-                                <SelectItem value="6">July</SelectItem>
-                                <SelectItem value="7">August</SelectItem>
-                                <SelectItem value="8">September</SelectItem>
-                                <SelectItem value="9">October</SelectItem>
-                                <SelectItem value="10">November</SelectItem>
-                                <SelectItem value="11">December</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <Select
+                        value={String(date.getMonth())}
+                        onValueChange={(val) => {
+                            const newDate = new Date(
+                                date.getFullYear(),
+                                parseInt(val),
+                                1,
+                            );
+                            router.visit(
+                                `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                            );
+                        }}
+                    >
+                        <SelectTrigger className="w-full border-gray-300 sm:w-[140px] dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                            <SelectItem value="0">January</SelectItem>
+                            <SelectItem value="1">February</SelectItem>
+                            <SelectItem value="2">March</SelectItem>
+                            <SelectItem value="3">April</SelectItem>
+                            <SelectItem value="4">May</SelectItem>
+                            <SelectItem value="5">June</SelectItem>
+                            <SelectItem value="6">July</SelectItem>
+                            <SelectItem value="7">August</SelectItem>
+                            <SelectItem value="8">September</SelectItem>
+                            <SelectItem value="9">October</SelectItem>
+                            <SelectItem value="10">November</SelectItem>
+                            <SelectItem value="11">December</SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                    <div className="flex items-center gap-2">
-                        <Label className="text-sm font-medium">Year:</Label>
-                        <Select
-                            value={String(date.getFullYear())}
-                            onValueChange={(val) => {
-                                const newDate = new Date(
-                                    parseInt(val),
-                                    date.getMonth(),
-                                    1,
+                    <Select
+                        value={String(date.getFullYear())}
+                        onValueChange={(val) => {
+                            const newDate = new Date(
+                                parseInt(val),
+                                date.getMonth(),
+                                1,
+                            );
+                            router.visit(
+                                `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                            );
+                        }}
+                    >
+                        <SelectTrigger className="w-full border-gray-300 sm:w-[100px] dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                            {Array.from({ length: 10 }, (_, i) => {
+                                const year =
+                                    new Date().getFullYear() - 5 + i;
+                                return (
+                                    <SelectItem
+                                        key={year}
+                                        value={String(year)}
+                                    >
+                                        {year}
+                                    </SelectItem>
                                 );
-                                router.visit(
-                                    `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
-                                );
-                            }}
-                        >
-                            <SelectTrigger className="w-full border-gray-300 sm:w-[100px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                {Array.from({ length: 10 }, (_, i) => {
-                                    const year =
-                                        new Date().getFullYear() - 5 + i;
-                                    return (
-                                        <SelectItem
-                                            key={year}
-                                            value={String(year)}
-                                        >
-                                            {year}
-                                        </SelectItem>
-                                    );
-                                })}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            })}
+                        </SelectContent>
+                    </Select>
 
                     <Button
                         variant="outline"
-                        className="w-full sm:w-auto bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                        className="w-full sm:w-auto bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90 hover:text-white"
                         onClick={() => {
                             const today = new Date();
                             router.visit(
@@ -517,6 +545,25 @@ export default function Whereabouts({
                     >
                         Today
                     </Button>
+
+                    <Select
+                        value={selectedSection}
+                        onValueChange={setSelectedSection}
+                    >
+                        <SelectTrigger className="w-full border-gray-300 sm:ml-auto sm:w-[200px] dark:border-neutral-700 dark:bg-neutral-950">
+                            <SelectValue placeholder="Select Section" />
+                        </SelectTrigger>
+                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                            {SECTION_FILTERS.map((filter) => (
+                                <SelectItem
+                                    key={filter.value}
+                                    value={filter.value}
+                                >
+                                    {filter.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="mb-2 flex flex-wrap gap-2 sm:mb-4 sm:gap-4">
@@ -571,8 +618,11 @@ export default function Whereabouts({
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(usersByOffice).map(
-                                    ([office, officeUsers]) => (
+                                {Object.entries(usersByOffice)
+                                    .filter(([office]) =>
+                                        matchesFilter(office, selectedSection),
+                                    )
+                                    .map(([office, officeUsers]) => (
                                         <SortableContext
                                             key={office}
                                             items={officeUsers.map((u) => u.id)}
@@ -598,11 +648,11 @@ export default function Whereabouts({
                                                         handleCellClick
                                                     }
                                                     canReorder={canReorder}
+                                                    authUser={auth.user}
                                                 />
                                             ))}
                                         </SortableContext>
-                                    ),
-                                )}
+                                    ))}
                             </tbody>
                         </table>
                     </div>
@@ -690,7 +740,9 @@ export default function Whereabouts({
                                         </Button>
                                     )}
                             </div>
-                            <Button onClick={handleSubmit}>Save</Button>
+                            <Button
+                                className=" bg-[#163832] text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                onClick={handleSubmit}>Save</Button>
                         </div>
                     </DialogFooter>
                 </DialogContent>
