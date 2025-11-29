@@ -2,7 +2,6 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { ChangeEvent, useRef, useState } from 'react';
@@ -297,7 +297,9 @@ export default function AddEmployee() {
                                                 </Label>
                                                 <Select
                                                     value={employment_status}
-                                                    onValueChange={setEmploymentStatus}
+                                                    onValueChange={
+                                                        setEmploymentStatus
+                                                    }
                                                 >
                                                     <SelectTrigger className="mt-1">
                                                         <SelectValue placeholder="Select employment status" />
@@ -320,25 +322,25 @@ export default function AddEmployee() {
                                             </div>
                                             {employment_status ===
                                                 'Regular' && (
-                                                    <div>
-                                                        <Label htmlFor="item_number">
-                                                            Item Number
-                                                        </Label>
-                                                        <Input
-                                                            id="item_number"
-                                                            name="item_number"
-                                                            type="text"
-                                                            value={item_number}
-                                                            onChange={(e) =>
-                                                                setItemNumber(
-                                                                    e.target.value,
-                                                                )
-                                                            }
-                                                            className="mt-1"
-                                                            placeholder="Item Number"
-                                                        />
-                                                    </div>
-                                                )}
+                                                <div>
+                                                    <Label htmlFor="item_number">
+                                                        Item Number
+                                                    </Label>
+                                                    <Input
+                                                        id="item_number"
+                                                        name="item_number"
+                                                        type="text"
+                                                        value={item_number}
+                                                        onChange={(e) =>
+                                                            setItemNumber(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="mt-1"
+                                                        placeholder="Item Number"
+                                                    />
+                                                </div>
+                                            )}
                                             <div>
                                                 <Label htmlFor="office">
                                                     Office
@@ -374,13 +376,16 @@ export default function AddEmployee() {
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="Office of the Chief">
-                                                                Office of the Chief
+                                                                Office of the
+                                                                Chief
                                                             </SelectItem>
                                                             <SelectItem value="OC-Admin Support Unit">
-                                                                OC-Admin Support Unit
+                                                                OC-Admin Support
+                                                                Unit
                                                             </SelectItem>
                                                             <SelectItem value="OC-Special Project Unit">
-                                                                OC-Special Project Unit
+                                                                OC-Special
+                                                                Project Unit
                                                             </SelectItem>
                                                             <SelectItem value="OC-ICT Unit">
                                                                 OC-ICT Unit

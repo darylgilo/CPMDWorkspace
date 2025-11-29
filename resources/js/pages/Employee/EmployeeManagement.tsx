@@ -173,14 +173,14 @@ export default function EmployeeManagement() {
                     <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         {(auth?.user?.role === 'superadmin' ||
                             auth?.user?.role === 'admin') && (
-                                <button
-                                    onClick={() => router.get('/employees/create')}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                >
-                                    <UserPlus className="h-4 w-4" />
-                                    <span>Add Employee</span>
-                                </button>
-                            )}
+                            <button
+                                onClick={() => router.get('/employees/create')}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                <span>Add Employee</span>
+                            </button>
+                        )}
                         <Select
                             value={office || 'all'}
                             onValueChange={(val) => {
@@ -412,9 +412,9 @@ export default function EmployeeManagement() {
                                         >
                                             {employee.status
                                                 ? employee.status
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                employee.status.slice(1)
+                                                      .charAt(0)
+                                                      .toUpperCase() +
+                                                  employee.status.slice(1)
                                                 : '—'}
                                         </span>
                                         <button

@@ -29,7 +29,11 @@ export default function VerifyEmail({ status }: { status?: string }) {
             >
                 {({ processing }) => (
                     <>
-                        <Button disabled={processing} variant="secondary" className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90">
+                        <Button
+                            disabled={processing}
+                            variant="secondary"
+                            className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                        >
                             {processing && (
                                 <LoaderCircle className="h-4 w-4 animate-spin" />
                             )}

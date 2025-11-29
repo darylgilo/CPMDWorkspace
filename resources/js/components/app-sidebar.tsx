@@ -1,23 +1,14 @@
 'use client';
 
 import {
-    AlignHorizontalSpaceAroundIcon,
-    BookOpen,
-    Bot,
     BotMessageSquareIcon,
     CalendarCheckIcon,
-    Contact2Icon,
-    ContactRoundIcon,
-    DockIcon,
     FolderArchive,
     FolderSymlink,
     HomeIcon,
     LucideContact,
     LucideNotebookPen,
     MessageSquareTextIcon,
-    NotebookPen,
-    NotebookTabsIcon,
-    NotebookTextIcon,
     Send,
     Settings2,
 } from 'lucide-react';

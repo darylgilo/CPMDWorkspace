@@ -2,7 +2,6 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
     Select,
     SelectContent,
@@ -10,6 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -92,15 +92,15 @@ export default function EmployeeView() {
         employment_status: 'Regular' | 'COS' | 'Job Order' | 'Others';
         office: 'CPMD' | 'Others';
         cpmd:
-        | ''
-        | 'Office of the Chief'
-        | 'OC-Admin Support Unit'
-        | 'OC-Special Project Unit'
-        | 'OC-ICT Unit'
-        | 'BIOCON Section'
-        | 'PFS Section'
-        | 'PHPS Section'
-        | 'Others';
+            | ''
+            | 'Office of the Chief'
+            | 'OC-Admin Support Unit'
+            | 'OC-Special Project Unit'
+            | 'OC-ICT Unit'
+            | 'BIOCON Section'
+            | 'PFS Section'
+            | 'PHPS Section'
+            | 'Others';
         tin_number: string;
         gsis_number: string;
         address: string;
@@ -441,7 +441,9 @@ export default function EmployeeView() {
                                                     <SelectItem value="Regular">
                                                         Regular
                                                     </SelectItem>
-                                                    <SelectItem value="COS">COS</SelectItem>
+                                                    <SelectItem value="COS">
+                                                        COS
+                                                    </SelectItem>
                                                     <SelectItem value="Job Order">
                                                         Job Order
                                                     </SelectItem>
@@ -453,23 +455,23 @@ export default function EmployeeView() {
                                         </div>
                                         {data.employment_status ===
                                             'Regular' && (
-                                                <div>
-                                                    <Label htmlFor="item_number">
-                                                        Item Number
-                                                    </Label>
-                                                    <Input
-                                                        id="item_number"
-                                                        value={data.item_number}
-                                                        onChange={(e) =>
-                                                            handleInputChange(
-                                                                'item_number',
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="mt-1"
-                                                    />
-                                                </div>
-                                            )}
+                                            <div>
+                                                <Label htmlFor="item_number">
+                                                    Item Number
+                                                </Label>
+                                                <Input
+                                                    id="item_number"
+                                                    value={data.item_number}
+                                                    onChange={(e) =>
+                                                        handleInputChange(
+                                                            'item_number',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                        )}
                                         <div>
                                             <Label htmlFor="office">
                                                 Office
@@ -491,7 +493,8 @@ export default function EmployeeView() {
                                             >
                                                 <SelectTrigger className="mt-1">
                                                     <SelectValue>
-                                                        {data.office || "Select office"}
+                                                        {data.office ||
+                                                            'Select office'}
                                                     </SelectValue>
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -520,7 +523,8 @@ export default function EmployeeView() {
                                                 >
                                                     <SelectTrigger className="mt-1">
                                                         <SelectValue>
-                                                            {data.cpmd || "Select section/unit"}
+                                                            {data.cpmd ||
+                                                                'Select section/unit'}
                                                         </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -528,10 +532,12 @@ export default function EmployeeView() {
                                                             Office of the Chief
                                                         </SelectItem>
                                                         <SelectItem value="OC-Admin Support Unit">
-                                                            OC-Admin Support Unit
+                                                            OC-Admin Support
+                                                            Unit
                                                         </SelectItem>
                                                         <SelectItem value="OC-Special Project Unit">
-                                                            OC-Special Project Unit
+                                                            OC-Special Project
+                                                            Unit
                                                         </SelectItem>
                                                         <SelectItem value="OC-ICT Unit">
                                                             OC-ICT Unit
