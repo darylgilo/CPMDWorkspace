@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
+    AlertCircle,
     Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
@@ -16,7 +17,8 @@ type Category =
     | 'Announcement'
     | 'Notice of Meeting'
     | 'Notice of Event'
-    | 'MEMO';
+    | 'MEMO'
+    | 'Reminder/Deadline';
 
 interface Notice {
     id: string;
@@ -69,7 +71,27 @@ function isSameDay(date1: Date, date2: Date): boolean {
     );
 }
 
-export default function MemoPage() {
+// Helper function to check if a date is in the past
+function isPastDate(date: Date): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today;
+}
+
+// Helper function to get days until deadline
+function getDaysUntilDeadline(date: Date): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadline = new Date(date);
+    deadline.setHours(0, 0, 0, 0);
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+}
+
+export default function ReminderPage() {
     const pageProps = usePage().props as Record<string, unknown>;
     const serverNotices = useMemo(
         () => (pageProps?.notices as Array<Record<string, unknown>>) ?? [],
@@ -82,6 +104,7 @@ export default function MemoPage() {
     const [search, setSearch] = useState('');
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
+    const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'overdue'>('all');
     const itemsPerPage = 5;
 
     const toggleCardExpansion = (id: string) => {
@@ -101,11 +124,11 @@ export default function MemoPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                      name: f.name ?? 'file',
-                      url: f.url,
-                      type: f.mime ?? '',
-                      size: Number(f.size ?? 0),
-                  }))
+                    name: f.name ?? 'file',
+                    url: f.url,
+                    type: f.mime ?? '',
+                    size: Number(f.size ?? 0),
+                }))
                 : [];
             return {
                 id: String(n.id),
@@ -119,21 +142,21 @@ export default function MemoPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                          name: n.file_name ?? 'file',
-                          url: n.file_url,
-                          type: n.file_mime ?? '',
-                          size: Number(n.file_size ?? 0),
-                      }
+                        name: n.file_name ?? 'file',
+                        url: n.file_url,
+                        type: n.file_mime ?? '',
+                        size: Number(n.file_size ?? 0),
+                    }
                     : null,
                 files: filesArr,
             } as Notice;
         });
     }, [serverNotices]);
 
-    // Filter only MEMO category and apply search
-    const memos = useMemo(() => {
+    // Filter only Reminder/Deadline category and apply search
+    const reminders = useMemo(() => {
         return mappedNotices
-            .filter((n) => n.category === 'MEMO')
+            .filter((n) => n.category === 'Reminder/Deadline')
             .filter((n) => {
                 const q = search.trim().toLowerCase();
                 if (!q) return true;
@@ -145,42 +168,65 @@ export default function MemoPage() {
             });
     }, [mappedNotices, search]);
 
-    // Group memos by date
-    const memosByDate = useMemo(() => {
+    // Apply filter type (all, upcoming, overdue)
+    const filteredReminders = useMemo(() => {
+        if (filterType === 'all') return reminders;
+
+        return reminders.filter((reminder) => {
+            if (!reminder.date) return false;
+            const reminderDate = new Date(reminder.date);
+            const isOverdue = isPastDate(reminderDate);
+
+            if (filterType === 'upcoming') return !isOverdue;
+            if (filterType === 'overdue') return isOverdue;
+            return true;
+        });
+    }, [reminders, filterType]);
+
+    // Group reminders by date
+    const remindersByDate = useMemo(() => {
         const grouped = new Map<string, Notice[]>();
-        memos.forEach((memo) => {
-            if (memo.date) {
-                const dateKey = memo.date;
+        filteredReminders.forEach((reminder) => {
+            if (reminder.date) {
+                const dateKey = reminder.date;
                 if (!grouped.has(dateKey)) {
                     grouped.set(dateKey, []);
                 }
-                grouped.get(dateKey)!.push(memo);
+                grouped.get(dateKey)!.push(reminder);
             }
         });
         return grouped;
-    }, [memos]);
+    }, [filteredReminders]);
 
-    // Get memos for selected date or all memos
-    const displayedMemos = useMemo(() => {
+    // Get reminders for selected date or all reminders
+    const displayedReminders = useMemo(() => {
         if (selectedDate) {
             const dateKey = formatDate(selectedDate);
-            return memosByDate.get(dateKey) || [];
+            return remindersByDate.get(dateKey) || [];
         }
-        return memos;
-    }, [selectedDate, memos, memosByDate]);
+        return filteredReminders;
+    }, [selectedDate, filteredReminders, remindersByDate]);
+
+    // Sort reminders by date (upcoming first)
+    const sortedReminders = useMemo(() => {
+        return [...displayedReminders].sort((a, b) => {
+            if (!a.date || !b.date) return 0;
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+    }, [displayedReminders]);
 
     // Pagination
-    const totalPages = Math.ceil(displayedMemos.length / itemsPerPage);
-    const paginatedMemos = useMemo(() => {
+    const totalPages = Math.ceil(sortedReminders.length / itemsPerPage);
+    const paginatedReminders = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        return displayedMemos.slice(startIndex, endIndex);
-    }, [displayedMemos, currentPage]);
+        return sortedReminders.slice(startIndex, endIndex);
+    }, [sortedReminders, currentPage]);
 
     // Reset to page 1 when filters change
     useMemo(() => {
         setCurrentPage(1);
-    }, [search, selectedDate]);
+    }, [search, selectedDate, filterType]);
 
     // Calendar navigation
     const goToPreviousMonth = () => {
@@ -241,28 +287,35 @@ export default function MemoPage() {
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Memo', href: '/noticeboard/memo' },
+        { title: 'Reminders & Deadlines', href: '/noticeboard/reminders' },
     ];
 
-    // Check if a date has memos
-    const hasMemos = (date: Date): boolean => {
+    // Check if a date has reminders
+    const hasReminders = (date: Date): boolean => {
         const dateKey = formatDate(date);
-        return memosByDate.has(dateKey);
+        return remindersByDate.has(dateKey);
     };
 
-    // Get memo count for a date
-    const getMemoCount = (date: Date): number => {
+    // Get reminder count for a date
+    const getReminderCount = (date: Date): number => {
         const dateKey = formatDate(date);
-        return memosByDate.get(dateKey)?.length || 0;
+        return remindersByDate.get(dateKey)?.length || 0;
     };
+
+    // Count upcoming and overdue reminders
+    const upcomingCount = useMemo(() => {
+        return reminders.filter((r) => r.date && !isPastDate(new Date(r.date))).length;
+    }, [reminders]);
+
+    const overdueCount = useMemo(() => {
+        return reminders.filter((r) => r.date && isPastDate(new Date(r.date))).length;
+    }, [reminders]);
 
     const today = new Date();
 
-    console.log('pageProps:', pageProps);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Memo" />
+            <Head title="Reminders & Deadlines" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
                 {/* Header */}
@@ -270,16 +323,16 @@ export default function MemoPage() {
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Memo
+                                Reminders & Deadlines
                             </h1>
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 {selectedDate
-                                    ? `Showing memos for ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                                    : 'View all memos'}
+                                    ? `Showing reminders and deadlines for ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                                    : 'Track important deadlines and reminders'}
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             {selectedDate && (
                                 <button
                                     onClick={() => setSelectedDate(null)}
@@ -290,34 +343,65 @@ export default function MemoPage() {
                             )}
 
                             {/* Search Bar */}
-                            <div className="w-full md:w-80">
+                            <div className="w-full sm:w-80">
                                 <SearchBar
                                     search={search}
                                     onSearchChange={setSearch}
-                                    placeholder="Search by title or user..."
+                                    placeholder="Search reminders..."
                                     className="w-full"
                                 />
                             </div>
                         </div>
                     </div>
+
+                    {/* Filter Buttons */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setFilterType('all')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'all'
+                                ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                                }`}
+                        >
+                            All ({reminders.length})
+                        </button>
+                        <button
+                            onClick={() => setFilterType('upcoming')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'upcoming'
+                                ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                                }`}
+                        >
+                            Upcoming ({upcomingCount})
+                        </button>
+                        <button
+                            onClick={() => setFilterType('overdue')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'overdue'
+                                ? 'bg-red-600 text-white dark:bg-red-700'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                                }`}
+                        >
+                            Overdue ({overdueCount})
+                        </button>
+                    </div>
                 </div>
 
                 {/* Main Content Grid */}
                 <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Memo List */}
+                    {/* Reminders List */}
                     <div className="lg:col-span-2">
                         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
                             <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                                 {selectedDate
-                                    ? `Memos (${displayedMemos.length})`
-                                    : `All Memos (${memos.length})`}
+                                    ? `Reminders (${sortedReminders.length})`
+                                    : `${filterType === 'all' ? 'All' : filterType === 'upcoming' ? 'Upcoming' : 'Overdue'} Reminders (${sortedReminders.length})`}
                             </h2>
 
                             {/* Pagination */}
                             {totalPages > 1 && (
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, displayedMemos.length)} of {displayedMemos.length} memos
+                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedReminders.length)} of {sortedReminders.length} reminders
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
@@ -344,122 +428,122 @@ export default function MemoPage() {
                             )}
 
                             <div className="space-y-4">
-                                {paginatedMemos.length > 0 ? (
-                                    paginatedMemos.map((memo) => {
-                                        const isExpanded = expandedCards.has(
-                                            memo.id,
-                                        );
+                                {paginatedReminders.length > 0 ? (
+                                    paginatedReminders.map((reminder) => {
+                                        const isExpanded = expandedCards.has(reminder.id);
+                                        const isOverdue = reminder.date && isPastDate(new Date(reminder.date));
+                                        const daysUntil = reminder.date ? getDaysUntilDeadline(new Date(reminder.date)) : null;
+
                                         return (
                                             <div
-                                                key={memo.id}
-                                                className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                                                key={reminder.id}
+                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${isOverdue
+                                                    ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
+                                                    : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                    }`}
                                             >
                                                 <div className="mb-3 flex items-start justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <FileText
-                                                            className="h-6 w-6"
+                                                    <div className="flex items-start gap-3 flex-1">
+                                                        <AlertCircle
+                                                            className={`h-6 w-6 flex-shrink-0 ${isOverdue
+                                                                ? 'text-red-600 dark:text-red-400'
+                                                                : 'text-[#163832] dark:text-[#235347]'
+                                                                }`}
                                                             aria-hidden
                                                         />
-                                                        <div>
+                                                        <div className="flex-1">
                                                             <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                {memo.title}
+                                                                {reminder.title}
                                                             </h3>
-                                                            <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                                                                 <span className="flex items-center gap-1">
                                                                     <User className="h-3 w-3" />
-                                                                    {
-                                                                        memo.username
-                                                                    }
+                                                                    {reminder.username}
                                                                 </span>
-                                                                Posted on{' '}
-                                                                {new Date(
-                                                                    memo.createdAt,
-                                                                ).toLocaleString()}
+                                                                <span>
+                                                                    Posted on{' '}
+                                                                    {new Date(reminder.createdAt).toLocaleString()}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    {/* Deadline Badge */}
+                                                    {daysUntil !== null && (
+                                                        <div className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${isOverdue
+                                                            ? 'bg-red-600 text-white dark:bg-red-700'
+                                                            : daysUntil <= 3
+                                                                ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                            }`}>
+                                                            {isOverdue
+                                                                ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`
+                                                                : daysUntil === 0
+                                                                    ? 'Due today'
+                                                                    : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <p
                                                     className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                 >
-                                                    {memo.description}
+                                                    {reminder.description}
                                                 </p>
-                                                {memo.description.length >
-                                                    150 && (
+                                                {reminder.description.length > 150 && (
                                                     <button
                                                         onClick={() =>
-                                                            toggleCardExpansion(
-                                                                memo.id,
-                                                            )
+                                                            toggleCardExpansion(reminder.id)
                                                         }
                                                         className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
                                                     >
-                                                        {isExpanded
-                                                            ? 'Show less'
-                                                            : 'Read more'}
+                                                        {isExpanded ? 'Show less' : 'Read more'}
                                                     </button>
                                                 )}
 
                                                 {/* Attachments */}
-                                                {memo.files &&
-                                                    memo.files.length > 0 && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
-                                                            <span>
-                                                                {
-                                                                    memo.files
-                                                                        .length
-                                                                }{' '}
-                                                                attachment(s)
-                                                            </span>
-                                                            {memo.files_download_url && (
-                                                                <a
-                                                                    href={
-                                                                        memo.files_download_url
-                                                                    }
-                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download
-                                                                >
-                                                                    Download All
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                {memo.file &&
-                                                    !memo.files?.length && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
+                                                {reminder.files && reminder.files.length > 0 && (
+                                                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                        <FileText className="h-4 w-4" />
+                                                        <span>
+                                                            {reminder.files.length} attachment(s)
+                                                        </span>
+                                                        {reminder.files_download_url && (
                                                             <a
-                                                                href={
-                                                                    memo.file
-                                                                        .url
-                                                                }
+                                                                href={reminder.files_download_url}
                                                                 className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                download={
-                                                                    memo.file
-                                                                        .name
-                                                                }
+                                                                download
                                                             >
-                                                                {memo.file.name}
+                                                                Download All
                                                             </a>
-                                                        </div>
-                                                    )}
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {reminder.file && !reminder.files?.length && (
+                                                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                        <FileText className="h-4 w-4" />
+                                                        <a
+                                                            href={reminder.file.url}
+                                                            className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                            download={reminder.file.name}
+                                                        >
+                                                            {reminder.file.name}
+                                                        </a>
+                                                    </div>
+                                                )}
 
                                                 <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                    {memo.date && (
-                                                        <span className="flex items-center gap-1">
+                                                    {reminder.date && (
+                                                        <span className="flex items-center gap-1 font-medium">
                                                             <CalendarIcon className="h-3 w-3" />
-                                                            {new Date(
-                                                                memo.date,
-                                                            ).toLocaleDateString()}
+                                                            {new Date(reminder.date).toLocaleDateString()}
                                                         </span>
                                                     )}
-                                                    {memo.time && (
+                                                    {reminder.time && (
                                                         <span className="flex items-center gap-1">
                                                             <Clock className="h-3 w-3" />
-                                                            {memo.time}
+                                                            {reminder.time}
                                                         </span>
                                                     )}
                                                 </div>
@@ -470,8 +554,12 @@ export default function MemoPage() {
                                     <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-neutral-700">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
                                             {selectedDate
-                                                ? 'No memos scheduled for this date.'
-                                                : 'No memos available.'}
+                                                ? 'No reminders scheduled for this date.'
+                                                : filterType === 'upcoming'
+                                                    ? 'No upcoming reminders.'
+                                                    : filterType === 'overdue'
+                                                        ? 'No overdue reminders.'
+                                                        : 'No reminders available.'}
                                         </p>
                                     </div>
                                 )}
@@ -536,21 +624,21 @@ export default function MemoPage() {
 
                                     const isToday = isSameDay(day, today);
                                     const isSelected =
-                                        selectedDate &&
-                                        isSameDay(day, selectedDate);
-                                    const hasEvents = hasMemos(day);
-                                    const eventCount = getMemoCount(day);
+                                        selectedDate && isSameDay(day, selectedDate);
+                                    const hasEvents = hasReminders(day);
+                                    const eventCount = getReminderCount(day);
+                                    const isOverdueDay = isPastDate(day) && hasEvents;
 
                                     return (
                                         <button
                                             key={index}
                                             onClick={() => setSelectedDate(day)}
-                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents ? 'hover:bg-blue-100 dark:hover:bg-blue-900/30' : ''} `}
+                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'bg-red-50 font-medium text-red-900 dark:bg-red-900/20 dark:text-red-300' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'hover:bg-red-100 dark:hover:bg-red-900/30' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'hover:bg-blue-100 dark:hover:bg-blue-900/30' : ''} `}
                                         >
                                             <span>{day.getDate()}</span>
                                             {hasEvents && (
                                                 <span
-                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400'} `}
+                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : isOverdueDay ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'} `}
                                                 >
                                                     {eventCount}
                                                 </span>
@@ -563,8 +651,12 @@ export default function MemoPage() {
                             {/* Legend */}
                             <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <FileText className="h-3 w-3" />
-                                    <span>Memo</span>
+                                    <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
+                                    <span>Upcoming Deadline</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                    <div className="h-3 w-3 rounded-full bg-red-100 dark:bg-red-900/20" />
+                                    <span>Overdue</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                     <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
@@ -577,15 +669,29 @@ export default function MemoPage() {
                             </div>
 
                             {/* Stats */}
-                            <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-neutral-800">
-                                <div className="text-center">
-                                    <div className="text-3xl font-bold text-[#163832] dark:text-[#235347]">
-                                        {memos.length}
-                                    </div>
-                                    <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                        Total Memos
+                            <div className="mt-4 space-y-2">
+                                <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                            {upcomingCount}
+                                        </div>
+                                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                            Upcoming Reminders
+                                        </div>
                                     </div>
                                 </div>
+                                {overdueCount > 0 && (
+                                    <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                                {overdueCount}
+                                            </div>
+                                            <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                                Overdue Items
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
