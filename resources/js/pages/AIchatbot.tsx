@@ -16,7 +16,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'AI Assistant',
+        title: 'AI Chatbot',
         href: '/chatbot',
     },
 ];
@@ -165,9 +165,9 @@ export default function AIchatbot() {
                 {
                     id: 'm1',
                     role: 'assistant',
-                    content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`,
+                    content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI Chatbot. Ask me anything, type a message below.`,
                     variants: [
-                        `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`,
+                        `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI Chatbot. Ask me anything, type a message below.`,
                     ],
                     variantIndex: 0,
                 },

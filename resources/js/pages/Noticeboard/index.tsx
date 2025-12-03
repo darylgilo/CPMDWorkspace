@@ -19,6 +19,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
+    AlertCircle,
     Bell,
     Calendar,
     FileText,
@@ -31,6 +32,7 @@ type Category =
     | 'Announcement'
     | 'Notice of Meeting'
     | 'Notice of Event'
+    | 'Reminder/Deadline'
     | 'MEMO';
 
 // Display shape for a notice card in the UI
@@ -72,6 +74,7 @@ const categoryOptions: Category[] = [
     'Announcement',
     'Notice of Meeting',
     'Notice of Event',
+    'Reminder/Deadline',
     'MEMO',
 ];
 
@@ -79,6 +82,7 @@ const categoryIcon: Record<Category, React.ReactNode> = {
     Announcement: <Megaphone className="h-5 w-5" />,
     'Notice of Meeting': <Calendar className="h-5 w-5" />,
     'Notice of Event': <Bell className="h-5 w-5" />,
+    'Reminder/Deadline': <AlertCircle className="h-5 w-5" />,
     MEMO: <FileText className="h-5 w-5" />,
 };
 

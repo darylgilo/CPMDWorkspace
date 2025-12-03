@@ -97,7 +97,7 @@ export default function Welcome() {
                                 {auth.user ? (
                                     <Link
                                         href={dashboard()}
-                                        className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm"
+                                        className="rounded-lg bg-[#163832] px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
                                         Dashboard
                                     </Link>

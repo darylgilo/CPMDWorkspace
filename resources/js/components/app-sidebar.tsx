@@ -67,6 +67,7 @@ const data = {
                     title: 'Announcement',
                     url: '/noticeboard/announcements',
                 },
+
                 {
                     title: 'Notice of Meeting',
                     url: '/noticeboard/meeting',
@@ -74,6 +75,10 @@ const data = {
                 {
                     title: 'Notice of Event',
                     url: '/noticeboard/event',
+                },
+                {
+                    title: 'Reminder/Deadline',
+                    url: '/noticeboard/reminder',
                 },
                 {
                     title: 'MEMO',

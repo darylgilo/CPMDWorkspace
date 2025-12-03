@@ -2,8 +2,7 @@ import SearchBar from '@/components/SearchBar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
-import {
-    Calendar as CalendarIcon,
+import { Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
     Clock,
@@ -11,7 +10,7 @@ import {
     Megaphone,
     User,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Category =
     | 'Announcement'
@@ -82,6 +81,8 @@ export default function AnnouncementPage() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [search, setSearch] = useState('');
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const toggleCardExpansion = (id: string) => {
         setExpandedCards((prev) => {
@@ -167,6 +168,19 @@ export default function AnnouncementPage() {
         }
         return announcements;
     }, [selectedDate, announcements, announcementsByDate]);
+
+    // Pagination
+    const totalPages = Math.ceil(displayedAnnouncements.length / itemsPerPage);
+    const paginatedAnnouncements = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return displayedAnnouncements.slice(startIndex, endIndex);
+    }, [displayedAnnouncements, currentPage]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, selectedDate]);
 
     // Calendar navigation
     const goToPreviousMonth = () => {
@@ -299,9 +313,53 @@ export default function AnnouncementPage() {
                                     : `All Announcements (${announcements.length})`}
                             </h2>
 
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="mb-4 flex items-center justify-between">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        Showing{' '}
+                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
+                                        to{' '}
+                                        {Math.min(
+                                            currentPage * itemsPerPage,
+                                            displayedAnnouncements.length,
+                                        )}{' '}
+                                        of {displayedAnnouncements.length}{' '}
+                                        announcements
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(currentPage - 1)
+                                            }
+                                            disabled={currentPage === 1}
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
+                                            aria-label="Previous page"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </button>
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() =>
+                                                setCurrentPage(currentPage + 1)
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
+                                            aria-label="Next page"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-4">
-                                {displayedAnnouncements.length > 0 ? (
-                                    displayedAnnouncements.map(
+                                {paginatedAnnouncements.length > 0 ? (
+                                    paginatedAnnouncements.map(
                                         (announcement) => {
                                             const isExpanded =
                                                 expandedCards.has(
@@ -341,7 +399,7 @@ export default function AnnouncementPage() {
                                                     </div>
 
                                                     <p
-                                                        className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                        className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                     >
                                                         {
                                                             announcement.description

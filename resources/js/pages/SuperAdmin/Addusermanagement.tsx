@@ -21,7 +21,7 @@ export default function AddUserManagement() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState<
-        'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps'
+        'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS'
     >('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
@@ -642,9 +642,9 @@ export default function AddUserManagement() {
                                                                     | 'user'
                                                                     | 'admin'
                                                                     | 'superadmin'
-                                                                    | 'biocon'
-                                                                    | 'psf'
-                                                                    | 'phps',
+                                                                    | 'BIOCON'
+                                                                    | 'PFS'
+                                                                    | 'PHPS',
                                                             )
                                                         }
                                                     >
@@ -661,13 +661,13 @@ export default function AddUserManagement() {
                                                             <SelectItem value="superadmin">
                                                                 Super Admin
                                                             </SelectItem>
-                                                            <SelectItem value="biocon">
-                                                                Biocon
+                                                            <SelectItem value="BIOCON">
+                                                                BIOCON
                                                             </SelectItem>
-                                                            <SelectItem value="psf">
-                                                                PSF
+                                                            <SelectItem value="PFS">
+                                                                PFS
                                                             </SelectItem>
-                                                            <SelectItem value="phps">
+                                                            <SelectItem value="PHPS">
                                                                 PHPS
                                                             </SelectItem>
                                                         </SelectContent>

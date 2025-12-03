@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/noticeboard/memo', [NoticeController::class, 'memo'])->name('noticeboard.memo');
     Route::get('/noticeboard/event', [NoticeController::class, 'events'])->name('noticeboard.event');
     Route::get('/noticeboard/meeting', [NoticeController::class, 'meetings'])->name('noticeboard.meeting');
+    Route::get('/noticeboard/reminder', [NoticeController::class, 'reminders'])->name('noticeboard.reminder');
     Route::get('/noticeboard/{notice}/download', [NoticeController::class, 'download'])->name('noticeboard.download');
     Route::get('/noticeboard/{notice}/download-all', [NoticeController::class, 'downloadAll'])->name('noticeboard.downloadAll');
     Route::get('/noticeboard', [NoticeController::class, 'index'])->name('noticeboard.index');
