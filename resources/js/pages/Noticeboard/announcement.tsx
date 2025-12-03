@@ -2,8 +2,7 @@ import SearchBar from '@/components/SearchBar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
-import {
-    Calendar as CalendarIcon,
+import { Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
     Clock,
@@ -11,7 +10,7 @@ import {
     Megaphone,
     User,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Category =
     | 'Announcement'
@@ -102,11 +101,11 @@ export default function AnnouncementPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -120,11 +119,11 @@ export default function AnnouncementPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -179,7 +178,7 @@ export default function AnnouncementPage() {
     }, [displayedAnnouncements, currentPage]);
 
     // Reset to page 1 when filters change
-    useMemo(() => {
+    useEffect(() => {
         setCurrentPage(1);
     }, [search, selectedDate]);
 
@@ -318,13 +317,23 @@ export default function AnnouncementPage() {
                             {totalPages > 1 && (
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, displayedAnnouncements.length)} of {displayedAnnouncements.length} announcements
+                                        Showing{' '}
+                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
+                                        to{' '}
+                                        {Math.min(
+                                            currentPage * itemsPerPage,
+                                            displayedAnnouncements.length,
+                                        )}{' '}
+                                        of {displayedAnnouncements.length}{' '}
+                                        announcements
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                            onClick={() =>
+                                                setCurrentPage(currentPage - 1)
+                                            }
                                             disabled={currentPage === 1}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Previous page"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
@@ -333,9 +342,13 @@ export default function AnnouncementPage() {
                                             Page {currentPage} of {totalPages}
                                         </span>
                                         <button
-                                            onClick={() => setCurrentPage(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            onClick={() =>
+                                                setCurrentPage(currentPage + 1)
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Next page"
                                         >
                                             <ChevronRight className="h-4 w-4" />
@@ -386,7 +399,7 @@ export default function AnnouncementPage() {
                                                     </div>
 
                                                     <p
-                                                        className={`mb-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                        className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                     >
                                                         {
                                                             announcement.description
@@ -394,19 +407,19 @@ export default function AnnouncementPage() {
                                                     </p>
                                                     {announcement.description
                                                         .length > 150 && (
-                                                            <button
-                                                                onClick={() =>
-                                                                    toggleCardExpansion(
-                                                                        announcement.id,
-                                                                    )
-                                                                }
-                                                                className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                            >
-                                                                {isExpanded
-                                                                    ? 'Show less'
-                                                                    : 'Read more'}
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleCardExpansion(
+                                                                    announcement.id,
+                                                                )
+                                                            }
+                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                        >
+                                                            {isExpanded
+                                                                ? 'Show less'
+                                                                : 'Read more'}
+                                                        </button>
+                                                    )}
 
                                                     {/* Attachments */}
                                                     {announcement.files &&

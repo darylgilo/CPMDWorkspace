@@ -33,8 +33,7 @@ type Category =
     | 'Notice of Meeting'
     | 'Notice of Event'
     | 'Reminder/Deadline'
-    | 'MEMO'
-
+    | 'MEMO';
 
 // Display shape for a notice card in the UI
 interface Notice {
@@ -77,16 +76,14 @@ const categoryOptions: Category[] = [
     'Notice of Event',
     'Reminder/Deadline',
     'MEMO',
-
 ];
 
 const categoryIcon: Record<Category, React.ReactNode> = {
-    'Announcement': <Megaphone className="h-5 w-5" />,
+    Announcement: <Megaphone className="h-5 w-5" />,
     'Notice of Meeting': <Calendar className="h-5 w-5" />,
     'Notice of Event': <Bell className="h-5 w-5" />,
     'Reminder/Deadline': <AlertCircle className="h-5 w-5" />,
-    'MEMO': <FileText className="h-5 w-5" />,
-
+    MEMO: <FileText className="h-5 w-5" />,
 };
 
 // Generate time options in 30-minute intervals
@@ -248,11 +245,11 @@ export default function Noticeboard() {
         return (serverNotices as Array<Record<string, unknown>>).map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -266,11 +263,11 @@ export default function Noticeboard() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -930,7 +927,7 @@ export default function Noticeboard() {
                                         Current Attachments
                                     </label>
                                     {editingNotice.files &&
-                                        editingNotice.files.length > 0 ? (
+                                    editingNotice.files.length > 0 ? (
                                         <div className="text-xs text-gray-600 dark:text-gray-300">
                                             {editingNotice.files.map(
                                                 (f, idx) => (

@@ -44,7 +44,7 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string | null;
-    role: 'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps';
+    role: 'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS';
     status: 'active' | 'inactive';
     created_at?: string;
     last_login_at?: string | null;

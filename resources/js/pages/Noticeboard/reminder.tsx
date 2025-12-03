@@ -11,7 +11,7 @@ import {
     FileText,
     User,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Category =
     | 'Announcement'
@@ -104,7 +104,9 @@ export default function ReminderPage() {
     const [search, setSearch] = useState('');
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
-    const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'overdue'>('all');
+    const [filterType, setFilterType] = useState<
+        'all' | 'upcoming' | 'overdue'
+    >('all');
     const itemsPerPage = 5;
 
     const toggleCardExpansion = (id: string) => {
@@ -124,11 +126,11 @@ export default function ReminderPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -142,11 +144,11 @@ export default function ReminderPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -224,7 +226,7 @@ export default function ReminderPage() {
     }, [sortedReminders, currentPage]);
 
     // Reset to page 1 when filters change
-    useMemo(() => {
+    useEffect(() => {
         setCurrentPage(1);
     }, [search, selectedDate, filterType]);
 
@@ -304,11 +306,13 @@ export default function ReminderPage() {
 
     // Count upcoming and overdue reminders
     const upcomingCount = useMemo(() => {
-        return reminders.filter((r) => r.date && !isPastDate(new Date(r.date))).length;
+        return reminders.filter((r) => r.date && !isPastDate(new Date(r.date)))
+            .length;
     }, [reminders]);
 
     const overdueCount = useMemo(() => {
-        return reminders.filter((r) => r.date && isPastDate(new Date(r.date))).length;
+        return reminders.filter((r) => r.date && isPastDate(new Date(r.date)))
+            .length;
     }, [reminders]);
 
     const today = new Date();
@@ -358,28 +362,31 @@ export default function ReminderPage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                         <button
                             onClick={() => setFilterType('all')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'all'
-                                ? 'bg-[#163832] text-white dark:bg-[#235347]'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'all'
+                                    ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
                         >
                             All ({reminders.length})
                         </button>
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'upcoming'
-                                ? 'bg-[#163832] text-white dark:bg-[#235347]'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'upcoming'
+                                    ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
                         >
                             Upcoming ({upcomingCount})
                         </button>
                         <button
                             onClick={() => setFilterType('overdue')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'overdue'
-                                ? 'bg-red-600 text-white dark:bg-red-700'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'overdue'
+                                    ? 'bg-red-600 text-white dark:bg-red-700'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
                         >
                             Overdue ({overdueCount})
                         </button>
@@ -401,13 +408,22 @@ export default function ReminderPage() {
                             {totalPages > 1 && (
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedReminders.length)} of {sortedReminders.length} reminders
+                                        Showing{' '}
+                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
+                                        to{' '}
+                                        {Math.min(
+                                            currentPage * itemsPerPage,
+                                            sortedReminders.length,
+                                        )}{' '}
+                                        of {sortedReminders.length} reminders
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                            onClick={() =>
+                                                setCurrentPage(currentPage - 1)
+                                            }
                                             disabled={currentPage === 1}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Previous page"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
@@ -416,9 +432,13 @@ export default function ReminderPage() {
                                             Page {currentPage} of {totalPages}
                                         </span>
                                         <button
-                                            onClick={() => setCurrentPage(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            onClick={() =>
+                                                setCurrentPage(currentPage + 1)
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Next page"
                                         >
                                             <ChevronRight className="h-4 w-4" />
@@ -430,25 +450,35 @@ export default function ReminderPage() {
                             <div className="space-y-4">
                                 {paginatedReminders.length > 0 ? (
                                     paginatedReminders.map((reminder) => {
-                                        const isExpanded = expandedCards.has(reminder.id);
-                                        const isOverdue = reminder.date && isPastDate(new Date(reminder.date));
-                                        const daysUntil = reminder.date ? getDaysUntilDeadline(new Date(reminder.date)) : null;
+                                        const isExpanded = expandedCards.has(
+                                            reminder.id,
+                                        );
+                                        const isOverdue =
+                                            reminder.date &&
+                                            isPastDate(new Date(reminder.date));
+                                        const daysUntil = reminder.date
+                                            ? getDaysUntilDeadline(
+                                                  new Date(reminder.date),
+                                              )
+                                            : null;
 
                                         return (
                                             <div
                                                 key={reminder.id}
-                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${isOverdue
-                                                    ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
-                                                    : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
-                                                    }`}
+                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
+                                                    isOverdue
+                                                        ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
+                                                        : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                }`}
                                             >
                                                 <div className="mb-3 flex items-start justify-between">
-                                                    <div className="flex items-start gap-3 flex-1">
+                                                    <div className="flex flex-1 items-start gap-3">
                                                         <AlertCircle
-                                                            className={`h-6 w-6 flex-shrink-0 ${isOverdue
-                                                                ? 'text-red-600 dark:text-red-400'
-                                                                : 'text-[#163832] dark:text-[#235347]'
-                                                                }`}
+                                                            className={`h-6 w-6 flex-shrink-0 ${
+                                                                isOverdue
+                                                                    ? 'text-red-600 dark:text-red-400'
+                                                                    : 'text-[#163832] dark:text-[#235347]'
+                                                            }`}
                                                             aria-hidden
                                                         />
                                                         <div className="flex-1">
@@ -458,11 +488,15 @@ export default function ReminderPage() {
                                                             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                                                                 <span className="flex items-center gap-1">
                                                                     <User className="h-3 w-3" />
-                                                                    {reminder.username}
+                                                                    {
+                                                                        reminder.username
+                                                                    }
                                                                 </span>
                                                                 <span>
                                                                     Posted on{' '}
-                                                                    {new Date(reminder.createdAt).toLocaleString()}
+                                                                    {new Date(
+                                                                        reminder.createdAt,
+                                                                    ).toLocaleString()}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -470,17 +504,22 @@ export default function ReminderPage() {
 
                                                     {/* Deadline Badge */}
                                                     {daysUntil !== null && (
-                                                        <div className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${isOverdue
-                                                            ? 'bg-red-600 text-white dark:bg-red-700'
-                                                            : daysUntil <= 3
-                                                                ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                : 'bg-blue-500 text-white dark:bg-blue-600'
-                                                            }`}>
+                                                        <div
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                isOverdue
+                                                                    ? 'bg-red-600 text-white dark:bg-red-700'
+                                                                    : daysUntil <=
+                                                                        3
+                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                            }`}
+                                                        >
                                                             {isOverdue
                                                                 ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`
-                                                                : daysUntil === 0
-                                                                    ? 'Due today'
-                                                                    : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
+                                                                : daysUntil ===
+                                                                    0
+                                                                  ? 'Due today'
+                                                                  : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
                                                         </div>
                                                     )}
                                                 </div>
@@ -490,54 +529,83 @@ export default function ReminderPage() {
                                                 >
                                                     {reminder.description}
                                                 </p>
-                                                {reminder.description.length > 150 && (
+                                                {reminder.description.length >
+                                                    150 && (
                                                     <button
                                                         onClick={() =>
-                                                            toggleCardExpansion(reminder.id)
+                                                            toggleCardExpansion(
+                                                                reminder.id,
+                                                            )
                                                         }
                                                         className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
                                                     >
-                                                        {isExpanded ? 'Show less' : 'Read more'}
+                                                        {isExpanded
+                                                            ? 'Show less'
+                                                            : 'Read more'}
                                                     </button>
                                                 )}
 
                                                 {/* Attachments */}
-                                                {reminder.files && reminder.files.length > 0 && (
-                                                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                        <FileText className="h-4 w-4" />
-                                                        <span>
-                                                            {reminder.files.length} attachment(s)
-                                                        </span>
-                                                        {reminder.files_download_url && (
-                                                            <a
-                                                                href={reminder.files_download_url}
-                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                download
-                                                            >
-                                                                Download All
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                {reminder.files &&
+                                                    reminder.files.length >
+                                                        0 && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <span>
+                                                                {
+                                                                    reminder
+                                                                        .files
+                                                                        .length
+                                                                }{' '}
+                                                                attachment(s)
+                                                            </span>
+                                                            {reminder.files_download_url && (
+                                                                <a
+                                                                    href={
+                                                                        reminder.files_download_url
+                                                                    }
+                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                                    download
+                                                                >
+                                                                    Download All
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    )}
 
-                                                {reminder.file && !reminder.files?.length && (
-                                                    <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                        <FileText className="h-4 w-4" />
-                                                        <a
-                                                            href={reminder.file.url}
-                                                            className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                            download={reminder.file.name}
-                                                        >
-                                                            {reminder.file.name}
-                                                        </a>
-                                                    </div>
-                                                )}
+                                                {reminder.file &&
+                                                    !reminder.files?.length && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <a
+                                                                href={
+                                                                    reminder
+                                                                        .file
+                                                                        .url
+                                                                }
+                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                                download={
+                                                                    reminder
+                                                                        .file
+                                                                        .name
+                                                                }
+                                                            >
+                                                                {
+                                                                    reminder
+                                                                        .file
+                                                                        .name
+                                                                }
+                                                            </a>
+                                                        </div>
+                                                    )}
 
                                                 <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
                                                     {reminder.date && (
                                                         <span className="flex items-center gap-1 font-medium">
                                                             <CalendarIcon className="h-3 w-3" />
-                                                            {new Date(reminder.date).toLocaleDateString()}
+                                                            {new Date(
+                                                                reminder.date,
+                                                            ).toLocaleDateString()}
                                                         </span>
                                                     )}
                                                     {reminder.time && (
@@ -556,10 +624,10 @@ export default function ReminderPage() {
                                             {selectedDate
                                                 ? 'No reminders scheduled for this date.'
                                                 : filterType === 'upcoming'
-                                                    ? 'No upcoming reminders.'
-                                                    : filterType === 'overdue'
-                                                        ? 'No overdue reminders.'
-                                                        : 'No reminders available.'}
+                                                  ? 'No upcoming reminders.'
+                                                  : filterType === 'overdue'
+                                                    ? 'No overdue reminders.'
+                                                    : 'No reminders available.'}
                                         </p>
                                     </div>
                                 )}
@@ -624,10 +692,12 @@ export default function ReminderPage() {
 
                                     const isToday = isSameDay(day, today);
                                     const isSelected =
-                                        selectedDate && isSameDay(day, selectedDate);
+                                        selectedDate &&
+                                        isSameDay(day, selectedDate);
                                     const hasEvents = hasReminders(day);
                                     const eventCount = getReminderCount(day);
-                                    const isOverdueDay = isPastDate(day) && hasEvents;
+                                    const isOverdueDay =
+                                        isPastDate(day) && hasEvents;
 
                                     return (
                                         <button

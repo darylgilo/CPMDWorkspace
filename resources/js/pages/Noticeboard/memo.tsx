@@ -10,7 +10,7 @@ import {
     FileText,
     User,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Category =
     | 'Announcement'
@@ -178,7 +178,7 @@ export default function MemoPage() {
     }, [displayedMemos, currentPage]);
 
     // Reset to page 1 when filters change
-    useMemo(() => {
+    useEffect(() => {
         setCurrentPage(1);
     }, [search, selectedDate]);
 
@@ -317,13 +317,22 @@ export default function MemoPage() {
                             {totalPages > 1 && (
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, displayedMemos.length)} of {displayedMemos.length} memos
+                                        Showing{' '}
+                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
+                                        to{' '}
+                                        {Math.min(
+                                            currentPage * itemsPerPage,
+                                            displayedMemos.length,
+                                        )}{' '}
+                                        of {displayedMemos.length} memos
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
-                                            onClick={() => setCurrentPage(currentPage - 1)}
+                                            onClick={() =>
+                                                setCurrentPage(currentPage - 1)
+                                            }
                                             disabled={currentPage === 1}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Previous page"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
@@ -332,9 +341,13 @@ export default function MemoPage() {
                                             Page {currentPage} of {totalPages}
                                         </span>
                                         <button
-                                            onClick={() => setCurrentPage(currentPage + 1)}
-                                            disabled={currentPage === totalPages}
-                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-neutral-800"
+                                            onClick={() =>
+                                                setCurrentPage(currentPage + 1)
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            className="rounded-md p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-neutral-800"
                                             aria-label="Next page"
                                         >
                                             <ChevronRight className="h-4 w-4" />

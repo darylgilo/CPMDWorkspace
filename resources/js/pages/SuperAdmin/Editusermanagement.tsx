@@ -26,7 +26,7 @@ interface UserType {
     id: number;
     name: string;
     email: string;
-    role: 'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps';
+    role: 'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS';
     status: 'active' | 'inactive';
     employee_id?: string;
     position?: string;
@@ -69,7 +69,7 @@ export default function EditUserManagement() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState<
-        'user' | 'admin' | 'superadmin' | 'biocon' | 'psf' | 'phps'
+        'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS'
     >('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
@@ -122,6 +122,7 @@ export default function EditUserManagement() {
             setHiringDate(user.hiring_date || '');
             setItemNumber(user.item_number || '');
             setGender(user.gender || 'Male');
+            setRole(user.role || 'user');
             setMobileNumber(user.mobile_number || '');
             setContactNumber(user.contact_number || '');
             setContactPerson(user.contact_person || '');
@@ -497,6 +498,7 @@ export default function EditUserManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Select
+                                                                key={`employment-${user?.id}-${employment_status}`}
                                                                 value={
                                                                     employment_status
                                                                 }
@@ -572,16 +574,14 @@ export default function EditUserManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Select
+                                                                key={`office-${user?.id}-${office}`}
                                                                 value={office}
                                                                 onValueChange={
                                                                     setOffice
                                                                 }
                                                             >
                                                                 <SelectTrigger className="w-full">
-                                                                    <SelectValue>
-                                                                        {office ||
-                                                                            'Select office'}
-                                                                    </SelectValue>
+                                                                    <SelectValue placeholder="Select office" />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="CPMD">
@@ -607,16 +607,14 @@ export default function EditUserManagement() {
                                                             </TableCell>
                                                             <TableCell>
                                                                 <Select
+                                                                    key={`cpmd-${user?.id}-${cpmd}`}
                                                                     value={cpmd}
                                                                     onValueChange={
                                                                         setCpmd
                                                                     }
                                                                 >
                                                                     <SelectTrigger className="w-full">
-                                                                        <SelectValue>
-                                                                            {cpmd ||
-                                                                                'Select section/unit'}
-                                                                        </SelectValue>
+                                                                        <SelectValue placeholder="Select section/unit" />
                                                                     </SelectTrigger>
                                                                     <SelectContent>
                                                                         <SelectItem value="Office of the Chief">
@@ -714,7 +712,7 @@ export default function EditUserManagement() {
                                                 </TableHeader>
                                                 <TableBody>
                                                     <TableRow>
-                                                        <TableCell className="1/3 font-medium">
+                                                        <TableCell className="w-1/3 font-medium">
                                                             TIN Number
                                                         </TableCell>
                                                         <TableCell>
@@ -991,6 +989,7 @@ export default function EditUserManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Select
+                                                                key={`role-${user?.id}-${role}`}
                                                                 value={role}
                                                                 onValueChange={(
                                                                     value,
@@ -1000,9 +999,9 @@ export default function EditUserManagement() {
                                                                             | 'user'
                                                                             | 'admin'
                                                                             | 'superadmin'
-                                                                            | 'biocon'
-                                                                            | 'psf'
-                                                                            | 'phps',
+                                                                            | 'BIOCON'
+                                                                            | 'PFS'
+                                                                            | 'PHPS',
                                                                     )
                                                                 }
                                                             >
@@ -1020,13 +1019,13 @@ export default function EditUserManagement() {
                                                                         Super
                                                                         Admin
                                                                     </SelectItem>
-                                                                    <SelectItem value="biocon">
+                                                                    <SelectItem value="BIOCON">
                                                                         Biocon
                                                                     </SelectItem>
-                                                                    <SelectItem value="psf">
-                                                                        PSF
+                                                                    <SelectItem value="PFS">
+                                                                        PFS
                                                                     </SelectItem>
-                                                                    <SelectItem value="phps">
+                                                                    <SelectItem value="PHPS">
                                                                         PHPS
                                                                     </SelectItem>
                                                                 </SelectContent>
@@ -1045,6 +1044,7 @@ export default function EditUserManagement() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Select
+                                                                key={`status-${user?.id}-${status}`}
                                                                 value={status}
                                                                 onValueChange={(
                                                                     value,
