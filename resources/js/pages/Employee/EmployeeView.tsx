@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 
 // Employee profile view/edit page component
 export default function EmployeeView() {
@@ -112,6 +112,9 @@ export default function EmployeeView() {
         contact_person: string;
         contact_number: string;
         status: 'active' | 'inactive';
+        profile_picture?: File | null;
+        remove_profile_picture?: boolean;
+        _method?: string;
     }
 
     // Helper function to safely get string value with fallback
@@ -180,15 +183,26 @@ export default function EmployeeView() {
             contact_person: getStringValue(user?.contact_person),
             contact_number: getStringValue(user?.contact_number),
             status: getEnumValue(user?.status, statuses, 'inactive'),
+            profile_picture: null,
+            remove_profile_picture: false,
+            _method: 'PUT',
         };
     };
 
     const initialData = getInitialData();
 
     // Inertia form helper for PUT updates with proper typing
-    const { data, setData, put, processing } = useForm({
+    const { data, setData, post, put, processing, transform } = useForm({
         ...initialData,
     });
+
+    // Transform data before submission to ensure correct types for backend
+    useEffect(() => {
+        transform((data) => ({
+            ...data,
+            remove_profile_picture: data.remove_profile_picture ? '1' : '0',
+        }));
+    }, [transform]);
 
     // Type assertion for setData to handle FormData keys
     const typedSetData = setData as <K extends keyof FormData>(
@@ -202,6 +216,47 @@ export default function EmployeeView() {
         value: FormData[K],
     ) => {
         typedSetData(field, value);
+    };
+
+    // Profile picture state
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Handle profile picture file selection
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setData('profile_picture', file);
+            setData('remove_profile_picture', false);
+
+            // Create a preview URL for the selected image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewImage(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // Handle removal of profile picture
+    const handleRemoveImage = () => {
+        setData('profile_picture', null);
+        setData('remove_profile_picture', true);
+        setPreviewImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // Get the URL for displaying the profile picture
+    const getProfilePictureUrl = () => {
+        if (previewImage) {
+            return previewImage;
+        }
+        if (!data.remove_profile_picture && user?.profile_picture) {
+            return `/storage/${user.profile_picture}`;
+        }
+        return null;
     };
 
     const isProtectedSuperadmin =
@@ -232,16 +287,25 @@ export default function EmployeeView() {
             return;
         }
 
-        put(`/employees/${user.id}`, {
+        const submitOptions = {
             onSuccess: () => {
                 // Navigate back to employee management after successful update
                 router.get('/employees');
             },
-            onError: (errors) => {
+            onError: (errors: Record<string, string>) => {
                 // Handle errors
                 console.error('Error updating employee:', errors);
             },
-        });
+        };
+
+        if (data.profile_picture) {
+            // If there is a file, we must use POST with _method="PUT" (handled by data._method)
+            // Inertia will automatically use FormData
+            post(`/employees/${user.id}`, submitOptions);
+        } else {
+            // If no file, use standard PUT request (JSON)
+            put(`/employees/${user.id}`, submitOptions);
+        }
     };
 
     // Reset form back to initial user values and navigate back to employees list
@@ -285,27 +349,67 @@ export default function EmployeeView() {
                                     {user?.status || '—'}
                                 </span>
                             </div>
-                            <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-muted dark:border-neutral-700">
-                                {user?.profile_picture ? (
-                                    <img
-                                        src={`/storage/${user.profile_picture}`}
-                                        className="h-full w-full object-cover"
-                                        alt={user?.name}
+
+                            {/* Profile Picture Section */}
+                            <div className="flex flex-col items-center space-y-4">
+                                <div className="relative">
+                                    <div className="flex h-45 w-45 items-center justify-center overflow-hidden rounded-full border-3 border-card bg-muted shadow-lg">
+                                        {getProfilePictureUrl() ? (
+                                            <img
+                                                src={getProfilePictureUrl()!}
+                                                className="h-full w-full object-cover"
+                                                alt={user?.name}
+                                            />
+                                        ) : (
+                                            <svg
+                                                className="h-16 w-16 text-muted-foreground"
+                                                fill="currentColor"
+                                                viewBox="0 0 20 20"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                        id="profile_picture"
+                                        name="profile_picture"
                                     />
-                                ) : (
-                                    <svg
-                                        className="h-12 w-12 text-muted-foreground"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
+                                </div>
+                                <div className="flex w-full flex-col space-y-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        className="w-full text-sm"
                                     >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                )}
+                                        Upload Photo
+                                    </Button>
+                                    {(getProfilePictureUrl() ||
+                                        (user?.profile_picture &&
+                                            !data.remove_profile_picture)) && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={handleRemoveImage}
+                                            className="w-full text-sm"
+                                        >
+                                            Remove
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
+
                             <div className="text-center">
                                 <div className="text-xl font-semibold text-gray-900 dark:text-white">
                                     {user?.name}
