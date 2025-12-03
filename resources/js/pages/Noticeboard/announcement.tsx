@@ -2,7 +2,8 @@ import SearchBar from '@/components/SearchBar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
-import { Calendar as CalendarIcon,
+import {
+    Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
     Clock,

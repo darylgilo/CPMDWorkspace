@@ -177,6 +177,8 @@ class EmployeeManagementController extends Controller
             'mobile_number' => 'nullable|string|max:255',
             'contact_number' => 'nullable|string|max:255',
             'contact_person' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'remove_profile_picture' => 'nullable|string',
         ]);
 
         if (($validated['office'] ?? $user->office) === 'CPMD' && empty($validated['cpmd'])) {
@@ -199,6 +201,34 @@ class EmployeeManagementController extends Controller
             $validated['cpmd'] = $validated['cpmd'] ?? $user->cpmd ?? 'Others';
         }
         $validated['gender'] = $validated['gender'] ?? $user->gender ?? 'Male';
+
+        // Handle profile picture removal
+        if ($request->has('remove_profile_picture') && $request->remove_profile_picture == '1') {
+            // Delete existing profile picture if exists
+            if ($user->profile_picture) {
+                $oldPath = storage_path('app/public/' . $user->profile_picture);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            $validated['profile_picture'] = null;
+        }
+        // Handle profile picture upload
+        elseif ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($user->profile_picture) {
+                $oldPath = storage_path('app/public/' . $user->profile_picture);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+            
+            // Store new profile picture
+            $profilePicture = $request->file('profile_picture');
+            $filename = time() . '_' . $user->id . '.' . $profilePicture->getClientOriginalExtension();
+            $path = $profilePicture->storeAs('profile-pictures', $filename, 'public');
+            $validated['profile_picture'] = $path;
+        }
 
         $user->update($validated);
 
