@@ -14,7 +14,6 @@ class Distribution extends Model
         'pesticide_id',
         'quantity',
         'travel_purpose',
-        'travel_location',
         'received_by',
         'received_date',
         'user_id',

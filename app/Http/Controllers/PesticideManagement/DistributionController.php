@@ -75,7 +75,6 @@ class DistributionController extends Controller
             'pesticide_id' => 'required|exists:pesticides,id',
             'quantity' => 'required|numeric|min:0.01',
             'travel_purpose' => 'required|string|max:255',
-            'travel_location' => 'required|string|max:255',
             'received_by' => 'required|string|max:255',
             'received_date' => 'required|date',
         ]);
@@ -96,7 +95,6 @@ class DistributionController extends Controller
                 'pesticide_id' => $pesticide->id,
                 'quantity' => $validated['quantity'],
                 'travel_purpose' => $validated['travel_purpose'],
-                'travel_location' => $validated['travel_location'],
                 'received_by' => $validated['received_by'],
                 'received_date' => $validated['received_date'],
                 'user_id' => auth()->id(),
@@ -124,7 +122,6 @@ class DistributionController extends Controller
             'pesticide_id' => 'required|exists:pesticides,id',
             'quantity' => 'required|numeric|min:0.01',
             'travel_purpose' => 'required|string|max:255',
-            'travel_location' => 'required|string|max:255',
             'received_by' => 'required|string|max:255',
             'received_date' => 'required|date',
         ]);
@@ -168,7 +165,6 @@ class DistributionController extends Controller
                 'pesticide_id' => $validated['pesticide_id'],
                 'quantity' => $validated['quantity'],
                 'travel_purpose' => $validated['travel_purpose'],
-                'travel_location' => $validated['travel_location'],
                 'received_by' => $validated['received_by'],
                 'received_date' => $validated['received_date'],
             ]);

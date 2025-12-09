@@ -1,7 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import ExportPesticide from '@/components/export/ExportPesticide';
 import FormDialog, { type FormField } from '@/components/FormDialog';
-import PhilippineLocationSelector from '@/components/PhilippineLocationSelector';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,6 @@ interface Distribution {
     };
     quantity: number;
     travel_purpose: string;
-    travel_location: string;
     received_by: string;
     received_date: string;
     user_id: number;
@@ -205,28 +203,6 @@ export default function Distribution() {
             placeholder: 'e.g., Field Visit, Training, Distribution',
         },
         {
-            name: 'travel_location',
-            label: 'Travel Location',
-            type: 'custom',
-            required: true,
-            customRender: (
-                value: string,
-                onChange?: (value: string) => void,
-            ) => {
-                return (
-                    <PhilippineLocationSelector
-                        value={value}
-                        onChange={(location) => {
-                            if (onChange) {
-                                onChange(location);
-                            }
-                        }}
-                        required={true}
-                    />
-                );
-            },
-        },
-        {
             name: 'received_by',
             label: 'Received By',
             type: 'text',
@@ -245,7 +221,6 @@ export default function Distribution() {
         pesticide_id: '',
         quantity: '',
         travel_purpose: '',
-        travel_location: '',
         received_by: '',
         received_date: '',
     });
@@ -264,7 +239,6 @@ export default function Distribution() {
             pesticide_id: '',
             quantity: '',
             travel_purpose: '',
-            travel_location: '',
             received_by: '',
             received_date: '',
         });
@@ -287,7 +261,6 @@ export default function Distribution() {
             pesticide_id: distribution.pesticide_id.toString(),
             quantity: distribution.quantity.toString(),
             travel_purpose: distribution.travel_purpose,
-            travel_location: distribution.travel_location || '',
             received_by: distribution.received_by,
             received_date: formatDateForInput(distribution.received_date),
         });
@@ -567,7 +540,6 @@ export default function Distribution() {
                                         label: 'Received By',
                                     },
                                     { key: 'travel_purpose', label: 'Purpose' },
-                                    { key: 'travel_location', label: 'Travel Location' },
                                 ]}
                                 variant="outline"
                                 size="sm"
@@ -637,17 +609,6 @@ export default function Distribution() {
                                     <TableHead
                                         className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
-                                            handleSort('travel_location')
-                                        }
-                                    >
-                                        <div className="flex items-center">
-                                            Travel Location
-                                            <SortIndicator field="travel_location" />
-                                        </div>
-                                    </TableHead>
-                                    <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() =>
                                             handleSort('received_by')
                                         }
                                     >
@@ -674,7 +635,7 @@ export default function Distribution() {
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data &&
-                                    distributions.data.length > 0 ? (
+                                distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>
@@ -691,9 +652,6 @@ export default function Distribution() {
                                             </TableCell>
                                             <TableCell>
                                                 {distribution.travel_purpose}
-                                            </TableCell>
-                                            <TableCell>
-                                                {distribution.travel_location}
                                             </TableCell>
                                             <TableCell>
                                                 {distribution.received_by}
