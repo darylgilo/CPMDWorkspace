@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('pesticide_id')->constrained()->onDelete('cascade');
             $table->decimal('quantity', 10, 2);
             $table->string('travel_purpose');
+            $table->string('travel_location');
             $table->string('received_by');
             $table->date('received_date');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
