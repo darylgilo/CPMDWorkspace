@@ -32,7 +32,7 @@ export default function ConfirmPassword() {
                             <InputError message={errors.password} />
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex items-center justify-center">
                             <Button
                                 className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 disabled={processing}

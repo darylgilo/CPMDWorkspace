@@ -132,7 +132,7 @@ export default function Welcome() {
                                     CPMD Workspace
                                 </h1>
                                 <p className="text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
-                                    a streamlined, all-in-one web platform
+                                    A streamlined, all-in-one web platform
                                     designed to help teams plan, manage, and
                                     deliver projects with clarity and
                                     efficiency. Built for modern workflows,
@@ -151,7 +151,7 @@ export default function Welcome() {
                                     Sign up
                                 </Link>
                                 <a
-                                    href="https://www.facebook.com/croppestmanagementdivision"
+                                    href="https://www.cpmd.buplant.da.gov.ph"
                                     target="_blank"
                                     className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 sm:px-8 sm:py-3.5 sm:text-base dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >

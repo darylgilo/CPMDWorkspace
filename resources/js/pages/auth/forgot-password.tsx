@@ -43,7 +43,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                 <InputError message={errors.email} />
                             </div>
 
-                            <div className="my-6 flex items-center justify-start">
+                            <div className="my-6 flex items-center justify-center">
                                 <Button
                                     className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     disabled={processing}
