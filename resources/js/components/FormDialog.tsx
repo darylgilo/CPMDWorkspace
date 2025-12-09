@@ -39,8 +39,8 @@ export interface FormField {
     datalistOptions?: string[];
     gridCols?: number;
     customRender?:
-        | ((value: string, onChange?: (value: string) => void) => ReactNode)
-        | ((value: string) => ReactNode);
+    | ((value: string, onChange?: (value: string) => void) => ReactNode)
+    | ((value: string) => ReactNode);
 }
 
 export interface FormDialogProps {
@@ -152,6 +152,24 @@ export default function FormDialog({
                                 <option key={option} value={option} />
                             ))}
                         </datalist>
+                    </div>
+                );
+
+            case 'custom':
+                return (
+                    <div
+                        key={field.name}
+                        className={`grid gap-2 ${field.gridCols ? `col-span-${field.gridCols}` : ''}`}
+                    >
+                        {field.customRender &&
+                            field.customRender(
+                                formData[field.name],
+                                (value: string) => {
+                                    if (onSelectChange) {
+                                        onSelectChange(field.name, value);
+                                    }
+                                },
+                            )}
                     </div>
                 );
 
