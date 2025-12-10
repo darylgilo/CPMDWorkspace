@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('travel_location');
             $table->string('received_by');
             $table->date('received_date');
+            $table->foreignId('region_id')->nullable()->constrained('regions')->onDelete('set null');
+            $table->foreignId('province_id')->nullable()->constrained('provinces')->onDelete('set null');
+            $table->foreignId('municipality_id')->nullable()->constrained('municipalities')->onDelete('set null');
+            $table->foreignId('barangay_id')->nullable()->constrained('barangays')->onDelete('set null');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
