@@ -34,9 +34,18 @@ interface Barangay {
     MUNICIPALITY_ID: string;
 }
 
+interface LocationIds {
+    regionId?: string;
+    provinceId?: string;
+    municipalityId?: string;
+    barangayId?: string;
+}
+
 interface PhilippineLocationSelectorProps {
     value?: string;
+    initialIds?: LocationIds;
     onChange: (location: string) => void;
+    onLocationSelect?: (ids: LocationIds) => void;
     required?: boolean;
     disabled?: boolean;
 }
@@ -76,7 +85,9 @@ function parseCSV(csvText: string): any[] {
 
 export default function PhilippineLocationSelector({
     value = '',
+    initialIds,
     onChange,
+    onLocationSelect,
     required = false,
     disabled = false,
 }: PhilippineLocationSelectorProps) {
@@ -147,7 +158,7 @@ export default function PhilippineLocationSelector({
             setFilteredProvinces(filtered);
         } else {
             setFilteredProvinces([]);
-            setSelectedProvince('');
+            if (!selectedRegion) setSelectedProvince(''); // Only clear if region cleared, prevent loop if setting from ID
         }
     }, [selectedRegion, provinces]);
 
@@ -160,7 +171,7 @@ export default function PhilippineLocationSelector({
             setFilteredMunicipalities(filtered);
         } else {
             setFilteredMunicipalities([]);
-            setSelectedMunicipality('');
+            if (!selectedProvince) setSelectedMunicipality('');
         }
     }, [selectedProvince, municipalities]);
 
@@ -173,120 +184,134 @@ export default function PhilippineLocationSelector({
             setFilteredBarangays(filtered);
         } else {
             setFilteredBarangays([]);
-            setSelectedBarangay('');
+            if (!selectedMunicipality) setSelectedBarangay('');
         }
     }, [selectedMunicipality, barangays]);
 
-    // Parse incoming value and set initial selections
+    // Parse incoming value/IDs and set initial selections
     useEffect(() => {
-        if (value && regions.length > 0 && provinces.length > 0 && municipalities.length > 0 && barangays.length > 0) {
-            // Only parse if we haven't already set selections
-            if (!selectedRegion && !selectedProvince && !selectedMunicipality && !selectedBarangay) {
-                // Parse the location string (format: "Barangay, Municipality, Province, Region")
-                const parts = value.split(',').map(part => part.trim());
+        if (loading || regions.length === 0) return;
 
-                if (parts.length >= 2) {
-                    // Try to find matching locations
-                    let foundBarangay: Barangay | undefined,
-                        foundMunicipality: Municipality | undefined,
-                        foundProvince: Province | undefined,
-                        foundRegion: Region | undefined;
+        // Prefer structured IDs if available
+        if (initialIds) {
+            // Check if we need to update to avoid infinite loops or overwriting user selection
+            // We use a simple check: if the passed initialIds are different from current state, update.
+            // But beware: initialIds might be invariant.
 
-                    // If we have 4 parts, it includes barangay
-                    if (parts.length === 4) {
-                        const [barangayName, municipalityName, provinceName, regionName] = parts;
+            if (initialIds.regionId && initialIds.regionId !== selectedRegion) {
+                setSelectedRegion(initialIds.regionId);
+            }
+            // Cascading updates (province depends on region) happen via other effects or need manual setting?
+            // Since we load all data at once, we can set all IDs at once.
+            if (initialIds.provinceId && initialIds.provinceId !== selectedProvince) {
+                setSelectedProvince(initialIds.provinceId);
+            }
+            if (initialIds.municipalityId && initialIds.municipalityId !== selectedMunicipality) {
+                setSelectedMunicipality(initialIds.municipalityId);
+            }
+            if (initialIds.barangayId && initialIds.barangayId !== selectedBarangay) {
+                setSelectedBarangay(initialIds.barangayId);
+            }
+            return;
+        }
 
-                        foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
-                        if (foundRegion) {
-                            foundProvince = provinces.find(p =>
-                                p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
-                                p.REGION_ID === foundRegion!.REGION_ID
-                            );
-                            if (foundProvince) {
-                                foundMunicipality = municipalities.find(m =>
-                                    m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
-                                    m.PROVINCE_ID === foundProvince!.PROVINCE_ID
-                                );
-                                if (foundMunicipality) {
-                                    foundBarangay = barangays.find(b =>
-                                        b.BARANGAY.toLowerCase() === barangayName.toLowerCase() &&
-                                        b.MUNICIPALITY_ID === foundMunicipality!.MUNICIPALITY_ID
-                                    );
-                                }
-                            }
-                        }
-                    }
-                    // If we have 3 parts, it's municipality, province, region
-                    else if (parts.length === 3) {
-                        const [municipalityName, provinceName, regionName] = parts;
+        // Fallback to parsing string value if no IDs and no current selection
+        if (value && !selectedRegion && !selectedProvince && !selectedMunicipality && !selectedBarangay) {
+            // Parse the location string (format: "Barangay, Municipality, Province, Region")
+            const parts = value.split(',').map(part => part.trim());
 
-                        foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
-                        if (foundRegion) {
-                            foundProvince = provinces.find(p =>
-                                p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
-                                p.REGION_ID === foundRegion!.REGION_ID
-                            );
-                            if (foundProvince) {
-                                foundMunicipality = municipalities.find(m =>
-                                    m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
-                                    m.PROVINCE_ID === foundProvince!.PROVINCE_ID
-                                );
-                            }
-                        }
-                    }
+            if (parts.length >= 2) {
+                // ... (Existing parsing logic) ...
+                // Re-implementation is safer to ensure it works
+                // If we have 4 parts, it includes barangay
+                let foundBarangay: Barangay | undefined,
+                    foundMunicipality: Municipality | undefined,
+                    foundProvince: Province | undefined,
+                    foundRegion: Region | undefined;
 
-                    // Set the found values
+                if (parts.length === 4) {
+                    const [barangayName, municipalityName, provinceName, regionName] = parts;
+                    foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
                     if (foundRegion) {
-                        setSelectedRegion(foundRegion.REGION_ID);
+                        foundProvince = provinces.find(p =>
+                            p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
+                            p.REGION_ID === foundRegion!.REGION_ID
+                        );
                         if (foundProvince) {
-                            setSelectedProvince(foundProvince.PROVINCE_ID);
+                            foundMunicipality = municipalities.find(m =>
+                                m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
+                                m.PROVINCE_ID === foundProvince!.PROVINCE_ID
+                            );
                             if (foundMunicipality) {
-                                setSelectedMunicipality(foundMunicipality.MUNICIPALITY_ID);
-                                if (foundBarangay) {
-                                    setSelectedBarangay(foundBarangay.BARANGAY_ID);
-                                }
+                                foundBarangay = barangays.find(b =>
+                                    b.BARANGAY.toLowerCase() === barangayName.toLowerCase() &&
+                                    b.MUNICIPALITY_ID === foundMunicipality!.MUNICIPALITY_ID
+                                );
                             }
                         }
                     }
                 }
+                else if (parts.length === 3) {
+                    const [municipalityName, provinceName, regionName] = parts;
+                    foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
+                    if (foundRegion) {
+                        foundProvince = provinces.find(p =>
+                            p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
+                            p.REGION_ID === foundRegion!.REGION_ID
+                        );
+                        if (foundProvince) {
+                            foundMunicipality = municipalities.find(m =>
+                                m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
+                                m.PROVINCE_ID === foundProvince!.PROVINCE_ID
+                            );
+                        }
+                    }
+                }
+
+                if (foundRegion) {
+                    setSelectedRegion(foundRegion.REGION_ID);
+                    if (foundProvince) setSelectedProvince(foundProvince.PROVINCE_ID);
+                    if (foundMunicipality) setSelectedMunicipality(foundMunicipality.MUNICIPALITY_ID);
+                    if (foundBarangay) setSelectedBarangay(foundBarangay.BARANGAY_ID);
+                }
             }
         }
-    }, [value, regions, provinces, municipalities, barangays]);
+    }, [value, initialIds, loading, regions, provinces, municipalities, barangays, selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay]);
 
     // Update parent component when location changes
     useEffect(() => {
-        if (selectedBarangay) {
+        // Emit structured IDs
+        if (onLocationSelect) {
+            onLocationSelect({
+                regionId: selectedRegion,
+                provinceId: selectedProvince,
+                municipalityId: selectedMunicipality,
+                barangayId: selectedBarangay
+            });
+        }
+
+        // Emit string value (Legacy/Display support)
+        if (selectedBarangay || selectedMunicipality) {
             const region = regions.find((r) => r.REGION_ID === selectedRegion);
             const province = provinces.find((p) => p.PROVINCE_ID === selectedProvince);
             const municipality = municipalities.find((m) => m.MUNICIPALITY_ID === selectedMunicipality);
             const barangay = barangays.find((b) => b.BARANGAY_ID === selectedBarangay);
 
-            const locationString = [
+            const parts = [
                 barangay?.BARANGAY,
                 municipality?.MUNICIPALITY,
                 province?.PROVINCE,
                 region?.REGION,
-            ]
-                .filter(Boolean)
-                .join(', ');
+            ].filter(Boolean);
 
-            onChange(locationString);
-        } else if (selectedMunicipality) {
-            const region = regions.find((r) => r.REGION_ID === selectedRegion);
-            const province = provinces.find((p) => p.PROVINCE_ID === selectedProvince);
-            const municipality = municipalities.find((m) => m.MUNICIPALITY_ID === selectedMunicipality);
+            const locationString = parts.join(', ');
 
-            const locationString = [
-                municipality?.MUNICIPALITY,
-                province?.PROVINCE,
-                region?.REGION,
-            ]
-                .filter(Boolean)
-                .join(', ');
-
-            onChange(locationString);
+            // Only fire onChange if value actually changed/is different (prevents infinite loops if parent updates value)
+            if (locationString && locationString !== value) {
+                onChange(locationString);
+            }
         }
-    }, [selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay, regions, provinces, municipalities, barangays]);
+    }, [selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay, regions, provinces, municipalities, barangays, onLocationSelect, onChange, value]);
 
     const handleRegionChange = (value: string) => {
         setSelectedRegion(value);

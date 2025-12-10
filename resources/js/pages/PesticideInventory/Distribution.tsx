@@ -60,6 +60,10 @@ interface Distribution {
     quantity: number;
     travel_purpose: string;
     travel_location: string;
+    region_id?: number | null;
+    province_id?: number | null;
+    municipality_id?: number | null;
+    barangay_id?: number | null;
     received_by: string;
     received_date: string;
     user_id: number;

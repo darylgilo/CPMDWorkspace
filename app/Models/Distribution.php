@@ -15,10 +15,20 @@ class Distribution extends Model
         'quantity',
         'travel_purpose',
         'travel_location',
+        'region_id',
+        'province_id',
+        'municipality_id',
+        'barangay_id',
         'received_by',
         'received_date',
         'user_id',
     ];
+
+    public function region() { return $this->belongsTo(Region::class); }
+    public function province() { return $this->belongsTo(Province::class); }
+    public function municipality() { return $this->belongsTo(Municipality::class); }
+    public function barangay() { return $this->belongsTo(Barangay::class); }
+
 
     protected $casts = [
         'received_date' => 'date',

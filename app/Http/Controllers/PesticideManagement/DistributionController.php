@@ -80,6 +80,12 @@ class DistributionController extends Controller
             'received_date' => 'required|date',
         ]);
 
+        // Parse location from travel_location string and get IDs
+        $locationIds = $this->getLocationIdsFromString($validated['travel_location']);
+        
+        // Merge location IDs with validated data
+        $data = array_merge($validated, $locationIds);
+
         DB::beginTransaction();
         try {
             // Get the specific pesticide
@@ -92,15 +98,7 @@ class DistributionController extends Controller
             }
 
             // Create distribution record
-            Distribution::create([
-                'pesticide_id' => $pesticide->id,
-                'quantity' => $validated['quantity'],
-                'travel_purpose' => $validated['travel_purpose'],
-                'travel_location' => $validated['travel_location'],
-                'received_by' => $validated['received_by'],
-                'received_date' => $validated['received_date'],
-                'user_id' => auth()->id(),
-            ]);
+            Distribution::create(array_merge($data, ['user_id' => auth()->id()]));
 
             // Update pesticide stock
             $pesticide->stock -= $validated['quantity'];
@@ -128,6 +126,12 @@ class DistributionController extends Controller
             'received_by' => 'required|string|max:255',
             'received_date' => 'required|date',
         ]);
+
+        // Parse location from travel_location string and get IDs
+        $locationIds = $this->getLocationIdsFromString($validated['travel_location']);
+        
+        // Merge location IDs with validated data
+        $data = array_merge($validated, $locationIds);
 
         DB::beginTransaction();
         try {
@@ -164,14 +168,7 @@ class DistributionController extends Controller
             }
             
             // Update the distribution record
-            $distribution->update([
-                'pesticide_id' => $validated['pesticide_id'],
-                'quantity' => $validated['quantity'],
-                'travel_purpose' => $validated['travel_purpose'],
-                'travel_location' => $validated['travel_location'],
-                'received_by' => $validated['received_by'],
-                'received_date' => $validated['received_date'],
-            ]);
+            $distribution->update($data);
 
             DB::commit();
 
@@ -203,5 +200,74 @@ class DistributionController extends Controller
             DB::rollBack();
             return back()->with('error', 'Failed to delete distribution: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Parse location string and get corresponding IDs
+     * Expected format: "Barangay Name, Municipality Name, Province Name, Region Name"
+     */
+    private function getLocationIdsFromString($locationString)
+    {
+        $locationIds = [
+            'region_id' => null,
+            'province_id' => null,
+            'municipality_id' => null,
+            'barangay_id' => null,
+        ];
+
+        if (empty($locationString)) {
+            return $locationIds;
+        }
+
+        // Split the location string by comma and trim each part
+        $parts = array_map('trim', explode(',', $locationString));
+        
+        // Reverse the order to process from region to barangay
+        $parts = array_reverse($parts);
+
+        try {
+            // Find region (last part)
+            if (isset($parts[0]) && !empty($parts[0])) {
+                $region = \App\Models\Region::where('name', 'like', '%' . $parts[0] . '%')->first();
+                if ($region) {
+                    $locationIds['region_id'] = $region->id;
+                }
+            }
+
+            // Find province (second to last)
+            if (isset($parts[1]) && !empty($parts[1]) && $locationIds['region_id']) {
+                $province = \App\Models\Province::where('name', 'like', '%' . $parts[1] . '%')
+                    ->where('region_id', $locationIds['region_id'])
+                    ->first();
+                if ($province) {
+                    $locationIds['province_id'] = $province->id;
+                }
+            }
+
+            // Find municipality (third to last)
+            if (isset($parts[2]) && !empty($parts[2]) && $locationIds['province_id']) {
+                $municipality = \App\Models\Municipality::where('name', 'like', '%' . $parts[2] . '%')
+                    ->where('province_id', $locationIds['province_id'])
+                    ->first();
+                if ($municipality) {
+                    $locationIds['municipality_id'] = $municipality->id;
+                }
+            }
+
+            // Find barangay (first part)
+            if (isset($parts[3]) && !empty($parts[3]) && $locationIds['municipality_id']) {
+                $barangay = \App\Models\Barangay::where('name', 'like', '%' . $parts[3] . '%')
+                    ->where('municipality_id', $locationIds['municipality_id'])
+                    ->first();
+                if ($barangay) {
+                    $locationIds['barangay_id'] = $barangay->id;
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but continue with null IDs
+            \Log::error('Error parsing location string: ' . $e->getMessage());
+        }
+
+        return $locationIds;
     }
 }
