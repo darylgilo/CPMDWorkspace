@@ -1,3 +1,4 @@
+import authIllustration from '@/Assets/Images/auth-illustration.png';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -21,7 +22,7 @@ export default function AuthSplitLayout({
 
                 <div className="relative z-20 flex flex-1 items-center justify-center">
                     <img
-                        src="/images/auth-illustration.png"
+                        src={authIllustration}
                         alt="Dashboard illustration"
                         className="h-auto w-full max-w-full"
                     />

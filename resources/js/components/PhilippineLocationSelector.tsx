@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -6,7 +6,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from 'react';
 
 interface Region {
     REGION_ID: string;
@@ -51,36 +51,39 @@ interface PhilippineLocationSelectorProps {
 }
 
 // Helper function to parse CSV
-function parseCSV(csvText: string): any[] {
+function parseCSV(csvText: string): Record<string, string>[] {
     const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+    const headers = lines[0].split(',').map((h) => h.replace(/"/g, '').trim());
 
-    return lines.slice(1).map(line => {
-        // Handle quoted values that may contain commas
-        const values: string[] = [];
-        let currentValue = '';
-        let insideQuotes = false;
+    return lines
+        .slice(1)
+        .map((line) => {
+            // Handle quoted values that may contain commas
+            const values: string[] = [];
+            let currentValue = '';
+            let insideQuotes = false;
 
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
 
-            if (char === '"') {
-                insideQuotes = !insideQuotes;
-            } else if (char === ',' && !insideQuotes) {
-                values.push(currentValue.trim());
-                currentValue = '';
-            } else {
-                currentValue += char;
+                if (char === '"') {
+                    insideQuotes = !insideQuotes;
+                } else if (char === ',' && !insideQuotes) {
+                    values.push(currentValue.trim());
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
             }
-        }
-        values.push(currentValue.trim());
+            values.push(currentValue.trim());
 
-        const obj: any = {};
-        headers.forEach((header, index) => {
-            obj[header] = values[index] || '';
-        });
-        return obj;
-    }).filter(obj => Object.values(obj).some(v => v !== ''));
+            const obj: Record<string, string> = {};
+            headers.forEach((header, index) => {
+                obj[header] = values[index] || '';
+            });
+            return obj;
+        })
+        .filter((obj) => Object.values(obj).some((v) => v !== ''));
 }
 
 export default function PhilippineLocationSelector({
@@ -93,7 +96,8 @@ export default function PhilippineLocationSelector({
 }: PhilippineLocationSelectorProps) {
     const [selectedRegion, setSelectedRegion] = useState<string>('');
     const [selectedProvince, setSelectedProvince] = useState<string>('');
-    const [selectedMunicipality, setSelectedMunicipality] = useState<string>('');
+    const [selectedMunicipality, setSelectedMunicipality] =
+        useState<string>('');
     const [selectedBarangay, setSelectedBarangay] = useState<string>('');
 
     const [regions, setRegions] = useState<Region[]>([]);
@@ -102,7 +106,9 @@ export default function PhilippineLocationSelector({
     const [barangays, setBarangays] = useState<Barangay[]>([]);
 
     const [filteredProvinces, setFilteredProvinces] = useState<Province[]>([]);
-    const [filteredMunicipalities, setFilteredMunicipalities] = useState<Municipality[]>([]);
+    const [filteredMunicipalities, setFilteredMunicipalities] = useState<
+        Municipality[]
+    >([]);
     const [filteredBarangays, setFilteredBarangays] = useState<Barangay[]>([]);
 
     const [loading, setLoading] = useState(true);
@@ -114,14 +120,24 @@ export default function PhilippineLocationSelector({
                 setLoading(true);
 
                 // Load all CSV files in parallel
-                const [regionsRes, provincesRes, municipalitiesRes, barangaysRes] = await Promise.all([
+                const [
+                    regionsRes,
+                    provincesRes,
+                    municipalitiesRes,
+                    barangaysRes,
+                ] = await Promise.all([
                     fetch('/csv/regions.csv'),
                     fetch('/csv/provinces.csv'),
                     fetch('/csv/municipalities.csv'),
                     fetch('/csv/barangays.csv'),
                 ]);
 
-                const [regionsText, provincesText, municipalitiesText, barangaysText] = await Promise.all([
+                const [
+                    regionsText,
+                    provincesText,
+                    municipalitiesText,
+                    barangaysText,
+                ] = await Promise.all([
                     regionsRes.text(),
                     provincesRes.text(),
                     municipalitiesRes.text(),
@@ -129,10 +145,18 @@ export default function PhilippineLocationSelector({
                 ]);
 
                 // Parse CSV data
-                const regionsData = parseCSV(regionsText) as Region[];
-                const provincesData = parseCSV(provincesText) as Province[];
-                const municipalitiesData = parseCSV(municipalitiesText) as Municipality[];
-                const barangaysData = parseCSV(barangaysText) as Barangay[];
+                const regionsData = parseCSV(
+                    regionsText,
+                ) as unknown as Region[];
+                const provincesData = parseCSV(
+                    provincesText,
+                ) as unknown as Province[];
+                const municipalitiesData = parseCSV(
+                    municipalitiesText,
+                ) as unknown as Municipality[];
+                const barangaysData = parseCSV(
+                    barangaysText,
+                ) as unknown as Barangay[];
 
                 setRegions(regionsData);
                 setProvinces(provincesData);
@@ -153,7 +177,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedRegion && provinces.length > 0) {
             const filtered = provinces.filter(
-                (p) => p.REGION_ID === selectedRegion
+                (p) => p.REGION_ID === selectedRegion,
             );
             setFilteredProvinces(filtered);
         } else {
@@ -166,7 +190,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedProvince && municipalities.length > 0) {
             const filtered = municipalities.filter(
-                (m) => m.PROVINCE_ID === selectedProvince
+                (m) => m.PROVINCE_ID === selectedProvince,
             );
             setFilteredMunicipalities(filtered);
         } else {
@@ -179,7 +203,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedMunicipality && barangays.length > 0) {
             const filtered = barangays.filter(
-                (b) => b.MUNICIPALITY_ID === selectedMunicipality
+                (b) => b.MUNICIPALITY_ID === selectedMunicipality,
             );
             setFilteredBarangays(filtered);
         } else {
@@ -203,22 +227,37 @@ export default function PhilippineLocationSelector({
             }
             // Cascading updates (province depends on region) happen via other effects or need manual setting?
             // Since we load all data at once, we can set all IDs at once.
-            if (initialIds.provinceId && initialIds.provinceId !== selectedProvince) {
+            if (
+                initialIds.provinceId &&
+                initialIds.provinceId !== selectedProvince
+            ) {
                 setSelectedProvince(initialIds.provinceId);
             }
-            if (initialIds.municipalityId && initialIds.municipalityId !== selectedMunicipality) {
+            if (
+                initialIds.municipalityId &&
+                initialIds.municipalityId !== selectedMunicipality
+            ) {
                 setSelectedMunicipality(initialIds.municipalityId);
             }
-            if (initialIds.barangayId && initialIds.barangayId !== selectedBarangay) {
+            if (
+                initialIds.barangayId &&
+                initialIds.barangayId !== selectedBarangay
+            ) {
                 setSelectedBarangay(initialIds.barangayId);
             }
             return;
         }
 
         // Fallback to parsing string value if no IDs and no current selection
-        if (value && !selectedRegion && !selectedProvince && !selectedMunicipality && !selectedBarangay) {
+        if (
+            value &&
+            !selectedRegion &&
+            !selectedProvince &&
+            !selectedMunicipality &&
+            !selectedBarangay
+        ) {
             // Parse the location string (format: "Barangay, Municipality, Province, Region")
-            const parts = value.split(',').map(part => part.trim());
+            const parts = value.split(',').map((part) => part.trim());
 
             if (parts.length >= 2) {
                 // ... (Existing parsing logic) ...
@@ -230,39 +269,62 @@ export default function PhilippineLocationSelector({
                     foundRegion: Region | undefined;
 
                 if (parts.length === 4) {
-                    const [barangayName, municipalityName, provinceName, regionName] = parts;
-                    foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
+                    const [
+                        barangayName,
+                        municipalityName,
+                        provinceName,
+                        regionName,
+                    ] = parts;
+                    foundRegion = regions.find(
+                        (r) =>
+                            r.REGION.toLowerCase() === regionName.toLowerCase(),
+                    );
                     if (foundRegion) {
-                        foundProvince = provinces.find(p =>
-                            p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
-                            p.REGION_ID === foundRegion!.REGION_ID
+                        foundProvince = provinces.find(
+                            (p) =>
+                                p.PROVINCE.toLowerCase() ===
+                                    provinceName.toLowerCase() &&
+                                p.REGION_ID === foundRegion!.REGION_ID,
                         );
                         if (foundProvince) {
-                            foundMunicipality = municipalities.find(m =>
-                                m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
-                                m.PROVINCE_ID === foundProvince!.PROVINCE_ID
+                            foundMunicipality = municipalities.find(
+                                (m) =>
+                                    m.MUNICIPALITY.toLowerCase() ===
+                                        municipalityName.toLowerCase() &&
+                                    m.PROVINCE_ID ===
+                                        foundProvince!.PROVINCE_ID,
                             );
                             if (foundMunicipality) {
-                                foundBarangay = barangays.find(b =>
-                                    b.BARANGAY.toLowerCase() === barangayName.toLowerCase() &&
-                                    b.MUNICIPALITY_ID === foundMunicipality!.MUNICIPALITY_ID
+                                foundBarangay = barangays.find(
+                                    (b) =>
+                                        b.BARANGAY.toLowerCase() ===
+                                            barangayName.toLowerCase() &&
+                                        b.MUNICIPALITY_ID ===
+                                            foundMunicipality!.MUNICIPALITY_ID,
                                 );
                             }
                         }
                     }
-                }
-                else if (parts.length === 3) {
+                } else if (parts.length === 3) {
                     const [municipalityName, provinceName, regionName] = parts;
-                    foundRegion = regions.find(r => r.REGION.toLowerCase() === regionName.toLowerCase());
+                    foundRegion = regions.find(
+                        (r) =>
+                            r.REGION.toLowerCase() === regionName.toLowerCase(),
+                    );
                     if (foundRegion) {
-                        foundProvince = provinces.find(p =>
-                            p.PROVINCE.toLowerCase() === provinceName.toLowerCase() &&
-                            p.REGION_ID === foundRegion!.REGION_ID
+                        foundProvince = provinces.find(
+                            (p) =>
+                                p.PROVINCE.toLowerCase() ===
+                                    provinceName.toLowerCase() &&
+                                p.REGION_ID === foundRegion!.REGION_ID,
                         );
                         if (foundProvince) {
-                            foundMunicipality = municipalities.find(m =>
-                                m.MUNICIPALITY.toLowerCase() === municipalityName.toLowerCase() &&
-                                m.PROVINCE_ID === foundProvince!.PROVINCE_ID
+                            foundMunicipality = municipalities.find(
+                                (m) =>
+                                    m.MUNICIPALITY.toLowerCase() ===
+                                        municipalityName.toLowerCase() &&
+                                    m.PROVINCE_ID ===
+                                        foundProvince!.PROVINCE_ID,
                             );
                         }
                     }
@@ -270,13 +332,30 @@ export default function PhilippineLocationSelector({
 
                 if (foundRegion) {
                     setSelectedRegion(foundRegion.REGION_ID);
-                    if (foundProvince) setSelectedProvince(foundProvince.PROVINCE_ID);
-                    if (foundMunicipality) setSelectedMunicipality(foundMunicipality.MUNICIPALITY_ID);
-                    if (foundBarangay) setSelectedBarangay(foundBarangay.BARANGAY_ID);
+                    if (foundProvince)
+                        setSelectedProvince(foundProvince.PROVINCE_ID);
+                    if (foundMunicipality)
+                        setSelectedMunicipality(
+                            foundMunicipality.MUNICIPALITY_ID,
+                        );
+                    if (foundBarangay)
+                        setSelectedBarangay(foundBarangay.BARANGAY_ID);
                 }
             }
         }
-    }, [value, initialIds, loading, regions, provinces, municipalities, barangays, selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay]);
+    }, [
+        value,
+        initialIds,
+        loading,
+        regions,
+        provinces,
+        municipalities,
+        barangays,
+        selectedRegion,
+        selectedProvince,
+        selectedMunicipality,
+        selectedBarangay,
+    ]);
 
     // Update parent component when location changes
     useEffect(() => {
@@ -286,16 +365,22 @@ export default function PhilippineLocationSelector({
                 regionId: selectedRegion,
                 provinceId: selectedProvince,
                 municipalityId: selectedMunicipality,
-                barangayId: selectedBarangay
+                barangayId: selectedBarangay,
             });
         }
 
         // Emit string value (Legacy/Display support)
         if (selectedBarangay || selectedMunicipality) {
             const region = regions.find((r) => r.REGION_ID === selectedRegion);
-            const province = provinces.find((p) => p.PROVINCE_ID === selectedProvince);
-            const municipality = municipalities.find((m) => m.MUNICIPALITY_ID === selectedMunicipality);
-            const barangay = barangays.find((b) => b.BARANGAY_ID === selectedBarangay);
+            const province = provinces.find(
+                (p) => p.PROVINCE_ID === selectedProvince,
+            );
+            const municipality = municipalities.find(
+                (m) => m.MUNICIPALITY_ID === selectedMunicipality,
+            );
+            const barangay = barangays.find(
+                (b) => b.BARANGAY_ID === selectedBarangay,
+            );
 
             const parts = [
                 barangay?.BARANGAY,
@@ -311,7 +396,19 @@ export default function PhilippineLocationSelector({
                 onChange(locationString);
             }
         }
-    }, [selectedRegion, selectedProvince, selectedMunicipality, selectedBarangay, regions, provinces, municipalities, barangays, onLocationSelect, onChange, value]);
+    }, [
+        selectedRegion,
+        selectedProvince,
+        selectedMunicipality,
+        selectedBarangay,
+        regions,
+        provinces,
+        municipalities,
+        barangays,
+        onLocationSelect,
+        onChange,
+        value,
+    ]);
 
     const handleRegionChange = (value: string) => {
         setSelectedRegion(value);
@@ -340,7 +437,9 @@ export default function PhilippineLocationSelector({
     if (loading) {
         return (
             <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">Loading locations...</p>
+                <p className="text-sm text-muted-foreground">
+                    Loading locations...
+                </p>
             </div>
         );
     }
@@ -358,12 +457,18 @@ export default function PhilippineLocationSelector({
                     disabled={disabled}
                     required={required}
                 >
-                    <SelectTrigger id="region" className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectTrigger
+                        id="region"
+                        className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950"
+                    >
                         <SelectValue placeholder="Select Region" />
                     </SelectTrigger>
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {regions.map((region) => (
-                            <SelectItem key={region.REGION_ID} value={region.REGION_ID}>
+                            <SelectItem
+                                key={region.REGION_ID}
+                                value={region.REGION_ID}
+                            >
                                 {region.REGION}
                             </SelectItem>
                         ))}
@@ -374,7 +479,8 @@ export default function PhilippineLocationSelector({
             {/* Province */}
             <div className="space-y-2">
                 <Label htmlFor="province">
-                    Province {required && <span className="text-red-500">*</span>}
+                    Province{' '}
+                    {required && <span className="text-red-500">*</span>}
                 </Label>
                 <Select
                     value={selectedProvince}
@@ -382,12 +488,18 @@ export default function PhilippineLocationSelector({
                     disabled={disabled || !selectedRegion}
                     required={required}
                 >
-                    <SelectTrigger id="province" className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectTrigger
+                        id="province"
+                        className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950"
+                    >
                         <SelectValue placeholder="Select Province" />
                     </SelectTrigger>
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredProvinces.map((province) => (
-                            <SelectItem key={province.PROVINCE_ID} value={province.PROVINCE_ID}>
+                            <SelectItem
+                                key={province.PROVINCE_ID}
+                                value={province.PROVINCE_ID}
+                            >
                                 {province.PROVINCE}
                             </SelectItem>
                         ))}
@@ -398,7 +510,8 @@ export default function PhilippineLocationSelector({
             {/* Municipality/City */}
             <div className="space-y-2">
                 <Label htmlFor="municipality">
-                    Municipality/City {required && <span className="text-red-500">*</span>}
+                    Municipality/City{' '}
+                    {required && <span className="text-red-500">*</span>}
                 </Label>
                 <Select
                     value={selectedMunicipality}
@@ -406,12 +519,18 @@ export default function PhilippineLocationSelector({
                     disabled={disabled || !selectedProvince}
                     required={required}
                 >
-                    <SelectTrigger id="municipality" className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectTrigger
+                        id="municipality"
+                        className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950"
+                    >
                         <SelectValue placeholder="Select Municipality/City" />
                     </SelectTrigger>
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredMunicipalities.map((municipality) => (
-                            <SelectItem key={municipality.MUNICIPALITY_ID} value={municipality.MUNICIPALITY_ID}>
+                            <SelectItem
+                                key={municipality.MUNICIPALITY_ID}
+                                value={municipality.MUNICIPALITY_ID}
+                            >
                                 {municipality.MUNICIPALITY}
                             </SelectItem>
                         ))}
@@ -422,7 +541,8 @@ export default function PhilippineLocationSelector({
             {/* Barangay */}
             <div className="space-y-2">
                 <Label htmlFor="barangay">
-                    Barangay {required && <span className="text-red-500">*</span>}
+                    Barangay{' '}
+                    {required && <span className="text-red-500">*</span>}
                 </Label>
                 <Select
                     value={selectedBarangay}
@@ -430,12 +550,18 @@ export default function PhilippineLocationSelector({
                     disabled={disabled || !selectedMunicipality}
                     required={required}
                 >
-                    <SelectTrigger id="barangay" className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                    <SelectTrigger
+                        id="barangay"
+                        className="border-gray-300 dark:border-neutral-700 dark:bg-neutral-950"
+                    >
                         <SelectValue placeholder="Select Barangay" />
                     </SelectTrigger>
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredBarangays.map((barangay) => (
-                            <SelectItem key={barangay.BARANGAY_ID} value={barangay.BARANGAY_ID}>
+                            <SelectItem
+                                key={barangay.BARANGAY_ID}
+                                value={barangay.BARANGAY_ID}
+                            >
                                 {barangay.BARANGAY}
                             </SelectItem>
                         ))}

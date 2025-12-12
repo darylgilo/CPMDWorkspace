@@ -3,11 +3,12 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Package, TruckIcon } from 'lucide-react';
+import { MapPin, Package, TruckIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 // Import child components
 import Distribution from './Distribution';
+import DistributionMap from './DistributionMap';
 import PesticideInventory from './Pesticide';
 
 interface PageProps {
@@ -29,6 +30,11 @@ const navItems: Array<Omit<NavItem, 'href'> & { href: string }> = [
         title: 'Distribution',
         href: '#distribution',
         icon: TruckIcon,
+    },
+    {
+        title: 'Map',
+        href: '#map',
+        icon: MapPin,
     },
 ];
 
@@ -54,7 +60,10 @@ export default function PesticideIndex() {
     // Handle browser back/forward buttons and initial hash navigation
     useEffect(() => {
         const hash = window.location.hash.substring(1);
-        if (hash && (hash === 'inventory' || hash === 'distribution')) {
+        if (
+            hash &&
+            (hash === 'inventory' || hash === 'distribution' || hash === 'map')
+        ) {
             // If there's a hash in the URL, navigate to that tab using query params
             router.get(
                 '/pesticidesindex',
@@ -115,6 +124,7 @@ export default function PesticideIndex() {
                                 <PesticideInventory />
                             )}
                             {activeTab === 'distribution' && <Distribution />}
+                            {activeTab === 'map' && <DistributionMap />}
                         </div>
                     </section>
                 </div>

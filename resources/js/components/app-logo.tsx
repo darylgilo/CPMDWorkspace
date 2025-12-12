@@ -1,9 +1,11 @@
+import logoImage from '@/Assets/Images/bpi-cpmd-logo.png';
+
 export default function AppLogo() {
     return (
         <>
             <div className="flex aspect-square size-10 items-center justify-center">
                 <img
-                    src="/images/bpi-cpmd-logo.png"
+                    src={logoImage}
                     alt="BPI Crop Pest Management Division"
                     className="size-10 object-contain"
                 />
