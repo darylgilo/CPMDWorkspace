@@ -43,8 +43,12 @@ DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
 ## Install Additional Dependencies
-bash npm install
+composer run build
 npm install
+php artisan key:generate
+
+set up env. database
+
 php artisan migrate
 php artisan dbseed
 
