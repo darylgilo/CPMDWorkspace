@@ -39,8 +39,8 @@ export interface FormField {
     datalistOptions?: string[];
     gridCols?: number;
     customRender?:
-    | ((value: string, onChange?: (value: string) => void) => ReactNode)
-    | ((value: string) => ReactNode);
+        | ((value: string, onChange?: (value: string) => void) => ReactNode)
+        | ((value: string) => ReactNode);
 }
 
 export interface FormDialogProps {

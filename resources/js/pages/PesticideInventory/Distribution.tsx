@@ -100,7 +100,7 @@ export default function Distribution() {
     } = props;
 
     // Debug: Log the pesticides data
-    console.log('Available Pesticides:', pesticides);
+    // console.log('Available Pesticides:', pesticides);
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -123,7 +123,7 @@ export default function Distribution() {
             required: true,
             options: (pesticides || []).map((p) => {
                 // Debug: Log each pesticide item with full details
-                console.log('Pesticide item:', JSON.stringify(p, null, 2));
+                // console.log('Pesticide item:', JSON.stringify(p, null, 2));
                 const displayName =
                     p?.brand_name ||
                     p?.type_of_pesticide ||
@@ -571,7 +571,10 @@ export default function Distribution() {
                                         label: 'Received By',
                                     },
                                     { key: 'travel_purpose', label: 'Purpose' },
-                                    { key: 'travel_location', label: 'Travel Location' },
+                                    {
+                                        key: 'travel_location',
+                                        label: 'Travel Location',
+                                    },
                                 ]}
                                 variant="outline"
                                 size="sm"
@@ -678,7 +681,7 @@ export default function Distribution() {
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data &&
-                                    distributions.data.length > 0 ? (
+                                distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>

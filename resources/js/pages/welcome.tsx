@@ -1,3 +1,6 @@
+import logoImage from '@/Assets/Images/bpi-cpmd-logo.png';
+import heroImage from '@/Assets/Images/hero-image.png';
+import heroImageDark from '@/Assets/Images/hero-image2.png';
 import { dashboard, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
@@ -43,7 +46,7 @@ export default function Welcome() {
                             {/* Logo */}
                             <div className="flex items-center gap-2">
                                 <img
-                                    src="/images/bpi-cpmd-logo.png"
+                                    src={logoImage}
                                     alt="CPMD"
                                     className="h-8 w-8 object-contain sm:h-10 sm:w-10"
                                 />
@@ -176,11 +179,7 @@ export default function Welcome() {
                         {/* Right Image */}
                         <div className="relative flex items-center justify-center">
                             <img
-                                src={
-                                    isDark
-                                        ? '/images/hero-image2.png'
-                                        : '/images/hero-image.png'
-                                }
+                                src={isDark ? heroImageDark : heroImage}
                                 alt="Team collaboration illustration"
                                 className="h-auto w-full scale-125 lg:scale-150"
                             />
