@@ -43,7 +43,7 @@ DB_USERNAME=your_username
 DB_PASSWORD=your_password
 
 ## Install Additional Dependencies
-bash npm install @headlessui/react @heroicons/react
+bash npm install
 npm install
 php artisan migrate
 php artisan dbseed
