@@ -9,29 +9,32 @@ import {
 import { useEffect, useState } from 'react';
 
 interface Region {
-    REGION_ID: string;
-    REGION: string;
+    adm1_psgc: string;
+    adm1_en: string;
 }
 
 interface Province {
-    PROVINCE_ID: string;
-    PROVINCE: string;
-    REGION: string;
-    REGION_ID: string;
+    adm1_psgc: string;
+    adm2_psgc: string;
+    adm2_en: string;
+    geo_level: string;
 }
 
 interface Municipality {
-    MUNICIPALITY_ID: string;
-    MUNICIPALITY: string;
-    PROVINCE: string;
-    PROVINCE_ID: string;
+    adm1_psgc: string;
+    adm2_psgc: string;
+    adm3_psgc: string;
+    adm3_en: string;
+    geo_level: string;
 }
 
 interface Barangay {
-    BARANGAY_ID: string;
-    BARANGAY: string;
-    MUNICIPALITY: string;
-    MUNICIPALITY_ID: string;
+    adm1_psgc: string;
+    adm2_psgc: string;
+    adm3_psgc: string;
+    adm4_psgc: string;
+    adm4_en: string;
+    geo_level: string;
 }
 
 interface LocationIds {
@@ -126,10 +129,10 @@ export default function PhilippineLocationSelector({
                     municipalitiesRes,
                     barangaysRes,
                 ] = await Promise.all([
-                    fetch('/csv/regions.csv'),
-                    fetch('/csv/provinces.csv'),
-                    fetch('/csv/municipalities.csv'),
-                    fetch('/csv/barangays.csv'),
+                    fetch('/csv/PH_Adm1_Regions.csv'),
+                    fetch('/csv/PH_Adm2_ProvDists.csv'),
+                    fetch('/csv/PH_Adm3_MuniCities.csv'),
+                    fetch('/csv/PH_Adm4_BgySubMuns.csv'),
                 ]);
 
                 const [
@@ -177,7 +180,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedRegion && provinces.length > 0) {
             const filtered = provinces.filter(
-                (p) => p.REGION_ID === selectedRegion,
+                (p) => p.adm1_psgc === selectedRegion && p.geo_level === 'Prov',
             );
             setFilteredProvinces(filtered);
         } else {
@@ -190,7 +193,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedProvince && municipalities.length > 0) {
             const filtered = municipalities.filter(
-                (m) => m.PROVINCE_ID === selectedProvince,
+                (m) => m.adm2_psgc === selectedProvince,
             );
             setFilteredMunicipalities(filtered);
         } else {
@@ -203,7 +206,7 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedMunicipality && barangays.length > 0) {
             const filtered = barangays.filter(
-                (b) => b.MUNICIPALITY_ID === selectedMunicipality,
+                (b) => b.adm3_psgc === selectedMunicipality,
             );
             setFilteredBarangays(filtered);
         } else {
@@ -277,30 +280,30 @@ export default function PhilippineLocationSelector({
                     ] = parts;
                     foundRegion = regions.find(
                         (r) =>
-                            r.REGION.toLowerCase() === regionName.toLowerCase(),
+                            r.adm1_en.toLowerCase() ===
+                            regionName.toLowerCase(),
                     );
                     if (foundRegion) {
                         foundProvince = provinces.find(
                             (p) =>
-                                p.PROVINCE.toLowerCase() ===
+                                p.adm2_en.toLowerCase() ===
                                     provinceName.toLowerCase() &&
-                                p.REGION_ID === foundRegion!.REGION_ID,
+                                p.adm1_psgc === foundRegion!.adm1_psgc,
                         );
                         if (foundProvince) {
                             foundMunicipality = municipalities.find(
                                 (m) =>
-                                    m.MUNICIPALITY.toLowerCase() ===
+                                    m.adm3_en.toLowerCase() ===
                                         municipalityName.toLowerCase() &&
-                                    m.PROVINCE_ID ===
-                                        foundProvince!.PROVINCE_ID,
+                                    m.adm2_psgc === foundProvince!.adm2_psgc,
                             );
                             if (foundMunicipality) {
                                 foundBarangay = barangays.find(
                                     (b) =>
-                                        b.BARANGAY.toLowerCase() ===
+                                        b.adm4_en.toLowerCase() ===
                                             barangayName.toLowerCase() &&
-                                        b.MUNICIPALITY_ID ===
-                                            foundMunicipality!.MUNICIPALITY_ID,
+                                        b.adm3_psgc ===
+                                            foundMunicipality!.adm3_psgc,
                                 );
                             }
                         }
@@ -309,37 +312,35 @@ export default function PhilippineLocationSelector({
                     const [municipalityName, provinceName, regionName] = parts;
                     foundRegion = regions.find(
                         (r) =>
-                            r.REGION.toLowerCase() === regionName.toLowerCase(),
+                            r.adm1_en.toLowerCase() ===
+                            regionName.toLowerCase(),
                     );
                     if (foundRegion) {
                         foundProvince = provinces.find(
                             (p) =>
-                                p.PROVINCE.toLowerCase() ===
+                                p.adm2_en.toLowerCase() ===
                                     provinceName.toLowerCase() &&
-                                p.REGION_ID === foundRegion!.REGION_ID,
+                                p.adm1_psgc === foundRegion!.adm1_psgc,
                         );
                         if (foundProvince) {
                             foundMunicipality = municipalities.find(
                                 (m) =>
-                                    m.MUNICIPALITY.toLowerCase() ===
+                                    m.adm3_en.toLowerCase() ===
                                         municipalityName.toLowerCase() &&
-                                    m.PROVINCE_ID ===
-                                        foundProvince!.PROVINCE_ID,
+                                    m.adm2_psgc === foundProvince!.adm2_psgc,
                             );
                         }
                     }
                 }
 
                 if (foundRegion) {
-                    setSelectedRegion(foundRegion.REGION_ID);
+                    setSelectedRegion(foundRegion.adm1_psgc);
                     if (foundProvince)
-                        setSelectedProvince(foundProvince.PROVINCE_ID);
+                        setSelectedProvince(foundProvince.adm2_psgc);
                     if (foundMunicipality)
-                        setSelectedMunicipality(
-                            foundMunicipality.MUNICIPALITY_ID,
-                        );
+                        setSelectedMunicipality(foundMunicipality.adm3_psgc);
                     if (foundBarangay)
-                        setSelectedBarangay(foundBarangay.BARANGAY_ID);
+                        setSelectedBarangay(foundBarangay.adm4_psgc);
                 }
             }
         }
@@ -371,22 +372,22 @@ export default function PhilippineLocationSelector({
 
         // Emit string value (Legacy/Display support)
         if (selectedBarangay || selectedMunicipality) {
-            const region = regions.find((r) => r.REGION_ID === selectedRegion);
+            const region = regions.find((r) => r.adm1_psgc === selectedRegion);
             const province = provinces.find(
-                (p) => p.PROVINCE_ID === selectedProvince,
+                (p) => p.adm2_psgc === selectedProvince,
             );
             const municipality = municipalities.find(
-                (m) => m.MUNICIPALITY_ID === selectedMunicipality,
+                (m) => m.adm3_psgc === selectedMunicipality,
             );
             const barangay = barangays.find(
-                (b) => b.BARANGAY_ID === selectedBarangay,
+                (b) => b.adm4_psgc === selectedBarangay,
             );
 
             const parts = [
-                barangay?.BARANGAY,
-                municipality?.MUNICIPALITY,
-                province?.PROVINCE,
-                region?.REGION,
+                barangay?.adm4_en,
+                municipality?.adm3_en,
+                province?.adm2_en,
+                region?.adm1_en,
             ].filter(Boolean);
 
             const locationString = parts.join(', ');
@@ -466,10 +467,10 @@ export default function PhilippineLocationSelector({
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {regions.map((region) => (
                             <SelectItem
-                                key={region.REGION_ID}
-                                value={region.REGION_ID}
+                                key={region.adm1_psgc}
+                                value={region.adm1_psgc}
                             >
-                                {region.REGION}
+                                {region.adm1_en}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -497,10 +498,10 @@ export default function PhilippineLocationSelector({
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredProvinces.map((province) => (
                             <SelectItem
-                                key={province.PROVINCE_ID}
-                                value={province.PROVINCE_ID}
+                                key={province.adm2_psgc}
+                                value={province.adm2_psgc}
                             >
-                                {province.PROVINCE}
+                                {province.adm2_en}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -528,10 +529,10 @@ export default function PhilippineLocationSelector({
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredMunicipalities.map((municipality) => (
                             <SelectItem
-                                key={municipality.MUNICIPALITY_ID}
-                                value={municipality.MUNICIPALITY_ID}
+                                key={municipality.adm3_psgc}
+                                value={municipality.adm3_psgc}
                             >
-                                {municipality.MUNICIPALITY}
+                                {municipality.adm3_en}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -559,10 +560,10 @@ export default function PhilippineLocationSelector({
                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                         {filteredBarangays.map((barangay) => (
                             <SelectItem
-                                key={barangay.BARANGAY_ID}
-                                value={barangay.BARANGAY_ID}
+                                key={barangay.adm4_psgc}
+                                value={barangay.adm4_psgc}
                             >
-                                {barangay.BARANGAY}
+                                {barangay.adm4_en}
                             </SelectItem>
                         ))}
                     </SelectContent>

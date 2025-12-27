@@ -81,12 +81,12 @@ class LocationSeeder extends Seeder
 
     private function seedRegions()
     {
-        $rows = $this->parseCsv('regions.csv');
+        $rows = $this->parseCsv('PH_Adm1_Regions.csv');
         $insert = [];
         foreach ($rows as $row) {
             $insert[] = [
-                'id' => $row['REGION_ID'],
-                'name' => $row['REGION'],
+                'id' => $row['adm1_psgc'],
+                'name' => $row['adm1_en'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -96,13 +96,18 @@ class LocationSeeder extends Seeder
 
     private function seedProvinces()
     {
-        $rows = $this->parseCsv('provinces.csv');
+        $rows = $this->parseCsv('PH_Adm2_ProvDists.csv');
         $insert = [];
         foreach ($rows as $row) {
+            // Skip entries that are not provinces (like NCR districts)
+            if ($row['geo_level'] !== 'Prov') {
+                continue;
+            }
+            
             $insert[] = [
-                'id' => $row['PROVINCE_ID'],
-                'name' => $row['PROVINCE'],
-                'region_id' => $row['REGION_ID'],
+                'id' => $row['adm2_psgc'],
+                'name' => $row['adm2_en'],
+                'region_id' => $row['adm1_psgc'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -112,19 +117,19 @@ class LocationSeeder extends Seeder
 
     private function seedMunicipalities()
     {
-        $rows = $this->parseCsv('municipalities.csv');
+        $rows = $this->parseCsv('PH_Adm3_MuniCities.csv');
         $insert = [];
         foreach ($rows as $row) {
             // Skip if province doesn't exist
-            if (!\App\Models\Province::find($row['PROVINCE_ID'])) {
-                $this->command->warn("Skipping municipality {$row['MUNICIPALITY']} - Province ID {$row['PROVINCE_ID']} not found");
+            if (!DB::table('provinces')->where('id', $row['adm2_psgc'])->exists()) {
+                $this->command->warn("Skipping municipality {$row['adm3_en']} - Province ID {$row['adm2_psgc']} not found");
                 continue;
             }
             
             $insert[] = [
-                'id' => $row['MUNICIPALITY_ID'],
-                'name' => mb_convert_encoding($row['MUNICIPALITY'], 'UTF-8', 'UTF-8'),
-                'province_id' => $row['PROVINCE_ID'],
+                'id' => $row['adm3_psgc'],
+                'name' => mb_convert_encoding($row['adm3_en'], 'UTF-8', 'UTF-8'),
+                'province_id' => $row['adm2_psgc'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -134,19 +139,19 @@ class LocationSeeder extends Seeder
 
     private function seedBarangays()
     {
-        $rows = $this->parseCsv('barangays.csv');
+        $rows = $this->parseCsv('PH_Adm4_BgySubMuns.csv');
         $insert = [];
         foreach ($rows as $row) {
             // Skip if municipality doesn't exist
-            if (!\App\Models\Municipality::find($row['MUNICIPALITY_ID'])) {
-                $this->command->warn("Skipping barangay {$row['BARANGAY']} - Municipality ID {$row['MUNICIPALITY_ID']} not found");
+            if (!DB::table('municipalities')->where('id', $row['adm3_psgc'])->exists()) {
+                $this->command->warn("Skipping barangay {$row['adm4_en']} - Municipality ID {$row['adm3_psgc']} not found");
                 continue;
             }
             
             $insert[] = [
-                'id' => $row['BARANGAY_ID'],
-                'name' => mb_convert_encoding($row['BARANGAY'], 'UTF-8', 'UTF-8'),
-                'municipality_id' => $row['MUNICIPALITY_ID'],
+                'id' => $row['adm4_psgc'],
+                'name' => mb_convert_encoding($row['adm4_en'], 'UTF-8', 'UTF-8'),
+                'municipality_id' => $row['adm3_psgc'],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
