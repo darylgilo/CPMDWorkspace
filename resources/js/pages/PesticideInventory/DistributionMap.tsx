@@ -2,6 +2,10 @@ import StatisticsMap, { LocationData } from '@/components/StatisticsMap';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import SearchBar from '@/components/SearchBar';
+import CustomPagination from '@/components/CustomPagination';
+import StatisticsTrend from '@/components/StatisticsTrend';
+import DistributionLineChart from '@/components/DistributionLineChart';
 import { usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
@@ -172,6 +176,12 @@ export default function DistributionMap() {
     } = props;
 
     const [selectedRegion, setSelectedRegion] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [chartYear, setChartYear] = useState<number>(new Date().getFullYear());
+    const [chartMonth, setChartMonth] = useState<number>(new Date().getMonth());
+    const [chartViewType, setChartViewType] = useState<'monthly' | 'yearly'>('monthly');
+    const itemsPerPage = 10;
     type ViewMode = 'map' | 'table';
     type AdminLevel = 'region' | 'province' | 'municipality';
 
@@ -382,7 +392,7 @@ export default function DistributionMap() {
         }));
     }, [adminLevel, regionData, provinceData, municipalityData]);
 
-    // Filter data based on selected filters
+    // Filter data based on selected filters and search
     const filteredMapData = useMemo(() => {
         let filtered = mapData;
 
@@ -392,8 +402,21 @@ export default function DistributionMap() {
             );
         }
 
+        // Apply search filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(
+                (item) =>
+                    item.name.toLowerCase().includes(query) ||
+                    item.region?.toLowerCase().includes(query) ||
+                    item.province?.toLowerCase().includes(query) ||
+                    item.municipality?.toLowerCase().includes(query) ||
+                    (item.description?.toLowerCase().includes(query) ?? false)
+            );
+        }
+
         return filtered;
-    }, [mapData, selectedRegion]);
+    }, [mapData, selectedRegion, searchQuery]);
 
     // Get unique regions for filter
     const uniqueRegions = useMemo(() => {
@@ -411,6 +434,98 @@ export default function DistributionMap() {
         return [...filteredMapData]
             .sort((a, b) => b.value - a.value)
             .slice(0, 5);
+    }, [filteredMapData]);
+
+    // Get paginated data for table view
+    const paginatedTableData = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredMapData.sort((a, b) => b.value - a.value).slice(startIndex, endIndex);
+    }, [filteredMapData, currentPage]);
+
+    // Reset current page when filters change
+    useMemo(() => {
+        setCurrentPage(1);
+    }, [selectedRegion, searchQuery]);
+
+    // Generate line chart data for distribution trends over time
+    const lineChartData = useMemo(() => {
+        // Get unique pesticide types from the data
+        const pesticideTypes = [...new Set(
+            distributions?.data?.map(d => d.pesticide?.type_of_pesticide).filter((type): type is string => Boolean(type)) || []
+        )].slice(0, 5); // Limit to top 5 for readability
+        
+        // Group distributions by month, year, and pesticide type
+        const monthlyData: Record<string, Record<string, number>> = {};
+        
+        // Initialize all months with zero values
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        months.forEach(month => {
+            monthlyData[month] = {};
+            pesticideTypes.forEach(type => {
+                monthlyData[month][type] = 0;
+            });
+        });
+        
+        // Process actual distribution data
+        distributions?.data?.forEach(distribution => {
+            if (distribution.received_date && distribution.pesticide?.type_of_pesticide) {
+                const date = new Date(distribution.received_date);
+                const month = months[date.getMonth()]; // Get month name
+                const year = date.getFullYear(); // Get year
+                const pesticideType = distribution.pesticide.type_of_pesticide;
+                
+                // Only include data from the selected year
+                if (year === chartYear && pesticideTypes.includes(pesticideType) && monthlyData[month]) {
+                    monthlyData[month][pesticideType] += Number(distribution.quantity || 0);
+                }
+            }
+        });
+        
+        // Convert to array format for chart
+        const chartData = months.map(month => ({
+            month,
+            ...monthlyData[month]
+        }));
+        
+        return { data: chartData, pesticideTypes, monthlyData };
+    }, [distributions, chartYear]);
+
+    // Generate trend data for statistics
+    const trendData = useMemo(() => {
+        // Calculate current period totals
+        const currentTotal = filteredMapData.reduce((sum, item) => sum + item.value, 0);
+        const currentAvg = filteredMapData.length > 0 ? Math.round(currentTotal / filteredMapData.length) : 0;
+        const currentLocations = filteredMapData.length;
+        
+        // Simulate previous period data (you can replace this with actual historical data)
+        const previousTotal = Math.round(currentTotal * 0.85); // Simulate 15% growth
+        const previousAvg = Math.round(currentAvg * 0.9);
+        const previousLocations = Math.max(0, currentLocations - 2);
+        
+        return [
+            {
+                label: 'Total Distribution',
+                value: currentTotal,
+                previousValue: previousTotal,
+                trend: (currentTotal > previousTotal ? 'up' : currentTotal < previousTotal ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+                unit: 'units'
+            },
+            {
+                label: 'Average per Location',
+                value: currentAvg,
+                previousValue: previousAvg,
+                trend: (currentAvg > previousAvg ? 'up' : currentAvg < previousAvg ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+                unit: 'units'
+            },
+            {
+                label: 'Active Locations',
+                value: currentLocations,
+                previousValue: previousLocations,
+                trend: (currentLocations > previousLocations ? 'up' : currentLocations < previousLocations ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+                unit: ''
+            }
+        ];
     }, [filteredMapData]);
 
     const handleLocationClick = () => {
@@ -465,7 +580,7 @@ export default function DistributionMap() {
                         variant={viewMode === 'map' ? 'default' : 'outline'}
                         className={
                             viewMode === 'map'
-                                ? 'bg-[#163832] hover:bg-[#163832]/90'
+                                ? 'bg-[#1E514B] hover:bg-[#1E514B]/90 text-white dark:text-white'
                                 : ''
                         }
                         size="sm"
@@ -478,7 +593,7 @@ export default function DistributionMap() {
                         variant={viewMode === 'table' ? 'default' : 'outline'}
                         className={
                             viewMode === 'table'
-                                ? 'bg-[#163832] hover:bg-[#163832]/90'
+                                ? 'bg-[#1E514B] hover:bg-[#1E514B]/90 text-white dark:text-white'
                                 : ''
                         }
                         size="sm"
@@ -491,7 +606,7 @@ export default function DistributionMap() {
             </div>
 
             {/* Filters */}
-            <Card className="p-4">
+            <Card className="p-4 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
                         <Filter className="h-4 w-4 text-muted-foreground" />
@@ -504,6 +619,11 @@ export default function DistributionMap() {
                             variant={
                                 adminLevel === 'region' ? 'default' : 'outline'
                             }
+                            className={
+                                adminLevel === 'region'
+                                    ? 'bg-[#1E514B] hover:bg-[#1E514B]/90 text-white dark:text-white'
+                                    : ''
+                            }
                             size="sm"
                             onClick={() => setAdminLevel('region')}
                         >
@@ -515,6 +635,11 @@ export default function DistributionMap() {
                                     ? 'default'
                                     : 'outline'
                             }
+                            className={
+                                adminLevel === 'province'
+                                    ? 'bg-[#1E514B] hover:bg-[#1E514B]/90 text-white dark:text-white'
+                                    : ''
+                            }
                             size="sm"
                             onClick={() => setAdminLevel('province')}
                         >
@@ -525,6 +650,11 @@ export default function DistributionMap() {
                                 adminLevel === 'municipality'
                                     ? 'default'
                                     : 'outline'
+                            }
+                            className={
+                                adminLevel === 'municipality'
+                                    ? 'bg-[#1E514B] hover:bg-[#1E514B]/90 text-white dark:text-white'
+                                    : ''
                             }
                             size="sm"
                             onClick={() => setAdminLevel('municipality')}
@@ -577,7 +707,7 @@ export default function DistributionMap() {
 
                     {/* Top Locations Sidebar */}
                     <div className="space-y-4">
-                        <Card className="p-4">
+                        <Card className="p-4 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
                             <h3 className="mb-3 flex items-center gap-2 font-semibold">
                                 <TrendingUp className="h-4 w-4" />
                                 Top Locations
@@ -609,7 +739,7 @@ export default function DistributionMap() {
                             </div>
                         </Card>
 
-                        <Card className="p-4">
+                        <Card className="p-4 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
                             <h3 className="mb-3 font-semibold">
                                 Distribution Summary
                             </h3>
@@ -656,11 +786,20 @@ export default function DistributionMap() {
             ) : (
                 // Table View
                 <div className="overflow-x-auto">
-                    <Card className="mt-4">
+                    <Card className="mt-4 bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
                         <div className="p-4">
-                            <h3 className="mb-4 font-semibold">
-                                Location Distribution Details
-                            </h3>
+                            <div className="mb-4 flex items-center justify-between">
+                                <h3 className="font-semibold">
+                                    Location Distribution Details
+                                </h3>
+                                <div className="w-64">
+                                    <SearchBar
+                                        search={searchQuery}
+                                        onSearchChange={setSearchQuery}
+                                        placeholder="Search locations..."
+                                    />
+                                </div>
+                            </div>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -679,52 +818,88 @@ export default function DistributionMap() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredMapData
-                                        .sort((a, b) => b.value - a.value)
-                                        .map((location) => (
-                                            <TableRow key={location.id}>
-                                                <TableCell className="font-medium">
-                                                    {adminLevel === 'region'
-                                                        ? location.region ||
-                                                          location.name
-                                                        : adminLevel ===
-                                                            'province'
-                                                          ? location.province ||
-                                                            location.name
-                                                          : location.municipality ||
-                                                            location.name}
-                                                </TableCell>
+                                    {paginatedTableData.map((location) => (
+                                        <TableRow key={location.id}>
+                                            <TableCell className="font-medium">
+                                                {adminLevel === 'region'
+                                                    ? location.region ||
+                                                      location.name
+                                                    : adminLevel ===
+                                                        'province'
+                                                      ? location.province ||
+                                                        location.name
+                                                      : location.municipality ||
+                                                        location.name}
+                                            </TableCell>
+                                            <TableCell>
+                                                {location.region || 'N/A'}
+                                            </TableCell>
+                                            {adminLevel !== 'region' && (
                                                 <TableCell>
-                                                    {location.region || 'N/A'}
+                                                    {location.province ||
+                                                        'N/A'}
                                                 </TableCell>
-                                                {adminLevel !== 'region' && (
-                                                    <TableCell>
-                                                        {location.province ||
-                                                            'N/A'}
-                                                    </TableCell>
-                                                )}
-                                                {adminLevel ===
-                                                    'municipality' && (
-                                                    <TableCell>
-                                                        {location.municipality ||
-                                                            'N/A'}
-                                                    </TableCell>
-                                                )}
-                                                <TableCell className="text-right">
-                                                    <Badge variant="secondary">
-                                                        {location.value}
-                                                    </Badge>
+                                            )}
+                                            {adminLevel ===
+                                                'municipality' && (
+                                                <TableCell>
+                                                    {location.municipality ||
+                                                        'N/A'}
                                                 </TableCell>
-                                                <TableCell className="text-sm text-muted-foreground">
-                                                    {location.description}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                            )}
+                                            <TableCell className="text-right">
+                                                <Badge variant="secondary">
+                                                    {location.value}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">
+                                                {location.description}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
                                 </TableBody>
                             </Table>
+                            {filteredMapData.length > 0 && (
+                                <div className="mt-4">
+                                    <CustomPagination
+                                        currentPage={currentPage}
+                                        totalItems={filteredMapData.length}
+                                        perPage={itemsPerPage}
+                                        onPageChange={setCurrentPage}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </Card>
                 </div>
+            )}
+            
+            {/* Statistics Trend Section - Only show in table view */}
+            {viewMode === 'table' && (
+                <>
+                    {/* Line Chart Section */}
+                    <DistributionLineChart
+                        title="Pesticide Distribution Trend"
+                        data={lineChartData.data}
+                        distributions={distributions?.data}
+                        lines={lineChartData.pesticideTypes.map((type, index) => ({
+                            dataKey: type,
+                            name: type,
+                            color: [
+                                '#10b981', // emerald-500
+                                '#3b82f6', // blue-500
+                                '#f59e0b', // amber-500
+                                '#ef4444', // red-500
+                                '#8b5cf6', // violet-500
+                            ][index % 5]
+                        }))}
+                        height={350}
+                        className="mt-6"
+                        onYearChange={setChartYear}
+                        onMonthChange={setChartMonth}
+                        onViewTypeChange={setChartViewType}
+                    />
+                </>
             )}
         </div>
     );
