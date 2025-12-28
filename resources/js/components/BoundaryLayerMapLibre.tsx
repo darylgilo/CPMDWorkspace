@@ -20,6 +20,7 @@ interface BoundaryLayerMapLibreProps {
 export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
     config,
     choroplethData,
+    pesticideData,
     maxValue,
     colorScheme = 'green',
     onFeatureClick,
@@ -37,20 +38,21 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
 
     // Cleanup function to safely remove map layers and sources
     const cleanupMapResources = useCallback(() => {
-        if (cleanupInProgress.current || !isMounted.current) {
+        if (!isMounted.current) {
             return;
+        }
+
+        // Allow re-entrant cleanup (e.g., rapid adminLevel switching) by canceling
+        // any pending deferred source removal and proceeding with best-effort cleanup.
+        if (cleanupTimeoutRef.current) {
+            clearTimeout(cleanupTimeoutRef.current);
+            cleanupTimeoutRef.current = null;
         }
 
         cleanupInProgress.current = true;
         const currentMap = mapInstanceRef.current;
 
         try {
-            // Clear any pending timeouts
-            if (cleanupTimeoutRef.current) {
-                clearTimeout(cleanupTimeoutRef.current);
-                cleanupTimeoutRef.current = null;
-            }
-
             if (!currentMap) {
                 cleanupInProgress.current = false;
                 return;
@@ -70,6 +72,18 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
             // Remove main layer and highlight layer
             removeLayerSafely(layerId);
             removeLayerSafely(`${layerId}-highlight`);
+
+            // Best-effort: remove any previously-added boundary layers (e.g., when switching levels)
+            try {
+                const mapLayers = currentMap.getStyle()?.layers || [];
+                for (const layer of mapLayers) {
+                    if (layer.id && layer.id.startsWith('boundary-')) {
+                        removeLayerSafely(layer.id);
+                    }
+                }
+            } catch (e) {
+                console.warn('Error removing boundary-* layers:', e);
+            }
 
             // Remove all layers that use this source
             try {
@@ -104,6 +118,25 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
                 }, 50);
             } else {
                 cleanupInProgress.current = false;
+            }
+
+            // Best-effort: remove any previously-added boundary sources after layers are cleared
+            try {
+                const style = currentMap.getStyle();
+                const sources = style?.sources ? Object.keys(style.sources) : [];
+                for (const id of sources) {
+                    if (id.startsWith('boundary-source-')) {
+                        try {
+                            if (currentMap.getSource && currentMap.getSource(id)) {
+                                currentMap.removeSource(id);
+                            }
+                        } catch (e) {
+                            console.warn(`Error removing source ${id}:`, e);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Error removing boundary-source-* sources:', e);
             }
         } catch (error) {
             console.warn('Error during map cleanup:', error);
@@ -282,19 +315,34 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
                         const featureValue = feature.properties?.value || 0;
 
                         if (featureValue > 0 && onFeatureClick) {
+                            const featureName =
+                                feature.properties?.name || 'Unknown';
+                            const featureProvince =
+                                feature.properties?.province || '';
+                            const pesticideKey =
+                                config.level === 'municipality' &&
+                                featureProvince &&
+                                featureName
+                                    ? `${featureProvince}::${featureName}`
+                                    : featureName;
+
                             const locationData: LocationData = {
                                 id: String(feature.id || 'unknown'),
-                                name: feature.properties?.name || 'Unknown',
+                                name: featureName,
                                 latitude: e.lngLat.lat,
                                 longitude: e.lngLat.lng,
                                 value: featureValue,
                                 region: feature.properties?.region || '',
-                                province: feature.properties?.province || '',
+                                province: featureProvince,
                                 municipality:
                                     feature.properties?.municipality || '',
                                 label: 'Distribution Data',
                                 description: `${featureValue} units distributed`,
-                                pesticideData: [],
+                                pesticideData:
+                                    (pesticideData &&
+                                        pesticideKey &&
+                                        pesticideData[pesticideKey]) ||
+                                    [],
                             };
                             onFeatureClick(locationData);
                         }
