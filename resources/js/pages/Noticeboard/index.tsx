@@ -186,7 +186,7 @@ export default function NoticeboardIndex() {
                                         'hover:bg-transparent hover:text-foreground',
                                         'focus-visible:ring-0 focus-visible:ring-offset-0',
                                         {
-                                            'border-[#163832] text-[#163832] dark:border-[#235347] dark:text-[#235347]':
+                                            'border-primary text-foreground':
                                                 isActive,
                                             'text-muted-foreground hover:border-b-accent':
                                                 !isActive,

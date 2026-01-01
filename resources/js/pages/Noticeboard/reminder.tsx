@@ -697,12 +697,12 @@ export default function ReminderPage() {
                                         <button
                                             key={index}
                                             onClick={() => setSelectedDate(day)}
-                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'bg-red-50 font-medium text-red-900 dark:bg-red-900/20 dark:text-red-300' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'hover:bg-red-100 dark:hover:bg-red-900/30' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'hover:bg-blue-100 dark:hover:bg-blue-900/30' : ''} `}
+                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'bg-red-50 font-medium text-red-900 dark:bg-red-800/40 dark:text-red-200' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-800/40 dark:text-blue-200' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents && isOverdueDay ? 'hover:bg-red-100 dark:hover:bg-red-800/60' : ''} ${!isSelected && hasEvents && !isOverdueDay ? 'hover:bg-blue-100 dark:hover:bg-blue-800/60' : ''} `}
                                         >
                                             <span>{day.getDate()}</span>
                                             {hasEvents && (
                                                 <span
-                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : isOverdueDay ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'} `}
+                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : isOverdueDay ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'} `}
                                                 >
                                                     {eventCount}
                                                 </span>
@@ -714,19 +714,19 @@ export default function ReminderPage() {
 
                             {/* Legend */}
                             <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                    <div className="h-3 w-3 rounded-full bg-blue-500 dark:bg-blue-300" />
                                     <span>Upcoming Deadline</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="h-3 w-3 rounded-full bg-red-100 dark:bg-red-900/20" />
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                    <div className="h-3 w-3 rounded-full bg-red-500 dark:bg-red-300" />
                                     <span>Overdue</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                    <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347] dark:bg-[#235347]/40" />
                                     <span>Today</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                                     <div className="h-3 w-3 rounded-full bg-[#163832] dark:bg-[#235347]" />
                                     <span>Selected</span>
                                 </div>
@@ -734,9 +734,9 @@ export default function ReminderPage() {
 
                             {/* Stats */}
                             <div className="mt-4 space-y-2">
-                                <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                                <div className="rounded-lg bg-gray-50 p-4 dark:bg-neutral-800">
                                     <div className="text-center">
-                                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                        <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                             {upcomingCount}
                                         </div>
                                         <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">

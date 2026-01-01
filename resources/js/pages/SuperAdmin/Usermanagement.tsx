@@ -372,7 +372,7 @@ export default function UserManagement() {
                     <ToggleButton
                         options={[
                             { value: 'active', label: 'Active Users' },
-                            { value: 'inactive', label: 'New Users' },
+                            { value: 'inactive', label: 'Inactive Users' },
                         ]}
                         activeValue={statusFilter}
                         onChange={(value) => {
