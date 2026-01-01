@@ -574,12 +574,12 @@ export default function AnnouncementPage() {
                                         <button
                                             key={index}
                                             onClick={() => setSelectedDate(day)}
-                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents ? 'hover:bg-blue-100 dark:hover:bg-blue-900/30' : ''} `}
+                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasEvents ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-800/40 dark:text-blue-200' : ''} ${!isSelected && !hasEvents ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasEvents ? 'hover:bg-blue-100 dark:hover:bg-blue-800/60' : ''} `}
                                         >
                                             <span>{day.getDate()}</span>
                                             {hasEvents && (
                                                 <span
-                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400'} `}
+                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'} `}
                                                 >
                                                     {eventCount}
                                                 </span>
@@ -591,15 +591,15 @@ export default function AnnouncementPage() {
 
                             {/* Legend */}
                             <div className="mt-4 space-y-2 border-t border-gray-200 pt-4 dark:border-neutral-700">
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                    <div className="h-3 w-3 rounded-full bg-blue-100 dark:bg-blue-900/20" />
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                    <div className="h-3 w-3 rounded-full bg-blue-500 dark:bg-blue-300" />
                                     <span>Announcement/Update</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                                     <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
                                     <span>Today</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                                     <div className="h-3 w-3 rounded-full bg-[#163832] dark:bg-[#235347]" />
                                     <span>Selected</span>
                                 </div>
@@ -608,7 +608,7 @@ export default function AnnouncementPage() {
                             {/* Stats */}
                             <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-neutral-800">
                                 <div className="text-center">
-                                    <div className="text-3xl font-bold text-[#163832] dark:text-[#235347]">
+                                    <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                         {announcements.length}
                                     </div>
                                     <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
