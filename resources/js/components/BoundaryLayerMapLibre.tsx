@@ -401,6 +401,7 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
         layerId,
         sourceId,
         choroplethData,
+        pesticideData,
         maxValue,
         cleanupMapResources,
         colorScheme,

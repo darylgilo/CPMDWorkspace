@@ -62,29 +62,7 @@ const data = {
             title: 'Noticeboard',
             url: '/noticeboard',
             icon: MessageSquareTextIcon,
-            items: [
-                {
-                    title: 'Announcement',
-                    url: '/noticeboard/announcements',
-                },
-
-                {
-                    title: 'Notice of Meeting',
-                    url: '/noticeboard/meeting',
-                },
-                {
-                    title: 'Notice of Event',
-                    url: '/noticeboard/event',
-                },
-                {
-                    title: 'Reminder/Deadline',
-                    url: '/noticeboard/reminder',
-                },
-                {
-                    title: 'MEMO',
-                    url: '/noticeboard/memo',
-                },
-            ],
+            isActive: true,
         },
         {
             title: 'Documentation',
@@ -214,7 +192,7 @@ export function AppSidebar(componentProps: AppSidebarProps) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href="/dashboard" prefetch className="hover:bg-transparent hover:no-underline">
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

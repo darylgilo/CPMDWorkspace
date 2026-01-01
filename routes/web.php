@@ -47,7 +47,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
     // Noticeboard - specific routes before parameterized routes
     Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
-    Route::get('/noticeboard/memo', [NoticeController::class, 'memo'])->name('noticeboard.memo');
     Route::get('/noticeboard/event', [NoticeController::class, 'events'])->name('noticeboard.event');
     Route::get('/noticeboard/meeting', [NoticeController::class, 'meetings'])->name('noticeboard.meeting');
     Route::get('/noticeboard/reminder', [NoticeController::class, 'reminders'])->name('noticeboard.reminder');

@@ -1,9 +1,7 @@
 import SearchBar from '@/components/SearchBar';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
-    Calendar,
+    AlertCircle,
     Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
@@ -59,6 +57,26 @@ function isSameDay(date1: Date, date2: Date): boolean {
     );
 }
 
+// Helper function to check if a date is in the past
+function isPastDate(date: Date): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today;
+}
+
+// Helper function to get days until deadline
+function getDaysUntilDeadline(date: Date): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadline = new Date(date);
+    deadline.setHours(0, 0, 0, 0);
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+}
+
 export default function AnnouncementPage() {
     interface PageProps {
         notices?: Array<{
@@ -90,6 +108,7 @@ export default function AnnouncementPage() {
     const [search, setSearch] = useState('');
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
+    const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'ended'>('all');
     const itemsPerPage = 5;
 
     const toggleCardExpansion = (id: string) => {
@@ -139,7 +158,7 @@ export default function AnnouncementPage() {
     }, [serverNotices]);
 
     // Filter only Notice of Meeting category and apply search
-    const announcements = useMemo(() => {
+    const meetings = useMemo(() => {
         return mappedNotices
             .filter((n) => n.category === 'Notice of Meeting')
             .filter((n) => {
@@ -153,37 +172,75 @@ export default function AnnouncementPage() {
             });
     }, [mappedNotices, search]);
 
-    // Group announcements by date
-    const announcementsByDate = useMemo(() => {
+    // Apply filter type (all, upcoming, ended)
+    const filteredMeetings = useMemo(() => {
+        if (filterType === 'all') return meetings;
+
+        return meetings.filter((meeting) => {
+            if (!meeting.date) return false;
+            const meetingDate = new Date(meeting.date);
+            const isEnded = isPastDate(meetingDate);
+
+            if (filterType === 'upcoming') return !isEnded;
+            if (filterType === 'ended') return isEnded;
+            return true;
+        });
+    }, [meetings, filterType]);
+
+    // Group meetings by date
+    const meetingsByDate = useMemo(() => {
         const grouped = new Map<string, Notice[]>();
-        announcements.forEach((announcement) => {
-            if (announcement.date) {
-                const dateKey = announcement.date;
+        meetings.forEach((meeting: Notice) => {
+            if (meeting.date) {
+                const dateKey = meeting.date;
                 if (!grouped.has(dateKey)) {
                     grouped.set(dateKey, []);
                 }
-                grouped.get(dateKey)!.push(announcement);
+                grouped.get(dateKey)!.push(meeting);
             }
         });
         return grouped;
-    }, [announcements]);
+    }, [meetings]);
 
-    // Get announcements for selected date or all announcements
-    const displayedAnnouncements = useMemo(() => {
+    // Get meetings for selected date or all meetings
+    const displayedMeetings = useMemo(() => {
         if (selectedDate) {
             const dateKey = formatDate(selectedDate);
-            return announcementsByDate.get(dateKey) || [];
+            return meetingsByDate.get(dateKey) || [];
         }
-        return announcements;
-    }, [selectedDate, announcements, announcementsByDate]);
+        return filteredMeetings;
+    }, [selectedDate, filteredMeetings, meetingsByDate]);
+
+    // Count upcoming and ended meetings
+    const upcomingCount = useMemo(() => {
+        return meetings.filter((m) => m.date && !isPastDate(new Date(m.date)))
+            .length;
+    }, [meetings]);
+
+    const endedCount = useMemo(() => {
+        return meetings.filter((m) => m.date && isPastDate(new Date(m.date)))
+            .length;
+    }, [meetings]);
+
+    // Helper functions for calendar - wrapped in useMemo to avoid re-creation issues
+    const calendarHelpers = useMemo(() => ({
+        hasMeetingsOnDay: (date: Date): boolean => {
+            const dateKey = formatDate(date);
+            return meetingsByDate.has(dateKey);
+        },
+        getMeetingCount: (date: Date): number => {
+            const dateKey = formatDate(date);
+            return meetingsByDate.get(dateKey)?.length || 0;
+        }
+    }), [meetingsByDate]);
 
     // Pagination
-    const totalPages = Math.ceil(displayedAnnouncements.length / itemsPerPage);
-    const paginatedAnnouncements = useMemo(() => {
+    const totalPages = Math.ceil(displayedMeetings.length / itemsPerPage);
+    const paginatedMeetings = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
-        return displayedAnnouncements.slice(startIndex, endIndex);
-    }, [displayedAnnouncements, currentPage]);
+        return displayedMeetings.slice(startIndex, endIndex);
+    }, [displayedMeetings, currentPage]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -247,27 +304,10 @@ export default function AnnouncementPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Meetings', href: '/noticeboard/meeting' },
-    ];
-
-    // Check if a date has travels
-    const hasAnnouncements = (date: Date): boolean => {
-        const dateKey = formatDate(date);
-        return announcementsByDate.has(dateKey);
-    };
-
-    // Get announcement count for a date
-    const getAnnouncementCount = (date: Date): number => {
-        const dateKey = formatDate(date);
-        return announcementsByDate.get(dateKey)?.length || 0;
-    };
-
     const today = new Date();
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Notice of Meeting" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
@@ -313,6 +353,40 @@ export default function AnnouncementPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Filter Buttons */}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setFilterType('all')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'all'
+                                    ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
+                        >
+                            All ({meetings.length})
+                        </button>
+                        <button
+                            onClick={() => setFilterType('upcoming')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'upcoming'
+                                    ? 'bg-[#163832] text-white dark:bg-[#235347]'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
+                        >
+                            Upcoming ({upcomingCount})
+                        </button>
+                        <button
+                            onClick={() => setFilterType('ended')}
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'ended'
+                                    ? 'bg-red-600 text-white dark:bg-red-700'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
+                            }`}
+                        >
+                            Ended ({endedCount})
+                        </button>
+                    </div>
                 </div>
 
                 {/* Main Content Grid */}
@@ -322,8 +396,8 @@ export default function AnnouncementPage() {
                         <div className="rounded-xl border border-sidebar-border/70 bg-white p-6 shadow-sm dark:border-sidebar-border dark:bg-neutral-900">
                             <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                                 {selectedDate
-                                    ? `Meetings (${displayedAnnouncements.length})`
-                                    : `All Meetings (${announcements.length})`}
+                                    ? `Meetings (${displayedMeetings.length})`
+                                    : `${filterType === 'all' ? 'All' : filterType === 'upcoming' ? 'Upcoming' : 'Ended'} Meetings (${displayedMeetings.length})`}
                             </h2>
 
                             {/* Pagination */}
@@ -335,9 +409,9 @@ export default function AnnouncementPage() {
                                         to{' '}
                                         {Math.min(
                                             currentPage * itemsPerPage,
-                                            displayedAnnouncements.length,
+                                            displayedMeetings.length,
                                         )}{' '}
-                                        of {displayedAnnouncements.length}{' '}
+                                        of {displayedMeetings.length}{' '}
                                         meetings
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -371,40 +445,55 @@ export default function AnnouncementPage() {
                             )}
 
                             <div className="space-y-4">
-                                {paginatedAnnouncements.length > 0 ? (
-                                    paginatedAnnouncements.map(
-                                        (announcement) => {
+                                {paginatedMeetings.length > 0 ? (
+                                    paginatedMeetings.map(
+                                        (meeting: Notice) => {
                                             const isExpanded =
                                                 expandedCards.has(
-                                                    announcement.id,
+                                                    meeting.id,
                                                 );
+                                            const isEnded =
+                                                meeting.date &&
+                                                isPastDate(new Date(meeting.date));
+                                            const daysUntil = meeting.date
+                                                ? getDaysUntilDeadline(
+                                                      new Date(meeting.date),
+                                                  )
+                                                : null;
+
                                             return (
                                                 <div
-                                                    key={announcement.id}
-                                                    className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                                                    key={meeting.id}
+                                                    className={`group rounded-lg border p-4 transition hover:shadow-md ${
+                                                        isEnded
+                                                            ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
+                                                            : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                    }`}
                                                 >
                                                     <div className="mb-3 flex items-start justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <Calendar
-                                                                className="h-6 w-6"
+                                                        <div className="flex flex-1 items-start gap-3">
+                                                            <AlertCircle
+                                                                className={`h-6 w-6 flex-shrink-0 ${
+                                                                    isEnded
+                                                                        ? 'text-red-600 dark:text-red-400'
+                                                                        : 'text-[#163832] dark:text-[#235347]'
+                                                                }`}
                                                                 aria-hidden
                                                             />
-                                                            <div>
+                                                            <div className="flex-1">
                                                                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                    {
-                                                                        announcement.title
-                                                                    }
+                                                                    {meeting.title}
                                                                 </h3>
-                                                                <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                                                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
                                                                     <span className="flex items-center gap-1">
                                                                         <User className="h-3 w-3" />
                                                                         {
-                                                                            announcement.username
+                                                                            meeting.username
                                                                         }
                                                                     </span>
                                                                     Posted on{' '}
                                                                     {new Date(
-                                                                        announcement.createdAt,
+                                                                        meeting.createdAt,
                                                                     ).toLocaleString()}
                                                                 </div>
                                                             </div>
@@ -415,15 +504,15 @@ export default function AnnouncementPage() {
                                                         className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                     >
                                                         {
-                                                            announcement.description
+                                                            meeting.description
                                                         }
                                                     </p>
-                                                    {announcement.description
+                                                    {meeting.description
                                                         .length > 150 && (
                                                         <button
                                                             onClick={() =>
                                                                 toggleCardExpansion(
-                                                                    announcement.id,
+                                                                    meeting.id,
                                                                 )
                                                             }
                                                             className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
@@ -435,23 +524,23 @@ export default function AnnouncementPage() {
                                                     )}
 
                                                     {/* Attachments */}
-                                                    {announcement.files &&
-                                                        announcement.files
+                                                    {meeting.files &&
+                                                        meeting.files
                                                             .length > 0 && (
                                                             <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                                 <FileText className="h-4 w-4" />
                                                                 <span>
                                                                     {
-                                                                        announcement
+                                                                        meeting
                                                                             .files
                                                                             .length
                                                                     }{' '}
                                                                     attachment(s)
                                                                 </span>
-                                                                {announcement.files_download_url && (
+                                                                {meeting.files_download_url && (
                                                                     <a
                                                                         href={
-                                                                            announcement.files_download_url
+                                                                            meeting.files_download_url
                                                                         }
                                                                         className="text-[#163832] hover:underline dark:text-[#235347]"
                                                                         download
@@ -463,26 +552,26 @@ export default function AnnouncementPage() {
                                                             </div>
                                                         )}
 
-                                                    {announcement.file &&
-                                                        !announcement.files
+                                                    {meeting.file &&
+                                                        !meeting.files
                                                             ?.length && (
                                                             <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                                 <FileText className="h-4 w-4" />
                                                                 <a
                                                                     href={
-                                                                        announcement
+                                                                        meeting
                                                                             .file
                                                                             .url
                                                                     }
                                                                     className="text-[#163832] hover:underline dark:text-[#235347]"
                                                                     download={
-                                                                        announcement
+                                                                        meeting
                                                                             .file
                                                                             .name
                                                                     }
                                                                 >
                                                                     {
-                                                                        announcement
+                                                                        meeting
                                                                             .file
                                                                             .name
                                                                     }
@@ -490,22 +579,46 @@ export default function AnnouncementPage() {
                                                             </div>
                                                         )}
 
-                                                    <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                        {announcement.date && (
-                                                            <span className="flex items-center gap-1">
-                                                                <CalendarIcon className="h-3 w-3" />
-                                                                {new Date(
-                                                                    announcement.date,
-                                                                ).toLocaleDateString()}
-                                                            </span>
-                                                        )}
-                                                        {announcement.time && (
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" />
-                                                                {
-                                                                    announcement.time
-                                                                }
-                                                            </span>
+                                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                                                            {meeting.date && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <CalendarIcon className="h-3 w-3" />
+                                                                    {new Date(
+                                                                        meeting.date,
+                                                                    ).toLocaleDateString()}
+                                                                </span>
+                                                            )}
+                                                            {meeting.time && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Clock className="h-3 w-3" />
+                                                                    {
+                                                                        meeting.time
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {daysUntil !== null && (
+                                                            <div
+                                                                className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                    isEnded
+                                                                        ? 'bg-red-600 text-white dark:bg-red-700'
+                                                                        : daysUntil <=
+                                                                            3
+                                                                          ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                          : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                                }`}
+                                                            >
+                                                                {isEnded
+                                                                    ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ended`
+                                                                    : daysUntil ===
+                                                                        0
+                                                                      ? 'Today'
+                                                                      : daysUntil ===
+                                                                        1
+                                                                      ? 'Tomorrow'
+                                                                      : `In ${daysUntil} days`}
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -517,7 +630,11 @@ export default function AnnouncementPage() {
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
                                             {selectedDate
                                                 ? 'No meetings scheduled for this date.'
-                                                : 'No meetings available.'}
+                                                : filterType === 'upcoming'
+                                                  ? 'No upcoming meetings.'
+                                                  : filterType === 'ended'
+                                                    ? 'No ended meetings.'
+                                                    : 'No meetings available.'}
                                         </p>
                                     </div>
                                 )}
@@ -584,20 +701,22 @@ export default function AnnouncementPage() {
                                     const isSelected =
                                         selectedDate &&
                                         isSameDay(day, selectedDate);
-                                    const hasMeetings = hasAnnouncements(day);
+                                    const hasMeetingsOnDay = calendarHelpers.hasMeetingsOnDay(day);
                                     const meetingCount =
-                                        getAnnouncementCount(day);
+                                        calendarHelpers.getMeetingCount(day);
+                                    const isEndedDay =
+                                        isPastDate(day) && hasMeetingsOnDay;
 
                                     return (
                                         <button
                                             key={index}
                                             onClick={() => setSelectedDate(day)}
-                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasMeetings ? 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300' : ''} ${!isSelected && !hasMeetings ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasMeetings ? 'hover:bg-blue-100 dark:hover:bg-blue-900/30' : ''} `}
+                                            className={`relative flex h-12 flex-col items-center justify-center rounded-md p-1 text-sm transition ${isToday ? 'font-bold ring-2 ring-[#163832] dark:ring-[#235347]' : ''} ${isSelected ? 'bg-[#163832] text-white dark:bg-[#235347]' : ''} ${!isSelected && hasMeetingsOnDay ? (isEndedDay ? 'bg-red-50 font-medium text-red-900 dark:bg-red-900/20 dark:text-red-300' : 'bg-blue-50 font-medium text-blue-900 dark:bg-blue-900/20 dark:text-blue-300') : ''} ${!isSelected && !hasMeetingsOnDay ? 'hover:bg-gray-100 dark:hover:bg-neutral-800' : ''} ${!isSelected && hasMeetingsOnDay ? (isEndedDay ? 'hover:bg-red-100 dark:hover:bg-red-900/30' : 'hover:bg-blue-100 dark:hover:bg-blue-900/30') : ''} `}
                                         >
                                             <span>{day.getDate()}</span>
-                                            {hasMeetings && (
+                                            {hasMeetingsOnDay && (
                                                 <span
-                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400'} `}
+                                                    className={`absolute bottom-0.5 text-[10px] font-bold ${isSelected ? 'text-white' : isEndedDay ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'} `}
                                                 >
                                                     {meetingCount}
                                                 </span>
@@ -614,6 +733,10 @@ export default function AnnouncementPage() {
                                     <span>Meeting</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                    <div className="h-3 w-3 rounded-full bg-red-100 dark:bg-red-900/20" />
+                                    <span>Ended Meeting</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                     <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347]" />
                                     <span>Today</span>
                                 </div>
@@ -627,7 +750,7 @@ export default function AnnouncementPage() {
                             <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-neutral-800">
                                 <div className="text-center">
                                     <div className="text-3xl font-bold text-[#163832] dark:text-[#235347]">
-                                        {announcements.length}
+                                        {meetings.length}
                                     </div>
                                     <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                                         Total Meetings
@@ -638,6 +761,6 @@ export default function AnnouncementPage() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

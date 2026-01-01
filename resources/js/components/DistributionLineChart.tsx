@@ -1,7 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import {
     LineChart,
@@ -13,6 +11,10 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
+
+interface Distribution {
+    received_date?: string;
+}
 
 interface ChartDataPoint {
     month: string;
@@ -29,7 +31,7 @@ interface DistributionLineChartProps {
     }>;
     height?: number;
     className?: string;
-    distributions?: any[]; // Add distributions prop for year extraction
+    distributions?: Distribution[]; // Add distributions prop for year extraction
     onYearChange?: (year: number) => void;
     onMonthChange?: (month: number) => void;
     onViewTypeChange?: (viewType: 'monthly' | 'yearly') => void;
@@ -49,14 +51,14 @@ export default function DistributionLineChart({
     const [filterType, setFilterType] = useState<'monthly' | 'yearly'>('monthly');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [calendarDate, setCalendarDate] = useState(new Date());
+    // const [calendarDate, setCalendarDate] = useState(new Date());
 
     // Generate years dynamically - show all years with scrollable dropdown
     const years = useMemo(() => {
         const dataYears = new Set<number>();
         
         // Extract years from the actual distribution data
-        distributions?.forEach(distribution => {
+        distributions?.forEach((distribution: Distribution) => {
             if (distribution.received_date) {
                 const year = new Date(distribution.received_date).getFullYear();
                 dataYears.add(year);
@@ -75,10 +77,10 @@ export default function DistributionLineChart({
         return allYears;
     }, [distributions]);
     
-    const months = [
+    const months = useMemo(() => [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
+    ], []);
 
     // Filter data based on selected filters
     const displayData = useMemo(() => {
@@ -90,37 +92,34 @@ export default function DistributionLineChart({
             const selectedMonthName = months[selectedMonth];
             return data.filter(item => item.month === selectedMonthName);
         }
-    }, [data, filterType, selectedMonth]);
+    }, [data, filterType, selectedMonth, months]);
 
-    const handleCalendarPrevious = () => {
-        const newDate = new Date(calendarDate);
-        if (filterType === 'monthly') {
-            newDate.setMonth(newDate.getMonth() - 1);
-        } else {
-            newDate.setFullYear(newDate.getFullYear() - 1);
-        }
-        setCalendarDate(newDate);
-        setSelectedMonth(newDate.getMonth());
-        setSelectedYear(newDate.getFullYear());
+    // const handleCalendarPrevious = () => {
+    //     const newDate = new Date(calendarDate);
+    //     if (filterType === 'monthly') {
+    //         newDate.setMonth(newDate.getMonth() - 1);
+    //     } else {
+    //         newDate.setFullYear(newDate.getFullYear() - 1);
+    //     }
+    //     setCalendarDate(newDate);
+    //     setSelectedMonth(newDate.getMonth());
+    //     setSelectedYear(newDate.getFullYear());
         
-        // Trigger parent component to update data if needed
-        // This will cause the displayData useMemo to recalculate
-    };
+    //     // Trigger parent component to update data if needed
+    //     // This will cause the displayData useMemo to recalculate
+    // };
 
-    const handleCalendarNext = () => {
-        const newDate = new Date(calendarDate);
-        if (filterType === 'monthly') {
-            newDate.setMonth(newDate.getMonth() + 1);
-        } else {
-            newDate.setFullYear(newDate.getFullYear() + 1);
-        }
-        setCalendarDate(newDate);
-        setSelectedMonth(newDate.getMonth());
-        setSelectedYear(newDate.getFullYear());
-        
-        // Trigger parent component to update data if needed
-        // This will cause the displayData useMemo to recalculate
-    };
+    // const handleCalendarNext = () => {
+    //     const newDate = new Date(calendarDate);
+    //     if (filterType === 'monthly') {
+    //         newDate.setMonth(newDate.getMonth() + 1);
+    //     } else {
+    //         newDate.setFullYear(newDate.getFullYear() + 1);
+    //     }
+    //     setCalendarDate(newDate);
+    //     setSelectedMonth(newDate.getMonth());
+    //     setSelectedYear(newDate.getFullYear());
+    // };
 
     return (
         <Card className={`p-6 ${className}`}>
@@ -230,7 +229,7 @@ export default function DistributionLineChart({
                             fontSize: '12px'
                         }}
                     />
-                    {lines.map((line, index) => (
+                    {lines.map((line) => (
                         <Line
                             key={line.dataKey}
                             type="monotone"
