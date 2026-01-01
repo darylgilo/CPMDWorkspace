@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import SearchBar from '@/components/SearchBar';
 import CustomPagination from '@/components/CustomPagination';
-import StatisticsTrend from '@/components/StatisticsTrend';
 import DistributionLineChart from '@/components/DistributionLineChart';
 import { usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
@@ -179,8 +178,8 @@ export default function DistributionMap() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [chartYear, setChartYear] = useState<number>(new Date().getFullYear());
-    const [chartMonth, setChartMonth] = useState<number>(new Date().getMonth());
-    const [chartViewType, setChartViewType] = useState<'monthly' | 'yearly'>('monthly');
+    // const [chartMonth, setChartMonth] = useState<number>(new Date().getMonth());
+    // const [chartViewType, setChartViewType] = useState<'monthly' | 'yearly'>('monthly');
     const itemsPerPage = 10;
     type ViewMode = 'map' | 'table';
     type AdminLevel = 'region' | 'province' | 'municipality';
@@ -446,7 +445,7 @@ export default function DistributionMap() {
     // Reset current page when filters change
     useMemo(() => {
         setCurrentPage(1);
-    }, [selectedRegion, searchQuery]);
+    }, []);
 
     // Generate line chart data for distribution trends over time
     const lineChartData = useMemo(() => {
@@ -492,41 +491,41 @@ export default function DistributionMap() {
     }, [distributions, chartYear]);
 
     // Generate trend data for statistics
-    const trendData = useMemo(() => {
-        // Calculate current period totals
-        const currentTotal = filteredMapData.reduce((sum, item) => sum + item.value, 0);
-        const currentAvg = filteredMapData.length > 0 ? Math.round(currentTotal / filteredMapData.length) : 0;
-        const currentLocations = filteredMapData.length;
+    // const trendData = useMemo(() => {
+    //     // Calculate current period totals
+    //     const currentTotal = filteredMapData.reduce((sum, item) => sum + item.value, 0);
+    //     const currentAvg = filteredMapData.length > 0 ? Math.round(currentTotal / filteredMapData.length) : 0;
+    //     const currentLocations = filteredMapData.length;
         
-        // Simulate previous period data (you can replace this with actual historical data)
-        const previousTotal = Math.round(currentTotal * 0.85); // Simulate 15% growth
-        const previousAvg = Math.round(currentAvg * 0.9);
-        const previousLocations = Math.max(0, currentLocations - 2);
+    //     // Simulate previous period data (you can replace this with actual historical data)
+    //     const previousTotal = Math.round(currentTotal * 0.85); // Simulate 15% growth
+    //     const previousAvg = Math.round(currentAvg * 0.9);
+    //     const previousLocations = Math.max(0, currentLocations - 2);
         
-        return [
-            {
-                label: 'Total Distribution',
-                value: currentTotal,
-                previousValue: previousTotal,
-                trend: (currentTotal > previousTotal ? 'up' : currentTotal < previousTotal ? 'down' : 'stable') as 'up' | 'down' | 'stable',
-                unit: 'units'
-            },
-            {
-                label: 'Average per Location',
-                value: currentAvg,
-                previousValue: previousAvg,
-                trend: (currentAvg > previousAvg ? 'up' : currentAvg < previousAvg ? 'down' : 'stable') as 'up' | 'down' | 'stable',
-                unit: 'units'
-            },
-            {
-                label: 'Active Locations',
-                value: currentLocations,
-                previousValue: previousLocations,
-                trend: (currentLocations > previousLocations ? 'up' : currentLocations < previousLocations ? 'down' : 'stable') as 'up' | 'down' | 'stable',
-                unit: ''
-            }
-        ];
-    }, [filteredMapData]);
+    //     return [
+    //         {
+    //             label: 'Total Distribution',
+    //             value: currentTotal,
+    //             previousValue: previousTotal,
+    //             trend: (currentTotal > previousTotal ? 'up' : currentTotal < previousTotal ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+    //             unit: 'units'
+    //         },
+    //         {
+    //             label: 'Average per Location',
+    //             value: currentAvg,
+    //             previousValue: previousAvg,
+    //             trend: (currentAvg > previousAvg ? 'up' : currentAvg < previousAvg ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+    //             unit: 'units'
+    //         },
+    //         {
+    //             label: 'Active Locations',
+    //             value: currentLocations,
+    //             previousValue: previousLocations,
+    //             trend: (currentLocations > previousLocations ? 'up' : currentLocations < previousLocations ? 'down' : 'stable') as 'up' | 'down' | 'stable',
+    //             unit: ''
+    //         }
+    //     ];
+    // }, [filteredMapData]);
 
     const handleLocationClick = () => {
         // You can add more detailed view or navigation here
@@ -896,8 +895,8 @@ export default function DistributionMap() {
                         height={350}
                         className="mt-6"
                         onYearChange={setChartYear}
-                        onMonthChange={setChartMonth}
-                        onViewTypeChange={setChartViewType}
+                        // onMonthChange={setChartMonth}
+                        // onViewTypeChange={setChartViewType}
                     />
                 </>
             )}

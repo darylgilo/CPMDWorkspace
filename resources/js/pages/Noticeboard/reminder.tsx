@@ -1,6 +1,4 @@
 import SearchBar from '@/components/SearchBar';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -287,11 +285,7 @@ export default function ReminderPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Reminders & Deadlines', href: '/noticeboard/reminders' },
-    ];
-
+    
     // Check if a date has reminders
     const hasReminders = (date: Date): boolean => {
         const dateKey = formatDate(date);
@@ -318,7 +312,7 @@ export default function ReminderPage() {
     const today = new Date();
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Reminders & Deadlines" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
@@ -767,6 +761,6 @@ export default function ReminderPage() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

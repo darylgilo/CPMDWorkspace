@@ -1,6 +1,4 @@
 import SearchBar from '@/components/SearchBar';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
     Calendar as CalendarIcon,
@@ -240,11 +238,7 @@ export default function AnnouncementPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Announcements', href: '/noticeboard/announcements' },
-    ];
-
+    
     // Check if a date has announcements
     const hasAnnouncements = (date: Date): boolean => {
         const dateKey = formatDate(date);
@@ -262,8 +256,8 @@ export default function AnnouncementPage() {
     console.log('pageProps:', pageProps);
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Announcements & News" />
+        <>
+            <Head title="Announcements & Memo" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
                 {/* Header */}
@@ -271,12 +265,12 @@ export default function AnnouncementPage() {
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Announcements & Updates
+                                Announcements & Memos
                             </h1>
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 {selectedDate
                                     ? `Showing announcements and updates for ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                                    : 'View all announcements and updates'}
+                                    : 'View all announcements and Memo'}
                             </p>
                         </div>
 
@@ -618,7 +612,7 @@ export default function AnnouncementPage() {
                                         {announcements.length}
                                     </div>
                                     <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                        Total Announcements & Updates
+                                        Total Announcements & Memos
                                     </div>
                                 </div>
                             </div>
@@ -626,6 +620,6 @@ export default function AnnouncementPage() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

@@ -1,6 +1,4 @@
 import SearchBar from '@/components/SearchBar';
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import {
     Bell,
@@ -252,11 +250,7 @@ export default function AnnouncementPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Noticeboard', href: '/noticeboard' },
-        { title: 'Events', href: '/noticeboard/event' },
-    ];
-
+    
     // Check if a date has travels
     const hasAnnouncements = (date: Date): boolean => {
         const dateKey = formatDate(date);
@@ -272,7 +266,7 @@ export default function AnnouncementPage() {
     const today = new Date();
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Notice of Events" />
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
@@ -643,6 +637,6 @@ export default function AnnouncementPage() {
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }

@@ -147,7 +147,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     <Link
                         href={dashboard()}
                         prefetch
-                        className="flex items-center space-x-2"
+                        className="flex items-center space-x-2 hover:bg-transparent hover:no-underline"
                     >
                         <AppLogo />
                     </Link>
