@@ -65,19 +65,9 @@ const data = {
             isActive: true,
         },
         {
-            title: 'Documentation',
-            url: '#',
+            title: 'Writing Suite',
+            url: '/writing',
             icon: LucideNotebookPen,
-            items: [
-                {
-                    title: 'Writeups',
-                    url: '#',
-                },
-                {
-                    title: 'Travel Report',
-                    url: '#',
-                },
-            ],
         },
         {
             title: 'Inventory',
