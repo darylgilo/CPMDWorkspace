@@ -217,7 +217,7 @@ export default function FormDialog({
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            className="bg-[#163832] hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 text-white"
                         >
                             {submitButtonText}
                         </Button>

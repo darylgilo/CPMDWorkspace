@@ -10,6 +10,8 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\PesticideManagement\PesticideController;
 use App\Http\Controllers\PesticideManagement\DistributionController;
 use App\Http\Controllers\PesticideManagement\PesticideIndexController;
+use App\Http\Controllers\Writing\WritingController;
+use App\Http\Controllers\CommentController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -33,6 +35,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Pesticide Management (Parent page with tabs)
     Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
+
+    // Writing Management (Parent page with tabs)
+    Route::get('/writing', [WritingController::class, 'index'])->name('writing.index');
+    Route::get('/archive', [WritingController::class, 'archive'])->name('writing.archive');
+    
+    // Document pages
+    Route::get('/editdocument/{document}', [WritingController::class, 'edit'])->name('documents.edit');
+    Route::get('/postedview/{document}', [WritingController::class, 'postedView'])->name('documents.postedview');
+    
+    // Document CRUD operations
+    Route::post('/documents', [WritingController::class, 'store'])->name('documents.store');
+    Route::put('/documents/{document}', [WritingController::class, 'update'])->name('documents.update');
+    Route::delete('/documents/{document}', [WritingController::class, 'destroy'])->name('documents.destroy');
+    
+    // Document interactions
+    Route::post('/documents/{document}/approve', [WritingController::class, 'approve'])->name('documents.approve');
+    Route::post('/documents/{document}/like', [WritingController::class, 'like'])->name('documents.like');
+    Route::post('/documents/{document}/bookmark', [WritingController::class, 'bookmark'])->name('documents.bookmark');
+    Route::put('/documents/{document}/status', [WritingController::class, 'updateStatus'])->name('documents.updateStatus');
+    
+    // Comments
+    Route::get('/documents/{document}/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     // Pesticide Inventory Management
     Route::get('/pesticides', [PesticideController::class, 'index'])->name('pesticides.index');
