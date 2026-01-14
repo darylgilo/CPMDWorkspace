@@ -1,10 +1,12 @@
-import { usePage, router } from '@inertiajs/react';
-import { FileText, Edit3, Trash2, MoreVertical, ChevronDown, ChevronUp, Eye, Search as SearchIcon, CheckCircle } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Select,
     SelectContent,
@@ -12,7 +14,24 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useState, useMemo, ChangeEvent } from 'react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { router, usePage } from '@inertiajs/react';
+import {
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+    Edit3,
+    MoreVertical,
+    Trash2,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface Document {
     id: number;
@@ -52,12 +71,7 @@ interface PageProps {
 
 export default function Approved() {
     const { props } = usePage<PageProps>();
-    const {
-        documents,
-        search = '',
-        perPage: perPageProp = 10,
-        auth
-    } = props;
+    const { documents, search = '', perPage: perPageProp = 10, auth } = props;
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -71,7 +85,7 @@ export default function Approved() {
     const approvedDocuments = useMemo(() => {
         if (!documents?.data) return [];
         return documents.data.filter(
-            (document: Document) => document.status === 'approved'
+            (document: Document) => document.status === 'approved',
         );
     }, [documents]);
 
@@ -108,21 +122,6 @@ export default function Approved() {
     };
 
     // Handle sorting
-    const handleSearch = (searchTerm: string) => {
-        setSearchValue(searchTerm);
-        router.get(
-            '/writing',
-            {
-                tab: 'approved',
-                search: searchTerm,
-                perPage,
-                page: 1,
-            },
-            { preserveState: true, replace: true },
-        );
-    };
-
-    // Handle sorting
     const handleSort = (field: string) => {
         const newDirection =
             sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
@@ -142,11 +141,6 @@ export default function Approved() {
             },
             { preserveState: true, replace: true },
         );
-    };
-
-    // Handle input change
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchValue(e.target.value);
     };
 
     // Sort the data client-side
@@ -200,16 +194,14 @@ export default function Approved() {
         );
     };
 
-    const handleView = (document: Document) => {
-        router.get(`/approvedview/${document.id}`);
-    };
-
     const handleEdit = (document: Document) => {
         router.get(`/editdocument/${document.id}`, { tab: 'approved' });
     };
 
     const handleDelete = (document: Document) => {
-        if (confirm('Are you sure you want to delete this approved document?')) {
+        if (
+            confirm('Are you sure you want to delete this approved document?')
+        ) {
             router.delete(`/documents/${document.id}`);
         }
     };
@@ -244,26 +236,26 @@ export default function Approved() {
     return (
         <div className="space-y-6 px-4 py-6">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="mb-6 flex items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
                         <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
                         Approved Documents
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-2">
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">
                         View all approved write-ups ready for posting
                     </p>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
                             <label
                                 htmlFor="entries"
-                                className="font-medium text-sm"
+                                className="text-sm font-medium"
                             >
                                 Show
                             </label>
@@ -301,15 +293,15 @@ export default function Approved() {
             </div>
 
             {/* Approved Documents Table */}
-            <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <div className="px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                         Approved Write-ups
-                        <span className="ml-2 px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
+                        <span className="ml-2 rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-200">
                             {approvedDocuments.length}
                         </span>
                     </h2>
-                    
+
                     {approvedDocuments.length > 0 ? (
                         <Table>
                             <TableHeader>
@@ -360,10 +352,13 @@ export default function Approved() {
                             </TableHeader>
                             <TableBody>
                                 {sortedDocuments.map((document: Document) => (
-                                    <TableRow key={document.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                    <TableRow
+                                        key={document.id}
+                                        className="hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                    >
                                         <TableCell>
                                             <div className="flex items-center">
-                                                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mr-3" />
+                                                <CheckCircle className="mr-3 h-5 w-5 text-green-600 dark:text-green-400" />
                                                 <div className="font-medium text-gray-900 dark:text-white">
                                                     {document.title}
                                                 </div>
@@ -371,14 +366,19 @@ export default function Approved() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-sm text-gray-900 dark:text-white">
-                                                {document.category === 'posting' ? 'Posting' : 'Travel Report'}
+                                                {document.category === 'posting'
+                                                    ? 'Posting'
+                                                    : 'Travel Report'}
                                             </span>
                                         </TableCell>
                                         <TableCell>
                                             <button
-                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(document.status)}`}
+                                                className={`inline-flex cursor-pointer items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity hover:opacity-80 ${getStatusColor(document.status)}`}
                                             >
-                                                {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
+                                                {document.status
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    document.status.slice(1)}
                                             </button>
                                         </TableCell>
                                         <TableCell className="text-sm text-gray-500 dark:text-gray-400">
@@ -392,7 +392,9 @@ export default function Approved() {
                                         <TableCell>
                                             <div className="flex justify-center">
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
                                                         <Button
                                                             variant="ghost"
                                                             size="icon-sm"
@@ -409,19 +411,30 @@ export default function Approved() {
                                                         className="w-40"
                                                     >
                                                         <DropdownMenuItem
-                                                            onClick={() => handleEdit(document)}
+                                                            onClick={() =>
+                                                                handleEdit(
+                                                                    document,
+                                                                )
+                                                            }
                                                             className="cursor-pointer"
                                                         >
                                                             <Edit3 className="mr-2 h-4 w-4" />
                                                             <span>Edit</span>
                                                         </DropdownMenuItem>
-                                                        {auth?.user?.role === 'superadmin' && (
+                                                        {auth?.user?.role ===
+                                                            'superadmin' && (
                                                             <DropdownMenuItem
-                                                                onClick={() => handleDelete(document)}
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        document,
+                                                                    )
+                                                                }
                                                                 className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                                                             >
                                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                                <span>Delete</span>
+                                                                <span>
+                                                                    Delete
+                                                                </span>
                                                             </DropdownMenuItem>
                                                         )}
                                                     </DropdownMenuContent>
@@ -433,9 +446,9 @@ export default function Approved() {
                             </TableBody>
                         </Table>
                     ) : (
-                        <div className="text-center py-12">
-                            <CheckCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        <div className="py-12 text-center">
+                            <CheckCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                                 No approved documents found
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
@@ -443,7 +456,7 @@ export default function Approved() {
                             </p>
                         </div>
                     )}
-                    
+
                     {/* Pagination */}
                     {approvedDocuments.length > 0 && (
                         <div className="mt-4">

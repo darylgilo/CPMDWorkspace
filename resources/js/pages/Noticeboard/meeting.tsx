@@ -108,7 +108,9 @@ export default function AnnouncementPage() {
     const [search, setSearch] = useState('');
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
     const [currentPage, setCurrentPage] = useState(1);
-    const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'ended'>('all');
+    const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'ended'>(
+        'all',
+    );
     const itemsPerPage = 5;
 
     const toggleCardExpansion = (id: string) => {
@@ -223,16 +225,19 @@ export default function AnnouncementPage() {
     }, [meetings]);
 
     // Helper functions for calendar - wrapped in useMemo to avoid re-creation issues
-    const calendarHelpers = useMemo(() => ({
-        hasMeetingsOnDay: (date: Date): boolean => {
-            const dateKey = formatDate(date);
-            return meetingsByDate.has(dateKey);
-        },
-        getMeetingCount: (date: Date): number => {
-            const dateKey = formatDate(date);
-            return meetingsByDate.get(dateKey)?.length || 0;
-        }
-    }), [meetingsByDate]);
+    const calendarHelpers = useMemo(
+        () => ({
+            hasMeetingsOnDay: (date: Date): boolean => {
+                const dateKey = formatDate(date);
+                return meetingsByDate.has(dateKey);
+            },
+            getMeetingCount: (date: Date): number => {
+                const dateKey = formatDate(date);
+                return meetingsByDate.get(dateKey)?.length || 0;
+            },
+        }),
+        [meetingsByDate],
+    );
 
     // Pagination
     const totalPages = Math.ceil(displayedMeetings.length / itemsPerPage);
@@ -411,8 +416,7 @@ export default function AnnouncementPage() {
                                             currentPage * itemsPerPage,
                                             displayedMeetings.length,
                                         )}{' '}
-                                        of {displayedMeetings.length}{' '}
-                                        meetings
+                                        of {displayedMeetings.length} meetings
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
@@ -446,185 +450,173 @@ export default function AnnouncementPage() {
 
                             <div className="space-y-4">
                                 {paginatedMeetings.length > 0 ? (
-                                    paginatedMeetings.map(
-                                        (meeting: Notice) => {
-                                            const isExpanded =
-                                                expandedCards.has(
-                                                    meeting.id,
-                                                );
-                                            const isEnded =
-                                                meeting.date &&
-                                                isPastDate(new Date(meeting.date));
-                                            const daysUntil = meeting.date
-                                                ? getDaysUntilDeadline(
-                                                      new Date(meeting.date),
-                                                  )
-                                                : null;
+                                    paginatedMeetings.map((meeting: Notice) => {
+                                        const isExpanded = expandedCards.has(
+                                            meeting.id,
+                                        );
+                                        const isEnded =
+                                            meeting.date &&
+                                            isPastDate(new Date(meeting.date));
+                                        const daysUntil = meeting.date
+                                            ? getDaysUntilDeadline(
+                                                  new Date(meeting.date),
+                                              )
+                                            : null;
 
-                                            return (
-                                                <div
-                                                    key={meeting.id}
-                                                    className={`group rounded-lg border p-4 transition hover:shadow-md ${
-                                                        isEnded
-                                                            ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
-                                                            : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
-                                                    }`}
-                                                >
-                                                    <div className="mb-3 flex items-start justify-between">
-                                                        <div className="flex flex-1 items-start gap-3">
-                                                            <AlertCircle
-                                                                className={`h-6 w-6 flex-shrink-0 ${
-                                                                    isEnded
-                                                                        ? 'text-red-600 dark:text-red-400'
-                                                                        : 'text-[#163832] dark:text-[#235347]'
-                                                                }`}
-                                                                aria-hidden
-                                                            />
-                                                            <div className="flex-1">
-                                                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                    {meeting.title}
-                                                                </h3>
-                                                                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                    <span className="flex items-center gap-1">
-                                                                        <User className="h-3 w-3" />
-                                                                        {
-                                                                            meeting.username
-                                                                        }
-                                                                    </span>
-                                                                    Posted on{' '}
-                                                                    {new Date(
-                                                                        meeting.createdAt,
-                                                                    ).toLocaleString()}
-                                                                </div>
+                                        return (
+                                            <div
+                                                key={meeting.id}
+                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
+                                                    isEnded
+                                                        ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
+                                                        : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                }`}
+                                            >
+                                                <div className="mb-3 flex items-start justify-between">
+                                                    <div className="flex flex-1 items-start gap-3">
+                                                        <AlertCircle
+                                                            className={`h-6 w-6 flex-shrink-0 ${
+                                                                isEnded
+                                                                    ? 'text-red-600 dark:text-red-400'
+                                                                    : 'text-[#163832] dark:text-[#235347]'
+                                                            }`}
+                                                            aria-hidden
+                                                        />
+                                                        <div className="flex-1">
+                                                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                                {meeting.title}
+                                                            </h3>
+                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                                                <span className="flex items-center gap-1">
+                                                                    <User className="h-3 w-3" />
+                                                                    {
+                                                                        meeting.username
+                                                                    }
+                                                                </span>
+                                                                Posted on{' '}
+                                                                {new Date(
+                                                                    meeting.createdAt,
+                                                                ).toLocaleString()}
                                                             </div>
                                                         </div>
-                                                    </div>
-
-                                                    <p
-                                                        className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
-                                                    >
-                                                        {
-                                                            meeting.description
-                                                        }
-                                                    </p>
-                                                    {meeting.description
-                                                        .length > 150 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleCardExpansion(
-                                                                    meeting.id,
-                                                                )
-                                                            }
-                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                        >
-                                                            {isExpanded
-                                                                ? 'Show less'
-                                                                : 'Read more'}
-                                                        </button>
-                                                    )}
-
-                                                    {/* Attachments */}
-                                                    {meeting.files &&
-                                                        meeting.files
-                                                            .length > 0 && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
-                                                                <span>
-                                                                    {
-                                                                        meeting
-                                                                            .files
-                                                                            .length
-                                                                    }{' '}
-                                                                    attachment(s)
-                                                                </span>
-                                                                {meeting.files_download_url && (
-                                                                    <a
-                                                                        href={
-                                                                            meeting.files_download_url
-                                                                        }
-                                                                        className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                        download
-                                                                    >
-                                                                        Download
-                                                                        All
-                                                                    </a>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                    {meeting.file &&
-                                                        !meeting.files
-                                                            ?.length && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
-                                                                <a
-                                                                    href={
-                                                                        meeting
-                                                                            .file
-                                                                            .url
-                                                                    }
-                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download={
-                                                                        meeting
-                                                                            .file
-                                                                            .name
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        meeting
-                                                                            .file
-                                                                            .name
-                                                                    }
-                                                                </a>
-                                                            </div>
-                                                        )}
-
-                                                    <div className="mt-3 flex items-center justify-between gap-3">
-                                                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                            {meeting.date && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <CalendarIcon className="h-3 w-3" />
-                                                                    {new Date(
-                                                                        meeting.date,
-                                                                    ).toLocaleDateString()}
-                                                                </span>
-                                                            )}
-                                                            {meeting.time && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <Clock className="h-3 w-3" />
-                                                                    {
-                                                                        meeting.time
-                                                                    }
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {daysUntil !== null && (
-                                                            <div
-                                                                className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                                                                    isEnded
-                                                                        ? 'bg-red-600 text-white dark:bg-red-700'
-                                                                        : daysUntil <=
-                                                                            3
-                                                                          ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                          : 'bg-blue-500 text-white dark:bg-blue-600'
-                                                                }`}
-                                                            >
-                                                                {isEnded
-                                                                    ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ended`
-                                                                    : daysUntil ===
-                                                                        0
-                                                                      ? 'Today'
-                                                                      : daysUntil ===
-                                                                        1
-                                                                      ? 'Tomorrow'
-                                                                      : `In ${daysUntil} days`}
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
-                                            );
-                                        },
-                                    )
+
+                                                <p
+                                                    className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                >
+                                                    {meeting.description}
+                                                </p>
+                                                {meeting.description.length >
+                                                    150 && (
+                                                    <button
+                                                        onClick={() =>
+                                                            toggleCardExpansion(
+                                                                meeting.id,
+                                                            )
+                                                        }
+                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                    >
+                                                        {isExpanded
+                                                            ? 'Show less'
+                                                            : 'Read more'}
+                                                    </button>
+                                                )}
+
+                                                {/* Attachments */}
+                                                {meeting.files &&
+                                                    meeting.files.length >
+                                                        0 && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <span>
+                                                                {
+                                                                    meeting
+                                                                        .files
+                                                                        .length
+                                                                }{' '}
+                                                                attachment(s)
+                                                            </span>
+                                                            {meeting.files_download_url && (
+                                                                <a
+                                                                    href={
+                                                                        meeting.files_download_url
+                                                                    }
+                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                                    download
+                                                                >
+                                                                    Download All
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                {meeting.file &&
+                                                    !meeting.files?.length && (
+                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                                            <FileText className="h-4 w-4" />
+                                                            <a
+                                                                href={
+                                                                    meeting.file
+                                                                        .url
+                                                                }
+                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
+                                                                download={
+                                                                    meeting.file
+                                                                        .name
+                                                                }
+                                                            >
+                                                                {
+                                                                    meeting.file
+                                                                        .name
+                                                                }
+                                                            </a>
+                                                        </div>
+                                                    )}
+
+                                                <div className="mt-3 flex items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                                                        {meeting.date && (
+                                                            <span className="flex items-center gap-1">
+                                                                <CalendarIcon className="h-3 w-3" />
+                                                                {new Date(
+                                                                    meeting.date,
+                                                                ).toLocaleDateString()}
+                                                            </span>
+                                                        )}
+                                                        {meeting.time && (
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock className="h-3 w-3" />
+                                                                {meeting.time}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {daysUntil !== null && (
+                                                        <div
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                isEnded
+                                                                    ? 'bg-red-600 text-white dark:bg-red-700'
+                                                                    : daysUntil <=
+                                                                        3
+                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                            }`}
+                                                        >
+                                                            {isEnded
+                                                                ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ended`
+                                                                : daysUntil ===
+                                                                    0
+                                                                  ? 'Today'
+                                                                  : daysUntil ===
+                                                                      1
+                                                                    ? 'Tomorrow'
+                                                                    : `In ${daysUntil} days`}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                                 ) : (
                                     <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-neutral-700">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -701,7 +693,8 @@ export default function AnnouncementPage() {
                                     const isSelected =
                                         selectedDate &&
                                         isSameDay(day, selectedDate);
-                                    const hasMeetingsOnDay = calendarHelpers.hasMeetingsOnDay(day);
+                                    const hasMeetingsOnDay =
+                                        calendarHelpers.hasMeetingsOnDay(day);
                                     const meetingCount =
                                         calendarHelpers.getMeetingCount(day);
                                     const isEndedDay =

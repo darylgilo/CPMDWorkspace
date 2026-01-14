@@ -250,7 +250,6 @@ export default function AnnouncementPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    
     // Check if a date has travels
     const hasAnnouncements = (date: Date): boolean => {
         const dateKey = formatDate(date);

@@ -485,7 +485,6 @@ export default function CategoriesPage() {
         });
     }
 
-    
     return (
         <>
             <Head title="Noticeboard" />
