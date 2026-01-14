@@ -54,7 +54,7 @@ class ProfileUpdateRequest extends FormRequest
             'cpmd' => ['nullable', 'string'],
             
             // Profile picture upload with restrictions
-            'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:10240'], // 10MB max
+            'profile_picture' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:10240'], // 10MB max
         ];
     }
     /**
