@@ -74,4 +74,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Whereabout::class);
     }
+
+    /**
+     * Get the profile picture URL.
+     */
+    public function getProfilePictureUrlAttribute(): ?string
+    {
+        if (!$this->profile_picture) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (filter_var($this->profile_picture, FILTER_VALIDATE_URL)) {
+            return $this->profile_picture;
+        }
+
+        // If it's a relative path, convert to full URL
+        return asset('storage/' . $this->profile_picture);
+    }
 }

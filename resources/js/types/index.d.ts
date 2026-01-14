@@ -35,6 +35,8 @@ export interface User {
     name: string;
     email: string;
     avatar?: string;
+    profile_picture?: string | null;
+    profile_picture_url?: string | null;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
     created_at: string;
@@ -66,7 +68,6 @@ export interface User {
     // Additional fields
     role?: string | null;
     status?: string | null;
-    profile_picture?: string | null;
     last_login_at?: string | null;
 
     [key: string]: unknown; // This allows for additional properties...
