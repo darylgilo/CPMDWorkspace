@@ -3,18 +3,12 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import {
-    AlertCircle,
-    Bell,
-    Calendar,
-    Grid3X3,
-    Megaphone,
-} from 'lucide-react';
+import { AlertCircle, Bell, Calendar, Grid3X3, Megaphone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 // Import child components
-import CategoriesPage from './categories';
 import AnnouncementPage from './announcement';
+import CategoriesPage from './categories';
 import EventPage from './event';
 import MeetingPage from './meeting';
 import ReminderPage from './reminder';
@@ -76,7 +70,7 @@ export default function NoticeboardIndex() {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         return (notices as Notice[]).filter((notice: Notice) => {
             if (notice.category !== 'Notice of Meeting' || !notice.date) {
                 return false;
@@ -92,7 +86,7 @@ export default function NoticeboardIndex() {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         return (notices as Notice[]).filter((notice: Notice) => {
             if (notice.category !== 'Reminder/Deadline' || !notice.date) {
                 return false;
@@ -108,7 +102,7 @@ export default function NoticeboardIndex() {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         return (notices as Notice[]).filter((notice: Notice) => {
             if (notice.category !== 'Notice of Event' || !notice.date) {
                 return false;
@@ -124,7 +118,7 @@ export default function NoticeboardIndex() {
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         return (notices as Notice[]).filter((notice: Notice) => {
             if (notice.category !== 'Announcement' || !notice.date) {
                 return false;
@@ -155,7 +149,11 @@ export default function NoticeboardIndex() {
         const hash = window.location.hash.substring(1);
         if (
             hash &&
-            (hash === 'notice' || hash === 'announcements' || hash === 'meetings' || hash === 'events' || hash === 'reminders')
+            (hash === 'notice' ||
+                hash === 'announcements' ||
+                hash === 'meetings' ||
+                hash === 'events' ||
+                hash === 'reminders')
         ) {
             // If there's a hash in the URL, navigate to that tab using query params
             router.get(
@@ -201,26 +199,30 @@ export default function NoticeboardIndex() {
                                             <item.icon className="h-4 w-4" />
                                         )}
                                         {item.title}
-                                        {item.title === 'Reminders' && todayRemindersCount > 0 && (
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
-                                                {todayRemindersCount}
-                                            </span>
-                                        )}
-                                        {item.title === 'Meetings' && todayMeetingsCount > 0 && (
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
-                                                {todayMeetingsCount}
-                                            </span>
-                                        )}
-                                        {item.title === 'Announcements' && todayAnnouncementsCount > 0 && (
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
-                                                {todayAnnouncementsCount}
-                                            </span>
-                                        )}
-                                        {item.title === 'Events' && todayEventsCount > 0 && (
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
-                                                {todayEventsCount}
-                                            </span>
-                                        )}
+                                        {item.title === 'Reminders' &&
+                                            todayRemindersCount > 0 && (
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
+                                                    {todayRemindersCount}
+                                                </span>
+                                            )}
+                                        {item.title === 'Meetings' &&
+                                            todayMeetingsCount > 0 && (
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
+                                                    {todayMeetingsCount}
+                                                </span>
+                                            )}
+                                        {item.title === 'Announcements' &&
+                                            todayAnnouncementsCount > 0 && (
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
+                                                    {todayAnnouncementsCount}
+                                                </span>
+                                            )}
+                                        {item.title === 'Events' &&
+                                            todayEventsCount > 0 && (
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs font-medium text-white">
+                                                    {todayEventsCount}
+                                                </span>
+                                            )}
                                     </div>
                                 </Button>
                             );
@@ -233,9 +235,7 @@ export default function NoticeboardIndex() {
                     <section className="w-full">
                         {/* Tab Content */}
                         <div className="tab-content">
-                            {activeTab === 'notice' && (
-                                <CategoriesPage />
-                            )}
+                            {activeTab === 'notice' && <CategoriesPage />}
                             {activeTab === 'announcements' && (
                                 <AnnouncementPage />
                             )}

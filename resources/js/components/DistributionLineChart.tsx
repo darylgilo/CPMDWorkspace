@@ -1,15 +1,21 @@
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useState, useMemo } from 'react';
 import {
-    LineChart,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { useMemo, useState } from 'react';
+import {
+    CartesianGrid,
+    Legend,
     Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
     XAxis,
     YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
 } from 'recharts';
 
 interface Distribution {
@@ -48,7 +54,9 @@ export default function DistributionLineChart({
     onMonthChange,
     onViewTypeChange,
 }: DistributionLineChartProps) {
-    const [filterType, setFilterType] = useState<'monthly' | 'yearly'>('monthly');
+    const [filterType, setFilterType] = useState<'monthly' | 'yearly'>(
+        'monthly',
+    );
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     // const [calendarDate, setCalendarDate] = useState(new Date());
@@ -56,7 +64,7 @@ export default function DistributionLineChart({
     // Generate years dynamically - show all years with scrollable dropdown
     const years = useMemo(() => {
         const dataYears = new Set<number>();
-        
+
         // Extract years from the actual distribution data
         distributions?.forEach((distribution: Distribution) => {
             if (distribution.received_date) {
@@ -64,23 +72,36 @@ export default function DistributionLineChart({
                 dataYears.add(year);
             }
         });
-        
+
         // Create a wide range of years for scrolling (1950 to current year + 10)
         const currentYear = new Date().getFullYear();
         const allYears = [];
-        
+
         // Generate years from 1950 to current year + 10
         for (let year = 1950; year <= currentYear + 10; year++) {
             allYears.push(year);
         }
-        
+
         return allYears;
     }, [distributions]);
-    
-    const months = useMemo(() => [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ], []);
+
+    const months = useMemo(
+        () => [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
+        ],
+        [],
+    );
 
     // Filter data based on selected filters
     const displayData = useMemo(() => {
@@ -90,7 +111,7 @@ export default function DistributionLineChart({
         } else {
             // For monthly view, show data for the selected month only
             const selectedMonthName = months[selectedMonth];
-            return data.filter(item => item.month === selectedMonthName);
+            return data.filter((item) => item.month === selectedMonthName);
         }
     }, [data, filterType, selectedMonth, months]);
 
@@ -104,7 +125,7 @@ export default function DistributionLineChart({
     //     setCalendarDate(newDate);
     //     setSelectedMonth(newDate.getMonth());
     //     setSelectedYear(newDate.getFullYear());
-        
+
     //     // Trigger parent component to update data if needed
     //     // This will cause the displayData useMemo to recalculate
     // };
@@ -128,16 +149,21 @@ export default function DistributionLineChart({
                 <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                     {title}
                 </h3>
-                
+
                 {/* Filter Controls */}
                 <div className="flex flex-wrap items-center gap-4">
                     {/* Filter Type Selector */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">View:</span>
-                        <Select value={filterType} onValueChange={(value: 'monthly' | 'yearly') => {
-                            setFilterType(value);
-                            onViewTypeChange?.(value);
-                        }}>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            View:
+                        </span>
+                        <Select
+                            value={filterType}
+                            onValueChange={(value: 'monthly' | 'yearly') => {
+                                setFilterType(value);
+                                onViewTypeChange?.(value);
+                            }}
+                        >
                             <SelectTrigger className="w-32">
                                 <SelectValue />
                             </SelectTrigger>
@@ -150,18 +176,26 @@ export default function DistributionLineChart({
 
                     {/* Year Selector */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Year:</span>
-                        <Select value={selectedYear.toString()} onValueChange={(value) => {
-                            const year = parseInt(value);
-                            setSelectedYear(year);
-                            onYearChange?.(year);
-                        }}>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            Year:
+                        </span>
+                        <Select
+                            value={selectedYear.toString()}
+                            onValueChange={(value) => {
+                                const year = parseInt(value);
+                                setSelectedYear(year);
+                                onYearChange?.(year);
+                            }}
+                        >
                             <SelectTrigger className="w-24">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {years.map(year => (
-                                    <SelectItem key={year} value={year.toString()}>
+                                {years.map((year) => (
+                                    <SelectItem
+                                        key={year}
+                                        value={year.toString()}
+                                    >
                                         {year}
                                     </SelectItem>
                                 ))}
@@ -172,18 +206,26 @@ export default function DistributionLineChart({
                     {/* Month Selector (only for monthly view) */}
                     {filterType === 'monthly' && (
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Month:</span>
-                            <Select value={selectedMonth.toString()} onValueChange={(value) => {
-                                const month = parseInt(value);
-                                setSelectedMonth(month);
-                                onMonthChange?.(month);
-                            }}>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                Month:
+                            </span>
+                            <Select
+                                value={selectedMonth.toString()}
+                                onValueChange={(value) => {
+                                    const month = parseInt(value);
+                                    setSelectedMonth(month);
+                                    onMonthChange?.(month);
+                                }}
+                            >
                                 <SelectTrigger className="w-28">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {months.map((month, index) => (
-                                        <SelectItem key={index} value={index.toString()}>
+                                        <SelectItem
+                                            key={index}
+                                            value={index.toString()}
+                                        >
                                             {month}
                                         </SelectItem>
                                     ))}
@@ -205,17 +247,21 @@ export default function DistributionLineChart({
                         bottom: 5,
                     }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                        dataKey={filterType === 'monthly' && displayData.length === 1 ? 'month' : 'month'}
+                    <CartesianGrid
+                        strokeDasharray="3 3"
+                        className="opacity-30"
+                    />
+                    <XAxis
+                        dataKey={
+                            filterType === 'monthly' && displayData.length === 1
+                                ? 'month'
+                                : 'month'
+                        }
                         tick={{ fontSize: 12 }}
                         stroke="#6b7280"
                     />
-                    <YAxis 
-                        tick={{ fontSize: 12 }}
-                        stroke="#6b7280"
-                    />
-                    <Tooltip 
+                    <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <Tooltip
                         contentStyle={{
                             backgroundColor: 'rgba(255, 255, 255, 0.95)',
                             border: '1px solid #e5e7eb',
@@ -223,10 +269,10 @@ export default function DistributionLineChart({
                         }}
                         labelStyle={{ color: '#111827', fontWeight: 600 }}
                     />
-                    <Legend 
+                    <Legend
                         wrapperStyle={{
                             paddingTop: '20px',
-                            fontSize: '12px'
+                            fontSize: '12px',
                         }}
                     />
                     {lines.map((line) => (

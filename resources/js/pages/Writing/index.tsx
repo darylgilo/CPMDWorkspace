@@ -3,15 +3,21 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { FileText, PenTool, BookOpen, Bookmark as BookmarkIcon, CheckCircle } from 'lucide-react';
+import {
+    BookOpen,
+    Bookmark as BookmarkIcon,
+    CheckCircle,
+    FileText,
+    PenTool,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 // Import child components
-import Writeup from './writeup';
-import Bookmark from './Bookmark';
-import Archive from './archive';
-import Posted from './Posted';
 import Approved from './Approved';
+import Archive from './archive';
+import Bookmark from './Bookmark';
+import Posted from './Posted';
+import Writeup from './writeup';
 
 interface PageProps {
     activeTab?: string;
@@ -105,7 +111,11 @@ export default function WritingIndex() {
         const hash = window.location.hash.substring(1);
         if (
             hash &&
-            (hash === 'writeup' || hash === 'bookmark' || hash === 'archive' || hash === 'posted' || hash === 'approved')
+            (hash === 'writeup' ||
+                hash === 'bookmark' ||
+                hash === 'archive' ||
+                hash === 'posted' ||
+                hash === 'approved')
         ) {
             // If there's a hash in the URL, navigate to that tab using query params
             router.get(

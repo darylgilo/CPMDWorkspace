@@ -1,9 +1,8 @@
-import { usePage, router } from '@inertiajs/react';
-import { FileText, Calendar, User, ArrowLeft } from 'lucide-react';
-import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/react';
+import { ArrowLeft, Calendar, FileText, User } from 'lucide-react';
 
 interface Document {
     id: number;
@@ -40,7 +39,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function PostedView() {
     const { props } = usePage<PageProps>();
-    const { document, auth } = props;
+    const { document } = props;
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -81,13 +80,13 @@ export default function PostedView() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={document.title} />
             <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
-                <div className="max-w-6xl mx-auto px-4 py-8">
+                <div className="mx-auto max-w-6xl px-4 py-8">
                     {/* Back Button */}
                     <div className="mb-6">
                         <Button
                             variant="ghost"
                             onClick={() => router.get('/writing?tab=posted')}
-                            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                         >
                             <ArrowLeft className="h-4 w-4" />
                             Back
@@ -95,19 +94,24 @@ export default function PostedView() {
                     </div>
 
                     {/* Document Card */}
-                    <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                         {/* Card Header */}
-                        <div className="p-8 border-b border-gray-200 dark:border-neutral-700">
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
-                                    {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
+                        <div className="border-b border-gray-200 p-8 dark:border-neutral-700">
+                            <div className="mb-4 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(document.status)}`}
+                                >
+                                    {document.status.charAt(0).toUpperCase() +
+                                        document.status.slice(1)}
                                 </span>
                                 <span className="flex items-center gap-1">
                                     <FileText className="h-4 w-4" />
-                                    {document.category === 'posting' ? 'Posting' : 'Travel Report'}
+                                    {document.category === 'posting'
+                                        ? 'Posting'
+                                        : 'Travel Report'}
                                 </span>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                            <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
                                 {document.title}
                             </h1>
                             <div className="flex items-center justify-between">
@@ -117,7 +121,9 @@ export default function PostedView() {
                                 </div>
                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <Calendar className="h-4 w-4" />
-                                    <span>{formatDateForBlog(document.created_at)}</span>
+                                    <span>
+                                        {formatDateForBlog(document.created_at)}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -125,15 +131,17 @@ export default function PostedView() {
                         {/* Card Content */}
                         <div className="p-8">
                             <div className="prose prose-gray dark:prose-invert max-w-none">
-                                <div 
-                                    className="text-gray-700 dark:text-gray-300 leading-relaxed"
-                                    dangerouslySetInnerHTML={{ __html: document.content }}
+                                <div
+                                    className="leading-relaxed text-gray-700 dark:text-gray-300"
+                                    dangerouslySetInnerHTML={{
+                                        __html: document.content,
+                                    }}
                                 />
                             </div>
                         </div>
 
                         {/* Card Footer */}
-                        <div className="p-8 border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+                        <div className="border-t border-gray-200 bg-gray-50 p-8 dark:border-neutral-700 dark:bg-neutral-800">
                             <div className="text-sm text-gray-500 dark:text-gray-400">
                                 Last updated: {formatDate(document.updated_at)}
                             </div>

@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
 
 interface TrendData {
     label: string;
@@ -57,9 +57,9 @@ export default function StatisticsTrend({
                 {data.map((item, index) => {
                     const percentageChange = calculatePercentageChange(
                         item.value,
-                        item.previousValue
+                        item.previousValue,
                     );
-                    
+
                     return (
                         <div
                             key={index}

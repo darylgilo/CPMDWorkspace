@@ -285,7 +285,6 @@ export default function ReminderPage() {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    
     // Check if a date has reminders
     const hasReminders = (date: Date): boolean => {
         const dateKey = formatDate(date);
@@ -723,7 +722,7 @@ export default function ReminderPage() {
                                     <span>Overdue</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-                                    <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:ring-[#235347] dark:bg-[#235347]/40" />
+                                    <div className="h-3 w-3 rounded-full ring-2 ring-[#163832] dark:bg-[#235347]/40 dark:ring-[#235347]" />
                                     <span>Today</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">

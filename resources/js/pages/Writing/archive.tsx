@@ -1,10 +1,12 @@
-import { usePage, router } from '@inertiajs/react';
-import { FileText, Calendar, User, Plus, Edit3, Trash2, MoreVertical, ChevronDown, ChevronUp } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Select,
     SelectContent,
@@ -12,7 +14,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useState, useMemo } from 'react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { router, usePage } from '@inertiajs/react';
+import {
+    Calendar,
+    ChevronDown,
+    ChevronUp,
+    Edit3,
+    FileText,
+    MoreVertical,
+    Trash2,
+    User,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface Document {
     id: number;
@@ -51,12 +72,7 @@ interface PageProps {
 
 export default function Archive() {
     const { props } = usePage<PageProps>();
-    const {
-        documents,
-        search = '',
-        perPage: perPageProp = 10,
-        auth
-    } = props;
+    const { documents, search = '', perPage: perPageProp = 10, auth } = props;
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -70,7 +86,7 @@ export default function Archive() {
     const userDocuments = useMemo(() => {
         if (!documents?.data) return [];
         return documents.data.filter(
-            (document: Document) => document.author.id === auth?.user?.id
+            (document: Document) => document.author.id === auth?.user?.id,
         );
     }, [documents, auth]);
 
@@ -223,23 +239,23 @@ export default function Archive() {
     return (
         <div className="space-y-6 px-4 py-6">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="mb-6 flex items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
                         <FileText className="h-8 w-8 text-[#163832] dark:text-[#235347]" />
                         My Writeup Archive
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-2">
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">
                         View and manage all the documents you've created
                     </p>
                 </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm">
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex items-center">
-                        <div className="p-3 bg-[#163832] dark:bg-[#235347] rounded-full">
+                        <div className="rounded-full bg-[#163832] p-3 dark:bg-[#235347]">
                             <FileText className="h-6 w-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -256,9 +272,9 @@ export default function Archive() {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex items-center">
-                        <div className="p-3 bg-[#163832] dark:bg-[#235347] rounded-full">
+                        <div className="rounded-full bg-[#163832] p-3 dark:bg-[#235347]">
                             <Calendar className="h-6 w-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -266,7 +282,11 @@ export default function Archive() {
                                 Posted
                             </h3>
                             <p className="text-2xl font-bold text-[#163832] dark:text-white">
-                                {userDocuments.filter(doc => doc.status === 'posted').length}
+                                {
+                                    userDocuments.filter(
+                                        (doc) => doc.status === 'posted',
+                                    ).length
+                                }
                             </p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Posted documents
@@ -275,9 +295,9 @@ export default function Archive() {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex items-center">
-                        <div className="p-3 bg-[#163832] dark:bg-[#235347] rounded-full">
+                        <div className="rounded-full bg-[#163832] p-3 dark:bg-[#235347]">
                             <User className="h-6 w-6 text-white" />
                         </div>
                         <div className="ml-4">
@@ -285,7 +305,11 @@ export default function Archive() {
                                 Draft
                             </h3>
                             <p className="text-2xl font-bold text-[#163832] dark:text-white">
-                                {userDocuments.filter(doc => doc.status === 'draft').length}
+                                {
+                                    userDocuments.filter(
+                                        (doc) => doc.status === 'draft',
+                                    ).length
+                                }
                             </p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 Draft documents
@@ -296,13 +320,13 @@ export default function Archive() {
             </div>
 
             {/* Controls */}
-            <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm p-6">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
                             <label
                                 htmlFor="entries"
-                                className="font-medium text-sm"
+                                className="text-sm font-medium"
                             >
                                 Show
                             </label>
@@ -340,12 +364,12 @@ export default function Archive() {
             </div>
 
             {/* Documents Table */}
-            <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <div className="px-6 py-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                         Your Documents
                     </h2>
-                    
+
                     {userDocuments.length > 0 ? (
                         <Table>
                             <TableHeader>
@@ -393,10 +417,13 @@ export default function Archive() {
                             </TableHeader>
                             <TableBody>
                                 {sortedDocuments.map((document: Document) => (
-                                    <TableRow key={document.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                    <TableRow
+                                        key={document.id}
+                                        className="hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                    >
                                         <TableCell>
                                             <div className="flex items-center">
-                                                <FileText className="h-5 w-5 text-[#163832] dark:text-[#235347] mr-3" />
+                                                <FileText className="mr-3 h-5 w-5 text-[#163832] dark:text-[#235347]" />
                                                 <div className="font-medium text-gray-900 dark:text-white">
                                                     {document.title}
                                                 </div>
@@ -404,14 +431,19 @@ export default function Archive() {
                                         </TableCell>
                                         <TableCell>
                                             <span className="text-sm text-gray-900 dark:text-white">
-                                                {document.category === 'posting' ? 'Posting' : 'Travel Report'}
+                                                {document.category === 'posting'
+                                                    ? 'Posting'
+                                                    : 'Travel Report'}
                                             </span>
                                         </TableCell>
                                         <TableCell>
                                             <button
-                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(document.status)}`}
+                                                className={`inline-flex cursor-pointer items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-opacity hover:opacity-80 ${getStatusColor(document.status)}`}
                                             >
-                                                {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
+                                                {document.status
+                                                    .charAt(0)
+                                                    .toUpperCase() +
+                                                    document.status.slice(1)}
                                             </button>
                                         </TableCell>
                                         <TableCell className="text-sm text-gray-500 dark:text-gray-400">
@@ -420,7 +452,9 @@ export default function Archive() {
                                         <TableCell>
                                             <div className="flex justify-center">
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
                                                         <Button
                                                             variant="ghost"
                                                             size="icon-sm"
@@ -437,14 +471,22 @@ export default function Archive() {
                                                         className="w-40"
                                                     >
                                                         <DropdownMenuItem
-                                                            onClick={() => handleEdit(document)}
+                                                            onClick={() =>
+                                                                handleEdit(
+                                                                    document,
+                                                                )
+                                                            }
                                                             className="cursor-pointer"
                                                         >
                                                             <Edit3 className="mr-2 h-4 w-4" />
                                                             <span>Edit</span>
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(document.id)}
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    document.id,
+                                                                )
+                                                            }
                                                             className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
@@ -459,17 +501,18 @@ export default function Archive() {
                             </TableBody>
                         </Table>
                     ) : (
-                        <div className="text-center py-12">
-                            <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        <div className="py-12 text-center">
+                            <FileText className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                            <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
                                 No documents found
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
-                                You haven't created any documents yet. Start by adding your first writeup!
+                                You haven't created any documents yet. Start by
+                                adding your first writeup!
                             </p>
                         </div>
                     )}
-                    
+
                     {/* Pagination */}
                     {userDocuments.length > 0 && (
                         <div className="mt-4">

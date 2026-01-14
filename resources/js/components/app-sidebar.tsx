@@ -182,7 +182,11 @@ export function AppSidebar(componentProps: AppSidebarProps) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch className="hover:bg-transparent hover:no-underline">
+                            <Link
+                                href="/dashboard"
+                                prefetch
+                                className="hover:bg-transparent hover:no-underline"
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

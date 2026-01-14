@@ -123,11 +123,16 @@ export const BoundaryLayerMapLibre: React.FC<BoundaryLayerMapLibreProps> = ({
             // Best-effort: remove any previously-added boundary sources after layers are cleared
             try {
                 const style = currentMap.getStyle();
-                const sources = style?.sources ? Object.keys(style.sources) : [];
+                const sources = style?.sources
+                    ? Object.keys(style.sources)
+                    : [];
                 for (const id of sources) {
                     if (id.startsWith('boundary-source-')) {
                         try {
-                            if (currentMap.getSource && currentMap.getSource(id)) {
+                            if (
+                                currentMap.getSource &&
+                                currentMap.getSource(id)
+                            ) {
                                 currentMap.removeSource(id);
                             }
                         } catch (e) {
