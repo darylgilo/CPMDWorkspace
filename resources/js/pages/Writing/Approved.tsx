@@ -205,7 +205,7 @@ export default function Approved() {
     };
 
     const handleEdit = (document: Document) => {
-        router.get(`/editdocument/${document.id}`);
+        router.get(`/editdocument/${document.id}`, { tab: 'approved' });
     };
 
     const handleDelete = (document: Document) => {

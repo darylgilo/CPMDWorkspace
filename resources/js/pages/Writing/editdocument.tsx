@@ -32,12 +32,14 @@ interface Document {
 
 interface PageProps {
     document?: Document;
+    tab?: string;
     [key: string]: unknown;
 }
 
 export default function EditDocument() {
     const { props } = usePage<PageProps>();
     const document = props.document;
+    const sourceTab = props.tab || 'writeup';
     
     const [formData, setFormData] = useState({
         title: '',
@@ -61,12 +63,12 @@ export default function EditDocument() {
         e.preventDefault();
         
         if (document) {
-            router.put(`/documents/${document.id}`, formData);
+            router.put(`/documents/${document.id}`, { ...formData, tab: sourceTab });
         }
     };
 
     const handleCancel = () => {
-        router.get('/writing');
+        router.get('/writing', { tab: sourceTab });
     };
 
     const formatDate = (dateString: string) => {

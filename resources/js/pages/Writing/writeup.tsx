@@ -184,7 +184,7 @@ export default function Writeup() {
     };
 
     const handleEdit = (document: Document) => {
-        router.get(`/editdocument/${document.id}`);
+        router.get(`/editdocument/${document.id}`, { tab: 'writeup' });
     };
 
     const handleDelete = (id: number) => {

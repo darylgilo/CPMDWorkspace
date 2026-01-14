@@ -180,7 +180,7 @@ export default function Archive() {
     };
 
     const handleEdit = (document: Document) => {
-        router.get(`/editdocument/${document.id}`);
+        router.get(`/editdocument/${document.id}`, { tab: 'archive' });
     };
 
     const handleDelete = (id: number) => {

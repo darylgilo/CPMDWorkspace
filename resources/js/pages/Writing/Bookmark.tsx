@@ -181,7 +181,7 @@ export default function Bookmark() {
     };
 
     const handleEdit = (document: Document) => {
-        router.get(`/editdocument/${document.id}`);
+        router.get(`/editdocument/${document.id}`, { tab: 'bookmark' });
     };
 
     const handleRemoveBookmark = (id: number) => {
