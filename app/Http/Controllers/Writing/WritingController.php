@@ -213,15 +213,18 @@ class WritingController extends Controller
     }
 
     /**
-     * Show the form for editing a document.
+     * Show form for editing a document.
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $document = Document::with(['user', 'histories.user'])->find($id);
         
         if (!$document) {
             abort(404, 'Document not found');
         }
+        
+        // Get the tab parameter from the request
+        $tab = $request->input('tab', 'writeup');
         
         return Inertia::render('Writing/editdocument', [
             'document' => [
@@ -250,6 +253,7 @@ class WritingController extends Controller
                     ];
                 }),
             ],
+            'tab' => $tab,
         ]);
     }
 
@@ -318,7 +322,10 @@ class WritingController extends Controller
             'status' => $validated['status'],
         ]);
 
-        return redirect('/writing')->with('success', 'Document updated successfully!');
+        // Get the tab parameter from the request
+        $tab = $request->input('tab', 'writeup');
+        
+        return redirect("/writing?tab={$tab}")->with('success', 'Document updated successfully!');
     }
 
     /**
