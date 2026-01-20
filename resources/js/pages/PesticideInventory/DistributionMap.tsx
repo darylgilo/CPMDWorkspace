@@ -102,6 +102,26 @@ const PHILIPPINE_REGIONS = {
     'MIMAROPA Region': { lat: 12.8797, lng: 121.774 },
 };
 
+// NCR Cities with their coordinates
+const NCR_CITIES = {
+    'City of Caloocan': { lat: 14.6591, lng: 120.9720 },
+    'City of Las Piñas': { lat: 14.4445, lng: 120.9768 },
+    'City of Makati': { lat: 14.5547, lng: 121.0244 },
+    'City of Malabon': { lat: 14.6601, lng: 120.9444 },
+    'City of Mandaluyong': { lat: 14.5794, lng: 121.0353 },
+    'City of Manila': { lat: 14.5995, lng: 120.9842 },
+    'City of Marikina': { lat: 14.6507, lng: 121.0353 },
+    'City of Muntinlupa': { lat: 14.4096, lng: 121.0244 },
+    'City of Navotas': { lat: 14.6678, lng: 120.9497 },
+    'City of Parañaque': { lat: 14.4793, lng: 121.0197 },
+    'Pasay City': { lat: 14.5378, lng: 121.0014 },
+    'City of Pasig': { lat: 14.5764, lng: 121.0851 },
+    'Quezon City': { lat: 14.6760, lng: 121.0437 },
+    'City of San Juan': { lat: 14.6018, lng: 121.0344 },
+    'City of Taguig': { lat: 14.5176, lng: 121.0582 },
+    'City of Valenzuela': { lat: 14.6998, lng: 120.9830 },
+};
+
 // Extract region from travel location string
 const extractRegionFromLocation = (location: string): string => {
     // Match the new region names from the CSV
@@ -360,12 +380,36 @@ export default function DistributionMap() {
             }
         });
 
+        // ---- Add all NCR cities to municipality data for comprehensive mapping ----
+        Object.entries(NCR_CITIES).forEach(([cityName, coords]) => {
+            const key = `National Capital Region (NCR)::NCR::${cityName}`;
+            
+            // Check if we already have data for this city from distributions
+            const existingCity = municipalityMap.get(key);
+            
+            // Add the city even if no distribution data exists (for complete map visualization)
+            municipalityMap.set(key, {
+                id: key,
+                name: cityName,
+                latitude: existingCity?.latitude || coords.lat,
+                longitude: existingCity?.longitude || coords.lng,
+                value: existingCity?.value || 0,
+                label: 'Distribution Data',
+                description: existingCity?.description || 'No distribution data available',
+                region: 'National Capital Region (NCR)',
+                province: 'NCR',
+                municipality: cityName,
+                barangay: existingCity?.barangay,
+                pesticideData: existingCity?.pesticideData || [],
+            });
+        });
+
         return {
             regionData: Array.from(regionMap.values()),
             provinceData: Array.from(provinceMap.values()),
             municipalityData: Array.from(municipalityMap.values()),
         };
-    }, [distributions, locationDetails]);
+    }, [distributions, locationDetails, NCR_CITIES]);
 
     // Pick dataset based on selected admin level
     const mapData = useMemo(() => {

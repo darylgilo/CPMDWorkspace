@@ -38,9 +38,9 @@ export default function Welcome() {
                     rel="stylesheet"
                 />
             </Head>
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900">
                 {/* Header */}
-                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/80">
+                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-black/80">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-14 items-center justify-between sm:h-16">
                             {/* Logo */}
@@ -116,7 +116,7 @@ export default function Welcome() {
                                             href={register()}
                                             className="rounded-lg bg-[#163832] px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                         >
-                                            Sign up
+                                            Register
                                         </Link>
                                     </>
                                 )}
@@ -135,31 +135,24 @@ export default function Welcome() {
                                     CPMD Workspace
                                 </h1>
                                 <p className="text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
-                                    A streamlined, all-in-one web platform
-                                    designed to help teams plan, manage, and
-                                    deliver projects with clarity and
-                                    efficiency. Built for modern workflows,
-                                    brings together communication, project
-                                    tracking, document organization, and
-                                    decision-making tools into a single
-                                    intuitive environment.
+                                    A streamlined all-in-one digital workspace designed to enhance operational efficiency. Bring together team collaboration, resource management, and communication tools in a single unified platform for seamless workflow coordination.
                                 </p>
                             </div>
 
-                            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
                                 <Link
-                                    href={auth.user ? dashboard() : register()}
-                                    className="rounded-lg bg-[#163832] px-6 py-3 text-center text-sm font-semibold text-white shadow-lg transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-xl sm:px-8 sm:py-3.5 sm:text-base md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                    href={auth.user ? dashboard() : login()}
+                                    className="rounded-lg bg-[#163832] px-4 py-2 text-center text-sm font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 >
-                                    Sign up
+                                    {auth.user ? 'Dashboard' : 'Login'}
                                 </Link>
                                 <a
                                     href="https://www.cpmd.buplant.da.gov.ph"
                                     target="_blank"
-                                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 sm:px-8 sm:py-3.5 sm:text-base dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 sm:px-6 sm:py-2.5 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
                                 >
                                     <svg
-                                        className="h-5 w-5"
+                                        className="h-4 w-4"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"

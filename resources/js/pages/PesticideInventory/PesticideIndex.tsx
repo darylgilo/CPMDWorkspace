@@ -17,24 +17,19 @@ interface PageProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Pesticide Management', href: '/pesticidesindex' },
+    { title: 'Pesticide Stock', href: '/pesticidesindex' },
 ];
 
 const navItems: Array<Omit<NavItem, 'href'> & { href: string }> = [
     {
-        title: 'Inventory',
+        title: 'Stock',
         href: '#inventory',
         icon: Package,
     },
     {
-        title: 'Distribution',
+        title: 'Distributed',
         href: '#distribution',
         icon: TruckIcon,
-    },
-    {
-        title: 'Map',
-        href: '#map',
-        icon: MapPin,
     },
 ];
 
@@ -75,7 +70,7 @@ export default function PesticideIndex() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Pesticide Management" />
+            <Head title="Pesticide Stock" />
             <div className="space-y-6 px-4 py-6">
                 {/* Header Navigation */}
                 <div className="border-b border-gray-200 dark:border-neutral-700">
