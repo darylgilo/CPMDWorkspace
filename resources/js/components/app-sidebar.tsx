@@ -4,6 +4,7 @@ import {
     BotMessageSquareIcon,
     CalendarCheckIcon,
     FolderArchive,
+    FolderArchiveIcon,
     FolderSymlink,
     HomeIcon,
     LucideContact,
@@ -70,12 +71,23 @@ const data = {
             icon: LucideNotebookPen,
         },
         {
+            title: 'Management',
+            url: '#',
+            icon: FolderArchiveIcon,
+            items: [
+                {
+                    title: 'Pesticide Stock',
+                    url: '/pesticidesindex',
+                },
+            ],
+        },
+        {
             title: 'Inventory',
             url: '#',
             icon: FolderArchive,
             items: [
                 {
-                    title: 'Pesticide Management',
+                    title: 'Pesticide Stock',
                     url: '/pesticidesindex',
                 },
             ],

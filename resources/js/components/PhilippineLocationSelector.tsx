@@ -179,9 +179,17 @@ export default function PhilippineLocationSelector({
     // Filter provinces when region is selected
     useEffect(() => {
         if (selectedRegion && provinces.length > 0) {
+            console.log('Filtering provinces for region:', selectedRegion);
+            // Debug NCR specifically
+            if (selectedRegion === '1300000000') {
+                const ncrProvs = provinces.filter(p => p.adm1_psgc === '1300000000');
+                console.log('Found NCR entries in provinces:', ncrProvs.length, ncrProvs);
+            }
+
             const filtered = provinces.filter(
-                (p) => p.adm1_psgc === selectedRegion && p.geo_level === 'Prov',
+                (p) => p.adm1_psgc === selectedRegion && (p.geo_level === 'Prov' || p.geo_level === 'Dist'),
             );
+            console.log('Filtered provinces count:', filtered.length);
             setFilteredProvinces(filtered);
         } else {
             setFilteredProvinces([]);
@@ -206,7 +214,8 @@ export default function PhilippineLocationSelector({
     useEffect(() => {
         if (selectedMunicipality && barangays.length > 0) {
             const filtered = barangays.filter(
-                (b) => b.adm3_psgc === selectedMunicipality,
+                (b) => b.adm3_psgc === selectedMunicipality ||
+                    (selectedMunicipality === '1380600000' && b.adm3_psgc === '1380601000'),
             );
             setFilteredBarangays(filtered);
         } else {
@@ -287,23 +296,23 @@ export default function PhilippineLocationSelector({
                         foundProvince = provinces.find(
                             (p) =>
                                 p.adm2_en.toLowerCase() ===
-                                    provinceName.toLowerCase() &&
+                                provinceName.toLowerCase() &&
                                 p.adm1_psgc === foundRegion!.adm1_psgc,
                         );
                         if (foundProvince) {
                             foundMunicipality = municipalities.find(
                                 (m) =>
                                     m.adm3_en.toLowerCase() ===
-                                        municipalityName.toLowerCase() &&
+                                    municipalityName.toLowerCase() &&
                                     m.adm2_psgc === foundProvince!.adm2_psgc,
                             );
                             if (foundMunicipality) {
                                 foundBarangay = barangays.find(
                                     (b) =>
                                         b.adm4_en.toLowerCase() ===
-                                            barangayName.toLowerCase() &&
+                                        barangayName.toLowerCase() &&
                                         b.adm3_psgc ===
-                                            foundMunicipality!.adm3_psgc,
+                                        foundMunicipality!.adm3_psgc,
                                 );
                             }
                         }
@@ -319,14 +328,14 @@ export default function PhilippineLocationSelector({
                         foundProvince = provinces.find(
                             (p) =>
                                 p.adm2_en.toLowerCase() ===
-                                    provinceName.toLowerCase() &&
+                                provinceName.toLowerCase() &&
                                 p.adm1_psgc === foundRegion!.adm1_psgc,
                         );
                         if (foundProvince) {
                             foundMunicipality = municipalities.find(
                                 (m) =>
                                     m.adm3_en.toLowerCase() ===
-                                        municipalityName.toLowerCase() &&
+                                    municipalityName.toLowerCase() &&
                                     m.adm2_psgc === foundProvince!.adm2_psgc,
                             );
                         }

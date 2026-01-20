@@ -25,6 +25,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
 
+    // Test route for location selector
+    Route::get('/test-location', function () {
+        return Inertia::render('test/LocationTest');
+    })->name('test.location');
+
     // Employee Directory (read-only, accessible to all authenticated users)
     Route::get('/directory', [EmployeeDirectoryController::class, 'index'])->name('directory.index');
     Route::get('/directory/{id}', [EmployeeDirectoryController::class, 'show'])->name('directory.show');
@@ -33,7 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
 
-    // Pesticide Management (Parent page with tabs)
+    // Pesticide Stock (Parent page with tabs)
     Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
 
     // Writing Management (Parent page with tabs)

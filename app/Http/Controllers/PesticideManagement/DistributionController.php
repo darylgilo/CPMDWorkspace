@@ -204,7 +204,8 @@ class DistributionController extends Controller
 
     /**
      * Parse location string and get corresponding IDs
-     * Expected format: "Barangay Name, Municipality Name, Province Name, Region Name"
+     * Expected format: "Barangay Name, Municipality Name, [Province Name], Region Name"
+     * For NCR: "Barangay Name, City Name, NCR, [additional info...]"
      */
     private function getLocationIdsFromString($locationString)
     {
@@ -222,45 +223,81 @@ class DistributionController extends Controller
         // Split the location string by comma and trim each part
         $parts = array_map('trim', explode(',', $locationString));
         
-        // Reverse the order to process from region to barangay
-        $parts = array_reverse($parts);
+        // Extract the key parts we need
+        $barangayName = $parts[0] ?? null;
+        $municipalityName = $parts[1] ?? null;
+        $provinceOrRegionName = $parts[2] ?? null;
 
         try {
-            // Find region (last part)
-            if (isset($parts[0]) && !empty($parts[0])) {
-                $region = \App\Models\Region::where('name', 'like', '%' . $parts[0] . '%')->first();
+            // Handle NCR specially - cities are directly under region
+            if ($provinceOrRegionName && (stripos($provinceOrRegionName, 'NCR') !== false || stripos($provinceOrRegionName, 'National Capital Region') !== false)) {
+                // This is NCR - find region first
+                $region = \App\Models\Region::where('name', 'like', '%NCR%')->first();
                 if ($region) {
                     $locationIds['region_id'] = $region->id;
+                    
+                    // Find municipality/city directly under region
+                    if ($municipalityName) {
+                        $municipality = \App\Models\Municipality::where('name', 'like', '%' . $municipalityName . '%')
+                            ->whereHas('province', function($query) use ($region) {
+                                $query->where('region_id', $region->id);
+                            })
+                            ->first();
+                        if ($municipality) {
+                            $locationIds['municipality_id'] = $municipality->id;
+                            $locationIds['province_id'] = $municipality->province_id;
+                            
+                            // Find barangay
+                            if ($barangayName) {
+                                $barangay = \App\Models\Barangay::where('name', 'like', '%' . $barangayName . '%')
+                                    ->where('municipality_id', $municipality->id)
+                                    ->first();
+                                if ($barangay) {
+                                    $locationIds['barangay_id'] = $barangay->id;
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-
-            // Find province (second to last)
-            if (isset($parts[1]) && !empty($parts[1]) && $locationIds['region_id']) {
-                $province = \App\Models\Province::where('name', 'like', '%' . $parts[1] . '%')
-                    ->where('region_id', $locationIds['region_id'])
-                    ->first();
-                if ($province) {
-                    $locationIds['province_id'] = $province->id;
+            } else {
+                // Handle regular provinces (non-NCR)
+                // Find region (last part)
+                $regionName = end($parts);
+                if (!empty($regionName)) {
+                    $region = \App\Models\Region::where('name', 'like', '%' . $regionName . '%')->first();
+                    if ($region) {
+                        $locationIds['region_id'] = $region->id;
+                    }
                 }
-            }
 
-            // Find municipality (third to last)
-            if (isset($parts[2]) && !empty($parts[2]) && $locationIds['province_id']) {
-                $municipality = \App\Models\Municipality::where('name', 'like', '%' . $parts[2] . '%')
-                    ->where('province_id', $locationIds['province_id'])
-                    ->first();
-                if ($municipality) {
-                    $locationIds['municipality_id'] = $municipality->id;
+                // Find province (second to last)
+                if ($provinceOrRegionName && $locationIds['region_id']) {
+                    $province = \App\Models\Province::where('name', 'like', '%' . $provinceOrRegionName . '%')
+                        ->where('region_id', $locationIds['region_id'])
+                        ->first();
+                    if ($province) {
+                        $locationIds['province_id'] = $province->id;
+                    }
                 }
-            }
 
-            // Find barangay (first part)
-            if (isset($parts[3]) && !empty($parts[3]) && $locationIds['municipality_id']) {
-                $barangay = \App\Models\Barangay::where('name', 'like', '%' . $parts[3] . '%')
-                    ->where('municipality_id', $locationIds['municipality_id'])
-                    ->first();
-                if ($barangay) {
-                    $locationIds['barangay_id'] = $barangay->id;
+                // Find municipality (third to last)
+                if ($municipalityName && $locationIds['province_id']) {
+                    $municipality = \App\Models\Municipality::where('name', 'like', '%' . $municipalityName . '%')
+                        ->where('province_id', $locationIds['province_id'])
+                        ->first();
+                    if ($municipality) {
+                        $locationIds['municipality_id'] = $municipality->id;
+                    }
+                }
+
+                // Find barangay (first part)
+                if ($barangayName && $locationIds['municipality_id']) {
+                    $barangay = \App\Models\Barangay::where('name', 'like', '%' . $barangayName . '%')
+                        ->where('municipality_id', $locationIds['municipality_id'])
+                        ->first();
+                    if ($barangay) {
+                        $locationIds['barangay_id'] = $barangay->id;
+                    }
                 }
             }
         } catch (\Exception $e) {

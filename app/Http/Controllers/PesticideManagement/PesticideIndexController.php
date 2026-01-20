@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class PesticideIndexController extends Controller
 {
     /**
-     * Display the pesticide management page with tabs.
+     * Display the pesticide stock page with tabs.
      */
     public function index(Request $request)
     {
