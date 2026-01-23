@@ -10,6 +10,7 @@ use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\PesticideManagement\PesticideController;
 use App\Http\Controllers\PesticideManagement\DistributionController;
 use App\Http\Controllers\PesticideManagement\PesticideIndexController;
+use App\Http\Controllers\BudgetManagementController;
 use App\Http\Controllers\Writing\WritingController;
 use App\Http\Controllers\CommentController;
 use App\Http\Middleware\RoleMiddleware;
@@ -77,6 +78,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/distributions', [DistributionController::class, 'store'])->name('distributions.store');
     Route::put('/distributions/{distribution}', [DistributionController::class, 'update'])->name('distributions.update');
     Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
+
+    // Budget Management
+    Route::get('/budgetmanagement', [BudgetManagementController::class, 'index'])->name('budgetmanagement.index');
+    Route::post('/funds', [BudgetManagementController::class, 'storeFund'])->name('funds.store');
+    Route::put('/funds/{fund}', [BudgetManagementController::class, 'updateFund'])->name('funds.update');
+    Route::delete('/funds/{fund}', [BudgetManagementController::class, 'destroyFund'])->name('funds.destroy');
+    Route::post('/fund-transactions', [BudgetManagementController::class, 'storeTransaction'])->name('fund-transactions.store');
+    Route::put('/fund-transactions/{transaction}', [BudgetManagementController::class, 'updateTransaction'])->name('fund-transactions.update');
+    Route::delete('/fund-transactions/{transaction}', [BudgetManagementController::class, 'destroyTransaction'])->name('fund-transactions.destroy');
+    Route::post('/travel-expenses', [BudgetManagementController::class, 'storeTravelExpense'])->name('travel-expenses.store');
+    Route::put('/travel-expenses/{expense}', [BudgetManagementController::class, 'updateTravelExpense'])->name('travel-expenses.update');
+    Route::delete('/travel-expenses/{expense}', [BudgetManagementController::class, 'destroyTravelExpense'])->name('travel-expenses.destroy');
+    Route::get('/budget-management/analytics', [BudgetManagementController::class, 'analytics'])->name('budget-management.analytics');
+    Route::get('/budget-management/export', [BudgetManagementController::class, 'exportFunds'])->name('budget-management.export');
     // Noticeboard - specific routes before parameterized routes
     Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
     Route::get('/noticeboard/event', [NoticeController::class, 'events'])->name('noticeboard.event');

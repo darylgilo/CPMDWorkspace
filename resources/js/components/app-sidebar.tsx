@@ -76,8 +76,8 @@ const data = {
             icon: FolderArchiveIcon,
             items: [
                 {
-                    title: 'Pesticide Stock',
-                    url: '/pesticidesindex',
+                    title: 'Budget Management',
+                    url: '/budgetmanagement',
                 },
             ],
         },
