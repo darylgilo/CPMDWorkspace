@@ -33,8 +33,6 @@ import {
     MoreVertical,
     Plus,
     Trash2,
-    Wallet,
-    DollarSign,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 

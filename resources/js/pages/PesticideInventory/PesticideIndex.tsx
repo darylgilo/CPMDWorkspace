@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { MapPin, Package, TruckIcon } from 'lucide-react';
+import { Package, TruckIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 // Import child components

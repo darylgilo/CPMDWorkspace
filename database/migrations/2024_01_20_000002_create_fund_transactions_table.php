@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('doctrack_no');
             $table->string('pr_no');
             $table->text('specific_items');
-            $table->string('category');
+            $table->enum('category', ['Office Supplies and Materials', 'Agricultural and Marine Supplies', 'Chemical and Filtering Suplies Expenses','Other Supplies and Materials']);
             $table->decimal('amount_pr', 15, 2);
             $table->string('resolution_no');
             $table->string('supplier');

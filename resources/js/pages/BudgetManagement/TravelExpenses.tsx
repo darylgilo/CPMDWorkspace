@@ -25,18 +25,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { router, usePage } from '@inertiajs/react';
-import {
-    ChevronDown,
-    ChevronUp,
-    Edit3,
-    MoreVertical,
-    Plus,
-    Trash2,
-    Calendar,
-    MapPin,
-    DollarSign,
-    FileText,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit3, MoreVertical, Plus, Trash2, Calendar, MapPin, DollarSign, FileText } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { type ReactElement } from 'react';
 import AppLayout from '@/layouts/app-layout';
@@ -96,7 +85,7 @@ interface PageProps {
 }
 
 export default function TravelExpenses() {
-    const { props } = usePage<PageProps>();
+    const { props, url } = usePage<PageProps>();
     const {
         travelExpenses,
         search = '',
@@ -104,6 +93,11 @@ export default function TravelExpenses() {
         expenseAnalytics: analytics,
         funds,
     } = props;
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(url.split('?')[1] || '');
+    const urlYear = urlParams.get('year');
+    const urlFundId = urlParams.get('fundId');
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -115,27 +109,31 @@ export default function TravelExpenses() {
     const [selectedExpense, setSelectedExpense] = useState<TravelExpense | null>(null);
     const [sortField, setSortField] = useState<string>('date_of_travel');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-    const [selectedYear, setSelectedYear] = useState<number>(2026);
-    const [selectedFundId, setSelectedFundId] = useState<number | null>(null);
+    const [selectedYear, setSelectedYear] = useState<number>(
+        urlYear ? parseInt(urlYear) : 2026
+    );
+    const [selectedFundId, setSelectedFundId] = useState<number | null>(
+        urlFundId ? parseInt(urlFundId) : null
+    );
 
     // Add loading state to track when all required data is available
     const [isDataLoading, setIsDataLoading] = useState(true);
 
-    // Initialize with first available year and fund immediately (like BudgetAllocation)
+    // Initialize with first available year and fund immediately (only if not set from URL)
     useEffect(() => {
-        if (funds?.data && funds.data.length > 0) {
+        if (funds?.data && funds.data.length > 0 && !urlYear) {
             const years = [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
             if (years.length > 0) {
                 const firstYear = years[0];
                 setSelectedYear(firstYear);
                 
                 const fundsForYear = funds.data.filter(fund => fund.source_year === firstYear);
-                if (fundsForYear.length > 0) {
+                if (fundsForYear.length > 0 && !urlFundId) {
                     setSelectedFundId(fundsForYear[0].id);
                 }
             }
         }
-    }, [funds?.data]);
+    }, [funds?.data, urlYear, urlFundId]);
 
     // Track when all required data is loaded
     useEffect(() => {
@@ -144,36 +142,22 @@ export default function TravelExpenses() {
         }
     }, [travelExpenses, funds?.data, analytics]);
 
-    // Generate date options for travel date
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-
-    // Get unique years from travel expenses
-    const availableYears = useMemo(() => {
-        if (!analytics?.totalByYear) return [];
-        return analytics.totalByYear.map(item => item.year).sort((a, b) => b - a);
-    }, [analytics]);
-
-    // Get unique years from funds
     const fundYears = useMemo(() => {
         if (!funds?.data || !Array.isArray(funds.data)) return [];
         return [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
     }, [funds?.data]);
 
-    // Filter funds by selected year (like BudgetAllocation)
     const filteredFunds = useMemo(() => {
         if (!funds?.data || !Array.isArray(funds.data)) return [];
         return funds.data.filter(fund => fund.source_year === selectedYear);
     }, [funds?.data, selectedYear]);
 
-    // Initialize fund selection when year or filtered funds change (like BudgetAllocation)
     useEffect(() => {
         if (filteredFunds && Array.isArray(filteredFunds) && filteredFunds.length > 0 && (!selectedFundId || !filteredFunds.find(f => f.id === selectedFundId))) {
             setSelectedFundId(filteredFunds[0].id);
         }
     }, [filteredFunds, selectedFundId]);
 
-    // Get current fund (like BudgetAllocation)
     const currentFund = useMemo(() => {
         if (!selectedFundId) return null;
         return filteredFunds.find(fund => fund.id === selectedFundId) || null;
@@ -282,16 +266,10 @@ export default function TravelExpenses() {
 
     const handleAdd = () => {
         resetForm();
-        // Pre-select the fund based on the currently filtered fund
         if (selectedFundId) {
             setFormData(prev => ({ ...prev, fund_id: selectedFundId.toString() }));
         }
         setIsAddDialogOpen(true);
-    };
-
-    // Get fund from expense
-    const getFundFromExpense = (expense: TravelExpense) => {
-        return funds?.data.find(fund => fund.id === expense.fund_id);
     };
 
     const handleEdit = (expense: TravelExpense) => {
@@ -316,6 +294,11 @@ export default function TravelExpenses() {
         }
     };
 
+    // Get fund from expense
+    const getFundFromExpense = (expense: TravelExpense) => {
+        return funds?.data.find(fund => fund.id === expense.fund_id);
+    };
+
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -337,6 +320,8 @@ export default function TravelExpenses() {
                         page: currentPage,
                         sort: sortField,
                         direction: sortDirection,
+                        year: selectedYear,
+                        fundId: selectedFundId,
                     },
                     { preserveState: true },
                 );
@@ -370,6 +355,8 @@ export default function TravelExpenses() {
                             page: currentPage,
                             sort: sortField,
                             direction: sortDirection,
+                            year: selectedYear,
+                            fundId: selectedFundId,
                         },
                         { preserveState: true },
                     );
@@ -392,6 +379,8 @@ export default function TravelExpenses() {
                 page,
                 sort: sortField,
                 direction: sortDirection,
+                year: selectedYear,
+                fundId: selectedFundId,
             },
             { preserveState: true, replace: true },
         );
@@ -412,12 +401,13 @@ export default function TravelExpenses() {
                 sort: field,
                 direction: newDirection,
                 page: 1,
+                year: selectedYear,
+                fundId: selectedFundId,
             },
             { preserveState: true, replace: true },
         );
     };
 
-    // Filter travel expenses based on selected year and fund
     const filteredExpenses = useMemo(() => {
         if (!travelExpenses?.data) return [];
         
@@ -613,6 +603,8 @@ export default function TravelExpenses() {
                                                 tab: 'travel-expenses',
                                                 search: searchValue,
                                                 perPage: newPerPage,
+                                                year: selectedYear,
+                                                fundId: selectedFundId,
                                             },
                                             {
                                                 preserveState: true,
@@ -637,7 +629,7 @@ export default function TravelExpenses() {
                                 <SearchBar
                                     search={searchValue}
                                     onSearchChange={setSearchValue}
-                                    placeholder="Search expenses..."
+                                    placeholder="Search TEV..."
                                     className="w-full md:max-w-md"
                                     searchRoute="/budgetmanagement"
                                     additionalParams={{ tab: 'travel-expenses', perPage: perPage }}
@@ -804,6 +796,8 @@ export default function TravelExpenses() {
                                                                         page: currentPage,
                                                                         sort: sortField,
                                                                         direction: sortDirection,
+                                                                        year: selectedYear,
+                                                                        fundId: selectedFundId,
                                                                     },
                                                                     { preserveState: true },
                                                                 );
