@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
-import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
+import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { DollarSign, Wallet, Receipt } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 // Import child components
 // Budget Management System - Main index with tabs
 import SourceofFund from './SourceofFund';
-import BudgetAllocation from './BudgetAllocation';
+import Budgetprpo from './Budgetprpo';
 import TravelExpenses from './TravelExpenses';
 import BudgetReports from './BudgetReports';
 
@@ -151,7 +151,7 @@ export default function BudgetManagementIndex() {
                         {/* Tab Content */}
                         <div className="tab-content">
                             {activeTab === 'source' && <SourceofFund />}
-                            {activeTab === 'allocation' && <BudgetAllocation />}
+                            {activeTab === 'allocation' && <Budgetprpo />}
                             {activeTab === 'travel-expenses' && <TravelExpenses />}
                             {activeTab === 'reports' && <BudgetReports />}
                         </div>

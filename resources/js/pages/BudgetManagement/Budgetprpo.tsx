@@ -94,7 +94,7 @@ interface PageProps {
 }
 
 export default function BudgetAllocation() {
-    const { props } = usePage<PageProps>();
+    const { props, url } = usePage<PageProps>();
     const {
         funds,
         fundTransactions,
@@ -103,37 +103,52 @@ export default function BudgetAllocation() {
         fundAnalytics: analytics,
     } = props;
 
+    // Get URL parameters
+    const urlParams = new URLSearchParams(url.split('?')[1] || '');
+    const urlYear = urlParams.get('year');
+    const urlFundId = urlParams.get('fundId');
+
+    // Category options matching the database enum
+    const categoryOptions = [
+        { value: 'Office Supplies and Materials', label: 'Office Supplies and Materials' },
+        { value: 'Agricultural and Marine Supplies', label: 'Agricultural and Marine Supplies' },
+        { value: 'Chemical and Filtering Suplies Expenses', label: 'Chemical and Filtering Suplies Expenses' },
+        { value: 'Other Supplies and Materials', label: 'Other Supplies and Materials' }
+    ];
+
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
     const [currentPage, setCurrentPage] = useState(
         funds?.current_page || 1,
     );
-    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isEditTransactionDialogOpen, setIsEditTransactionDialogOpen] = useState(false);
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
     const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
     const [selectedTransaction, setSelectedTransaction] = useState<FundTransaction | null>(null);
-    const [activeFundId, setActiveFundId] = useState<number | 'all'>('all');
-    const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
+    const [activeFundId, setActiveFundId] = useState<number | 'all'>(
+        urlFundId ? parseInt(urlFundId) : 'all'
+    );
+    const [selectedYear, setSelectedYear] = useState<number | 'all'>(
+        urlYear ? parseInt(urlYear) : 'all'
+    );
     const [sortField, setSortField] = useState<string>('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-    // Initialize with first available year and fund immediately
+    // Initialize with first available year and fund immediately (only if not set from URL)
     React.useEffect(() => {
-        if (funds?.data && funds.data.length > 0) {
+        if (funds?.data && funds.data.length > 0 && selectedYear === 'all') {
             const years = [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
             if (years.length > 0) {
                 const firstYear = years[0];
                 setSelectedYear(firstYear);
                 
                 const fundsForYear = funds.data.filter(fund => fund.source_year === firstYear);
-                if (fundsForYear.length > 0) {
+                if (fundsForYear.length > 0 && activeFundId === 'all') {
                     setActiveFundId(fundsForYear[0].id);
                 }
             }
         }
-    }, [funds?.data]);
+    }, [funds?.data, selectedYear, activeFundId]);
 
     // Form field configuration for fund transactions
     const transactionFormFields: FormField[] = [
@@ -142,12 +157,14 @@ export default function BudgetAllocation() {
             label: 'DocTrack No.',
             type: 'text',
             required: true,
+            placeholder: 'e.g., DOC-i9240',
         },
         {
             name: 'pr_no',
             label: 'PR No.',
             type: 'text',
             required: true,
+            placeholder: 'e.g., PR-2024-001',
         },
         {
             name: 'specific_items',
@@ -155,12 +172,14 @@ export default function BudgetAllocation() {
             type: 'text',
             required: true,
             gridCols: 2,
+            placeholder: 'e.g., Office supplies, equipment, materials',
         },
         {
             name: 'category',
             label: 'Category',
-            type: 'text',
+            type: 'select',
             required: true,
+            options: categoryOptions,
         },
         {
             name: 'amount_pr',
@@ -169,24 +188,28 @@ export default function BudgetAllocation() {
             required: true,
             step: '0.01',
             min: '0',
+            placeholder: 'e.g., 5000.00',
         },
         {
             name: 'resolution_no',
             label: 'Resolution No.',
             type: 'text',
             required: true,
+            placeholder: 'e.g., RES-2024-001',
         },
         {
             name: 'supplier',
             label: 'Supplier',
             type: 'text',
             required: true,
+            placeholder: 'e.g., ABC Supplies Corp.',
         },
         {
             name: 'po_no',
             label: 'PO No.',
             type: 'text',
             required: true,
+            placeholder: 'e.g., PO-2024-001',
         },
         {
             name: 'amount_po',
@@ -195,17 +218,20 @@ export default function BudgetAllocation() {
             required: true,
             step: '0.01',
             min: '0',
+            placeholder: 'e.g., 4500.00',
         },
         {
             name: 'delivery_date',
             label: 'Delivery Date',
             type: 'date',
             gridCols: 1,
+            placeholder: 'e.g., 2024-12-31',
         },
         {
             name: 'dv_no',
             label: 'DV No.',
             type: 'text',
+            placeholder: 'e.g., DV-2024-001',
         },
         {
             name: 'amount_dv',
@@ -213,18 +239,21 @@ export default function BudgetAllocation() {
             type: 'number',
             step: '0.01',
             min: '0',
+            placeholder: 'e.g., 4500.00',
         },
         {
             name: 'payment_date',
             label: 'Payment Date',
             type: 'date',
             gridCols: 1,
+            placeholder: 'e.g., 2024-12-31',
         },
         {
             name: 'remarks',
             label: 'Remarks',
             type: 'text',
             gridCols: 2,
+            placeholder: 'e.g., Additional notes or comments',
         },
     ];
 
@@ -274,17 +303,6 @@ export default function BudgetAllocation() {
         setIsTransactionDialogOpen(true);
     };
 
-    const handleEdit = (fund: Fund) => {
-        setSelectedFund(fund);
-        setIsEditDialogOpen(true);
-    };
-
-    const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this fund?')) {
-            router.delete(`/funds/${id}`);
-        }
-    };
-
     // Get fund from transaction
     const getFundFromTransaction = (transaction: FundTransaction): Fund | undefined => {
         return funds?.data.find(fund => fund.id === transaction.fund_id);
@@ -325,6 +343,8 @@ export default function BudgetAllocation() {
                             page: currentPage,
                             sort: sortField,
                             direction: sortDirection,
+                            year: selectedYear,
+                            fundId: activeFundId,
                         },
                         { preserveState: true },
                     );
@@ -366,6 +386,8 @@ export default function BudgetAllocation() {
                         page: currentPage,
                         sort: sortField,
                         direction: sortDirection,
+                        year: selectedYear,
+                        fundId: activeFundId,
                     },
                     { preserveState: true },
                 );
@@ -408,6 +430,8 @@ export default function BudgetAllocation() {
                         page: currentPage,
                         sort: sortField,
                         direction: sortDirection,
+                        year: selectedYear,
+                        fundId: activeFundId,
                     },
                     { preserveState: true },
                 );
@@ -429,6 +453,8 @@ export default function BudgetAllocation() {
                 page,
                 sort: sortField,
                 direction: sortDirection,
+                year: selectedYear,
+                fundId: activeFundId,
             },
             { preserveState: true, replace: true },
         );
@@ -449,6 +475,8 @@ export default function BudgetAllocation() {
                 sort: field,
                 direction: newDirection,
                 page: 1,
+                year: selectedYear,
+                fundId: activeFundId,
             },
             { preserveState: true, replace: true },
         );
@@ -685,6 +713,8 @@ export default function BudgetAllocation() {
                                                 tab: 'allocation',
                                                 search: searchValue,
                                                 perPage: newPerPage,
+                                                year: selectedYear,
+                                                fundId: activeFundId,
                                             },
                                             {
                                                 preserveState: true,
@@ -709,7 +739,7 @@ export default function BudgetAllocation() {
                                 <SearchBar
                                     search={searchValue}
                                     onSearchChange={setSearchValue}
-                                    placeholder="Search transactions..."
+                                    placeholder="Search PRs, POs Status..."
                                     className="w-full md:max-w-md"
                                     searchRoute="/budgetmanagement"
                                     additionalParams={{ tab: 'allocation', perPage }}
@@ -959,6 +989,18 @@ export default function BudgetAllocation() {
                             </TableBody>
                         </Table>
                     </div>
+                    
+                    {/* Pagination */}
+                    {sortedTransactions.length > 0 && (
+                        <div className="mt-4">
+                            <CustomPagination
+                                currentPage={currentPage}
+                                totalItems={sortedTransactions.length}
+                                perPage={perPage}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -980,7 +1022,7 @@ export default function BudgetAllocation() {
             <FormDialog
                 isOpen={isEditTransactionDialogOpen}
                 onOpenChange={(open) => !open && setIsEditTransactionDialogOpen(false)}
-                title={`Edit Transaction - ${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.fund_name || selectedFund?.fund_name} (${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.source_year || selectedFund?.source_year || selectedYear})`}
+                title={`Source of Fund - ${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.fund_name || selectedFund?.fund_name} (${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.source_year || selectedFund?.source_year || selectedYear})`}
                 description="Update Status PRs, POs details"
                 fields={transactionFormFields}
                 formData={transactionFormData}

@@ -10,6 +10,13 @@ class FundTransaction extends Model
 {
     use HasFactory;
 
+    const CATEGORIES = [
+        'Office Supplies and Materials',
+        'Agricultural and Marine Supplies',
+        'Chemical and Filtering Suplies Expenses',
+        'Other Supplies and Materials',
+    ];
+
     protected $fillable = [
         'fund_id',
         'doctrack_no',

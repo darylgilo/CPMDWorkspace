@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('documents', function (Blueprint $table) {
+        Schema::create('document_histories', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('document_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('content');
             $table->enum('category', ['posting', 'travel_report']);
-            $table->enum('status', ['draft', 'for review', 'approved', 'rejected', 'posted'])->default('draft');
+            $table->enum('status', ['draft', 'for review', 'approved', 'rejected', 'posted']);
+            $table->text('action'); // Changed from enum to text to accommodate longer action descriptions
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('documents');
+        Schema::dropIfExists('document_histories');
     }
 };
