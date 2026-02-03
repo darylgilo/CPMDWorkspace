@@ -1,9 +1,27 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { router, usePage } from '@inertiajs/react';
-import { BarChart3, DollarSign, TrendingUp, FileText, Download } from 'lucide-react';
-import React, { useState } from 'react';
+import {
+    BarChart3,
+    DollarSign,
+    Download,
+    FileText,
+    TrendingUp,
+} from 'lucide-react';
+import { useState } from 'react';
 
 interface Report {
     id: number;
@@ -38,14 +56,11 @@ interface PageProps {
 
 export default function BudgetReports() {
     const { props } = usePage<PageProps>();
-    const {
-        reports,
-        reportAnalytics: analytics,
-        funds = [],
-    } = props;
+    const { reports, reportAnalytics: analytics, funds = [] } = props;
 
     const [selectedFund, setSelectedFund] = useState<string>('all');
-    const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
+    const [selectedPeriod, setSelectedPeriod] =
+        useState<string>('current-month');
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-PH', {
@@ -146,21 +161,30 @@ export default function BudgetReports() {
                 <CardHeader>
                     <CardTitle>Generate Budget Report</CardTitle>
                     <CardDescription>
-                        Create detailed budget reports for specific funds and periods
+                        Create detailed budget reports for specific funds and
+                        periods
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col gap-4 md:flex-row md:items-end">
                         <div className="flex-1">
                             <label className="text-sm font-medium">Fund</label>
-                            <Select value={selectedFund} onValueChange={setSelectedFund}>
+                            <Select
+                                value={selectedFund}
+                                onValueChange={setSelectedFund}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select fund" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Funds</SelectItem>
+                                    <SelectItem value="all">
+                                        All Funds
+                                    </SelectItem>
                                     {funds.map((fund) => (
-                                        <SelectItem key={fund.id} value={fund.id.toString()}>
+                                        <SelectItem
+                                            key={fund.id}
+                                            value={fund.id.toString()}
+                                        >
                                             {fund.fund_name}
                                         </SelectItem>
                                     ))}
@@ -168,17 +192,32 @@ export default function BudgetReports() {
                             </Select>
                         </div>
                         <div className="flex-1">
-                            <label className="text-sm font-medium">Period</label>
-                            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                            <label className="text-sm font-medium">
+                                Period
+                            </label>
+                            <Select
+                                value={selectedPeriod}
+                                onValueChange={setSelectedPeriod}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select period" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="current-month">Current Month</SelectItem>
-                                    <SelectItem value="last-month">Last Month</SelectItem>
-                                    <SelectItem value="current-quarter">Current Quarter</SelectItem>
-                                    <SelectItem value="current-year">Current Year</SelectItem>
-                                    <SelectItem value="custom">Custom Range</SelectItem>
+                                    <SelectItem value="current-month">
+                                        Current Month
+                                    </SelectItem>
+                                    <SelectItem value="last-month">
+                                        Last Month
+                                    </SelectItem>
+                                    <SelectItem value="current-quarter">
+                                        Current Quarter
+                                    </SelectItem>
+                                    <SelectItem value="current-year">
+                                        Current Year
+                                    </SelectItem>
+                                    <SelectItem value="custom">
+                                        Custom Range
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -234,7 +273,10 @@ export default function BudgetReports() {
                             <tbody>
                                 {reports?.data && reports.data.length > 0 ? (
                                     reports.data.map((report: Report) => (
-                                        <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                        <tr
+                                            key={report.id}
+                                            className="hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                        >
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
                                                 {report.report_type}
                                             </td>
@@ -245,36 +287,55 @@ export default function BudgetReports() {
                                                 {report.period}
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(report.total_amount)}
+                                                {formatCurrency(
+                                                    report.total_amount,
+                                                )}
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(report.allocated_amount)}
+                                                {formatCurrency(
+                                                    report.allocated_amount,
+                                                )}
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(report.spent_amount)}
+                                                {formatCurrency(
+                                                    report.spent_amount,
+                                                )}
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                <span className={`font-semibold ${
-                                                    report.remaining_amount === 0
-                                                        ? 'text-red-600 dark:text-red-400'
-                                                        : report.remaining_amount < report.total_amount * 0.2
-                                                          ? 'text-orange-600 dark:text-orange-400'
-                                                          : 'text-green-600 dark:text-green-400'
-                                                }`}>
-                                                    {formatCurrency(report.remaining_amount)}
+                                                <span
+                                                    className={`font-semibold ${
+                                                        report.remaining_amount ===
+                                                        0
+                                                            ? 'text-red-600 dark:text-red-400'
+                                                            : report.remaining_amount <
+                                                                report.total_amount *
+                                                                    0.2
+                                                              ? 'text-orange-600 dark:text-orange-400'
+                                                              : 'text-green-600 dark:text-green-400'
+                                                    }`}
+                                                >
+                                                    {formatCurrency(
+                                                        report.remaining_amount,
+                                                    )}
                                                 </span>
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatDate(report.generated_date)}
+                                                {formatDate(
+                                                    report.generated_date,
+                                                )}
                                             </td>
                                             <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
                                                 <div className="flex gap-2">
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        onClick={() => handleDownloadReport(report.id)}
+                                                        onClick={() =>
+                                                            handleDownloadReport(
+                                                                report.id,
+                                                            )
+                                                        }
                                                     >
-                                                        <Download className="h-3 w-3 mr-1" />
+                                                        <Download className="mr-1 h-3 w-3" />
                                                         Download
                                                     </Button>
                                                 </div>
@@ -283,7 +344,10 @@ export default function BudgetReports() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={9} className="border border-gray-200 px-4 py-8 text-center dark:border-neutral-700">
+                                        <td
+                                            colSpan={9}
+                                            className="border border-gray-200 px-4 py-8 text-center dark:border-neutral-700"
+                                        >
                                             No reports found.
                                         </td>
                                     </tr>

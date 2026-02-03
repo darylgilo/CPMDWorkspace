@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Fund;
 use App\Models\FundTransaction;
+use App\Models\PpmpProject;
+use App\Models\PpmpFundingDetail;
+use App\Models\PpmpTimeline;
+use App\Models\PpmpSubtotalHighlight;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -31,7 +35,7 @@ class BudgetManagementController extends Controller
             'perPage' => $perPage,
         ];
 
-        if ($tab === 'source' || $tab === 'allocation' || $tab === 'reports') {
+        if ($tab === 'source' || $tab === 'allocation' || $tab === 'reports' || $tab === 'ppmp') {
             // Get funds with pagination and filtering
             $fundsQuery = Fund::with(['user'])
                 ->when($search, function ($query, $search) {
@@ -97,11 +101,28 @@ class BudgetManagementController extends Controller
                 ],
                 'fundAnalytics' => $fundAnalytics,
             ]);
+
+            // Add PPMP items for PPMP tab
+            if ($tab === 'ppmp') {
+                $ppmpProjects = PpmpProject::with(['fund', 'user', 'fundingDetails.timelines'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                $data = array_merge($data, [
+                    'ppmpItems' => [
+                        'data' => $ppmpProjects,
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => $ppmpProjects->count(),
+                        'total' => $ppmpProjects->count(),
+                    ],
+                ]);
+            }
         }
 
         if ($tab === 'travel-expenses') {
             // Import TravelExpense model
-            $travelExpenseQuery = \App\Models\TravelExpense::with(['user', 'fund'])
+            $travelExpenseQuery = \App\Models\TravelExpense::with(['user', 'fund', 'ppmpProject', 'ppmpFundingDetail'])
                 ->when($search, function ($query, $search) {
                     $query->where(function($q) use ($search) {
                         $q->where('doctrack_no', 'like', "%{$search}%")
@@ -149,6 +170,7 @@ class BudgetManagementController extends Controller
                 'travelExpenses' => $travelExpenses,
                 'expenseAnalytics' => $expenseAnalytics,
                 'funds' => \App\Models\Fund::select('id', 'fund_name', 'source_year')->orderBy('fund_name')->paginate(1000),
+                'ppmpItems' => \App\Models\PpmpProject::with(['fundingDetails'])->get(),
             ]);
         }
 
@@ -216,6 +238,8 @@ class BudgetManagementController extends Controller
             'purpose' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'fund_id' => 'nullable|exists:funds,id',
+            'ppmp_project_id' => 'nullable|exists:ppmp_projects,id',
+            'ppmp_funding_detail_id' => 'nullable|exists:ppmp_funding_details,id',
             'status' => 'required|in:pending,approved,rejected',
             'remarks' => 'nullable|string',
         ]);
@@ -240,6 +264,8 @@ class BudgetManagementController extends Controller
             'purpose' => 'required|string',
             'amount' => 'required|numeric|min:0',
             'fund_id' => 'nullable|exists:funds,id',
+            'ppmp_project_id' => 'nullable|exists:ppmp_projects,id',
+            'ppmp_funding_detail_id' => 'nullable|exists:ppmp_funding_details,id',
             'status' => 'required|in:pending,approved,rejected',
             'remarks' => 'nullable|string',
         ]);
@@ -420,5 +446,248 @@ class BudgetManagementController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Store a newly created PPMP project.
+     */
+    public function storePPMP(Request $request)
+    {
+        $validated = $request->validate([
+            'fund_id' => 'required|exists:funds,id',
+            'general_description' => 'required|string',
+            'project_type' => 'required|in:Goods,Infrastructure,Consulting Services',
+        ]);
+
+        // Create the main project record only
+        $project = PpmpProject::create([
+            'fund_id' => $validated['fund_id'],
+            'general_description' => $validated['general_description'],
+            'project_type' => $validated['project_type'],
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'PPMP project created successfully. You can now add funding details and timelines.');
+    }
+
+    /**
+     * Store funding details for a PPMP project.
+     */
+    public function storeFundingDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'ppmp_project_id' => 'required|exists:ppmp_projects,id',
+            'quantities' => 'required|array|min:1',
+            'quantities.*.quantity_size' => 'required|string',
+            'mode_of_procurement' => 'nullable|string',
+            'pre_procurement_conference' => 'required|in:Yes,No',
+            'estimated_budget' => 'required|numeric|min:0',
+            'supporting_documents' => 'nullable|string',
+            'remarks' => 'nullable|string',
+            'timelines' => 'required|array|min:1',
+            'timelines.*.start_procurement' => 'required|string',
+            'timelines.*.end_procurement' => 'required|string',
+            'timelines.*.delivery_period' => 'required|string',
+        ]);
+
+        // Create funding details for each quantity
+        $totalItems = 0;
+        foreach ($validated['quantities'] as $quantity) {
+            $fundingDetail = PpmpFundingDetail::create([
+                'ppmp_project_id' => $validated['ppmp_project_id'],
+                'quantity_size' => $quantity['quantity_size'],
+                'mode_of_procurement' => $validated['mode_of_procurement'],
+                'pre_procurement_conference' => $validated['pre_procurement_conference'],
+                'estimated_budget' => $validated['estimated_budget'],
+                'supporting_documents' => $validated['supporting_documents'],
+                'remarks' => $validated['remarks'],
+            ]);
+
+            // Create timelines for each funding detail
+            foreach ($validated['timelines'] as $timeline) {
+                PpmpTimeline::create([
+                    'ppmp_project_id' => $validated['ppmp_project_id'],
+                    'ppmp_funding_detail_id' => $fundingDetail->id,
+                    'start_procurement' => $timeline['start_procurement'],
+                    'end_procurement' => $timeline['end_procurement'],
+                    'delivery_period' => $timeline['delivery_period'],
+                ]);
+                $totalItems++;
+            }
+        }
+
+        return redirect()->back()->with('success', $totalItems . ' funding detail(s) added successfully');
+    }
+
+    /**
+     * Update the specified funding detail.
+     */
+    public function updateFundingDetails(Request $request, PpmpFundingDetail $fundingDetail)
+    {
+        $validated = $request->validate([
+            'quantities' => 'required|array',
+            'quantities.*.quantity_size' => 'required|string',
+            'mode_of_procurement' => 'nullable|string',
+            'pre_procurement_conference' => 'required|in:Yes,No',
+            'estimated_budget' => 'required|numeric|min:0',
+            'supporting_documents' => 'required|string',
+            'remarks' => 'nullable|string',
+            'timelines' => 'required|array',
+            'timelines.*.start_procurement' => 'required|string',
+            'timelines.*.end_procurement' => 'required|string',
+            'timelines.*.delivery_period' => 'required|string',
+        ]);
+
+        // Update the funding detail
+        $fundingDetail->update([
+            'quantity_size' => $validated['quantities'][0]['quantity_size'],
+            'mode_of_procurement' => $validated['mode_of_procurement'],
+            'pre_procurement_conference' => $validated['pre_procurement_conference'],
+            'estimated_budget' => $validated['estimated_budget'],
+            'supporting_documents' => $validated['supporting_documents'],
+            'remarks' => $validated['remarks'],
+        ]);
+
+        // Update timelines - delete existing and create new ones
+        $fundingDetail->timelines()->delete();
+        foreach ($validated['timelines'] as $timeline) {
+            PpmpTimeline::create([
+                'ppmp_project_id' => $fundingDetail->ppmp_project_id,
+                'ppmp_funding_detail_id' => $fundingDetail->id,
+                'start_procurement' => $timeline['start_procurement'],
+                'end_procurement' => $timeline['end_procurement'],
+                'delivery_period' => $timeline['delivery_period'],
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Funding detail updated successfully');
+    }
+
+    /**
+     * Remove the specified funding detail.
+     */
+    public function destroyFundingDetails(PpmpFundingDetail $fundingDetail)
+    {
+        // Delete related timelines first
+        $fundingDetail->timelines()->delete();
+        
+        // Delete the funding detail
+        $fundingDetail->delete();
+
+        return redirect()->back()->with('success', 'Funding detail deleted successfully');
+    }
+
+    /**
+     * Update the specified PPMP project.
+     */
+    public function updatePPMP(Request $request, PpmpProject $ppmpProject)
+    {
+        $validated = $request->validate([
+            'fund_id' => 'required|exists:funds,id',
+            'general_description' => 'required|string',
+            'project_type' => 'required|in:Goods,Infrastructure,Consulting Services',
+        ]);
+
+        // Update the main project only
+        $ppmpProject->update([
+            'fund_id' => $validated['fund_id'],
+            'general_description' => $validated['general_description'],
+            'project_type' => $validated['project_type'],
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'PPMP project updated successfully');
+    }
+
+    /**
+     * Remove the specified PPMP item.
+     */
+    public function destroyPPMP(PpmpProject $ppmpProject)
+    {
+        // Delete related records first
+        $ppmpProject->fundingDetails()->each(function ($detail) {
+            $detail->timelines()->delete();
+        });
+        $ppmpProject->fundingDetails()->delete();
+        
+        // Delete the project
+        $ppmpProject->delete();
+
+        return redirect()->back()->with('success', 'PPMP item deleted successfully');
+    }
+
+    /**
+     * Get all PPMP subtotal highlights.
+     */
+    public function getHighlights()
+    {
+        $highlights = PpmpSubtotalHighlight::with(['ppmpProject', 'user'])
+            ->where('user_id', auth()->id())
+            ->get()
+            ->map(function ($highlight) {
+                return [
+                    'id' => $highlight->id,
+                    'ppmp_project_id' => $highlight->ppmp_project_id,
+                    'status' => $highlight->status,
+                    'project_key' => $highlight->ppmpProject->general_description . '|' . $highlight->ppmpProject->project_type,
+                ];
+            });
+
+        return response()->json($highlights);
+    }
+
+    /**
+     * Store a new PPMP subtotal highlight.
+     */
+    public function storeHighlight(Request $request)
+    {
+        $validated = $request->validate([
+            'ppmp_project_id' => 'required|exists:ppmp_projects,id',
+            'status' => 'required|in:FINAL,INDICATIVE',
+        ]);
+
+        $highlight = PpmpSubtotalHighlight::updateOrCreate(
+            [
+                'ppmp_project_id' => $validated['ppmp_project_id'],
+                'user_id' => auth()->id(),
+            ],
+            [
+                'status' => $validated['status'],
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Highlight saved successfully');
+    }
+
+    /**
+     * Update a PPMP subtotal highlight.
+     */
+    public function updateHighlight(Request $request, PpmpSubtotalHighlight $highlight): JsonResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:FINAL,INDICATIVE',
+        ]);
+
+        $highlight->update($validated);
+
+        return response()->json([
+            'message' => 'Highlight updated successfully',
+            'highlight' => [
+                'id' => $highlight->id,
+                'ppmp_project_id' => $highlight->ppmp_project_id,
+                'status' => $highlight->status,
+                'project_key' => $highlight->ppmpProject->general_description . '|' . $highlight->ppmpProject->project_type,
+            ]
+        ]);
+    }
+
+    /**
+     * Delete a PPMP subtotal highlight.
+     */
+    public function destroyHighlight(PpmpSubtotalHighlight $highlight)
+    {
+        $highlight->delete();
+
+        return redirect()->back()->with('success', 'Highlight deleted successfully');
     }
 }

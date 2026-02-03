@@ -89,7 +89,7 @@ export default function SimpleStatistic({
                         {value}
                     </p>
                     {subtitle && (
-                        <p className="hidden text-xs text-white/70 md:block">
+                        <p className="hidden text-sm font-medium text-white/90 md:block">
                             {subtitle}
                         </p>
                     )}

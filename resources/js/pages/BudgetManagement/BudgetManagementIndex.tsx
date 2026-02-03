@@ -3,15 +3,16 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { DollarSign, Wallet, Receipt } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { DollarSign, FileText, Receipt, Wallet } from 'lucide-react';
+import { useEffect } from 'react';
 
 // Import child components
 // Budget Management System - Main index with tabs
-import SourceofFund from './SourceofFund';
 import Budgetprpo from './Budgetprpo';
-import TravelExpenses from './TravelExpenses';
 import BudgetReports from './BudgetReports';
+import PPMP from './PPMP';
+import SourceofFund from './SourceofFund';
+import TravelExpenses from './TravelExpenses';
 
 interface TravelExpense {
     id: number;
@@ -52,6 +53,11 @@ const navItems: Array<Omit<NavItem, 'href'> & { href: string }> = [
         icon: Wallet,
     },
     {
+        title: 'PPMP',
+        href: '#ppmp',
+        icon: FileText,
+    },
+    {
         title: 'PRs, POs Status ',
         href: '#allocation',
         icon: DollarSign,
@@ -71,12 +77,7 @@ const navItems: Array<Omit<NavItem, 'href'> & { href: string }> = [
 export default function BudgetManagementIndex() {
     const props = usePage<PageProps>().props;
     const { activeTab: activeTabProp = 'source' } = props;
-    const [activeTab, setActiveTab] = useState(activeTabProp);
-
-    // Sync state with prop changes when navigating between tabs
-    useEffect(() => {
-        setActiveTab(activeTabProp);
-    }, [activeTabProp]);
+    const activeTab = activeTabProp;
 
     const handleTabChange = (tab: string) => {
         // Use Inertia router to navigate with query parameters
@@ -92,7 +93,11 @@ export default function BudgetManagementIndex() {
         const hash = window.location.hash.substring(1);
         if (
             hash &&
-            (hash === 'source' || hash === 'allocation' || hash === 'travel-expenses' || hash === 'reports')
+            (hash === 'source' ||
+                hash === 'ppmp' ||
+                hash === 'allocation' ||
+                hash === 'travel-expenses' ||
+                hash === 'reports')
         ) {
             // If there's a hash in the URL, navigate to that tab using query params
             router.get(
@@ -151,8 +156,11 @@ export default function BudgetManagementIndex() {
                         {/* Tab Content */}
                         <div className="tab-content">
                             {activeTab === 'source' && <SourceofFund />}
+                            {activeTab === 'ppmp' && <PPMP />}
                             {activeTab === 'allocation' && <Budgetprpo />}
-                            {activeTab === 'travel-expenses' && <TravelExpenses />}
+                            {activeTab === 'travel-expenses' && (
+                                <TravelExpenses />
+                            )}
                             {activeTab === 'reports' && <BudgetReports />}
                         </div>
                     </section>

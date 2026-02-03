@@ -75,9 +75,7 @@ export default function SourceofFund() {
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
-    const [currentPage, setCurrentPage] = useState(
-        funds?.current_page || 1,
-    );
+    const [currentPage, setCurrentPage] = useState(funds?.current_page || 1);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
@@ -87,7 +85,10 @@ export default function SourceofFund() {
     // Form field configuration for funds
     // Generate year options (20 years back and 10 years forward)
     const currentYear = new Date().getFullYear();
-    const yearOptions = Array.from({ length: 31 }, (_, i) => currentYear - 20 + i);
+    const yearOptions = Array.from(
+        { length: 31 },
+        (_, i) => currentYear - 20 + i,
+    );
 
     const fundFormFields: FormField[] = [
         {
@@ -110,9 +111,9 @@ export default function SourceofFund() {
             label: 'Year',
             type: 'select',
             required: true,
-            options: yearOptions.map(year => ({
+            options: yearOptions.map((year) => ({
                 value: year.toString(),
-                label: year.toString()
+                label: year.toString(),
             })),
             placeholder: 'Select year',
         },
@@ -297,28 +298,44 @@ export default function SourceofFund() {
     };
 
     // State to hold the selected year for the donut chart
-    const [selectedDonutYear, setSelectedDonutYear] = useState<number | null>(null);
+    const [selectedDonutYear, setSelectedDonutYear] = useState<number | null>(
+        null,
+    );
 
     // Prepare data for donut chart from fund analytics
     const donutChartData = useMemo(() => {
-        if (!analytics?.fundsByYearAndName || analytics.fundsByYearAndName.length === 0) return [];
+        if (
+            !analytics?.fundsByYearAndName ||
+            analytics.fundsByYearAndName.length === 0
+        )
+            return [];
 
         // Use selected year or default to most recent year
-        const yearToDisplay = selectedDonutYear || Math.max(...analytics.fundsByYearAndName.map(item => item.year));
-        const yearData = analytics.fundsByYearAndName.find(item => item.year === yearToDisplay);
+        const yearToDisplay =
+            selectedDonutYear ||
+            Math.max(...analytics.fundsByYearAndName.map((item) => item.year));
+        const yearData = analytics.fundsByYearAndName.find(
+            (item) => item.year === yearToDisplay,
+        );
 
         if (!yearData) return [];
 
         return Object.entries(yearData.funds).map(([name, value]) => ({
             name,
-            value
+            value,
         }));
     }, [analytics, selectedDonutYear]);
 
     // Get the most recent year for title display
     const mostRecentYear = useMemo(() => {
-        if (!analytics?.fundsByYearAndName || analytics.fundsByYearAndName.length === 0) return null;
-        return Math.max(...analytics.fundsByYearAndName.map(item => item.year));
+        if (
+            !analytics?.fundsByYearAndName ||
+            analytics.fundsByYearAndName.length === 0
+        )
+            return null;
+        return Math.max(
+            ...analytics.fundsByYearAndName.map((item) => item.year),
+        );
     }, [analytics]);
 
     const formatCurrency = (amount: number) => {
@@ -341,7 +358,7 @@ export default function SourceofFund() {
             <div className="flex flex-col gap-4">
                 {/* Analytics Dashboard */}
                 <div className="mb-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {/* Donut Chart - Left Side */}
                         <div>
                             <DonutPieChart
@@ -351,12 +368,18 @@ export default function SourceofFund() {
                                 outerRadius={120}
                                 innerRadius={80}
                                 showYearSelector={true}
-                                availableYears={analytics?.fundsByYearAndName?.map(item => item.year).sort((a, b) => b - a) || []}
+                                availableYears={
+                                    analytics?.fundsByYearAndName
+                                        ?.map((item) => item.year)
+                                        .sort((a, b) => b - a) || []
+                                }
                                 selectedYear={selectedDonutYear}
-                                onYearChange={(year) => setSelectedDonutYear(year)}
+                                onYearChange={(year) =>
+                                    setSelectedDonutYear(year)
+                                }
                             />
                         </div>
-                        
+
                         {/* Fund Trends Chart - Right Side */}
                         <div>
                             <FundTrendChart
@@ -447,7 +470,9 @@ export default function SourceofFund() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('total_amount')}
+                                        onClick={() =>
+                                            handleSort('total_amount')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Total Amount
@@ -456,7 +481,9 @@ export default function SourceofFund() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('source_year')}
+                                        onClick={() =>
+                                            handleSort('source_year')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Year
@@ -476,7 +503,9 @@ export default function SourceofFund() {
                                                 {fund.fund_name}
                                             </TableCell>
                                             <TableCell>
-                                                {formatCurrency(fund.total_amount)}
+                                                {formatCurrency(
+                                                    fund.total_amount,
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 {fund.source_year}
@@ -484,7 +513,9 @@ export default function SourceofFund() {
                                             <TableCell>
                                                 <div className="flex items-center justify-center gap-2">
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
+                                                        <DropdownMenuTrigger
+                                                            asChild
+                                                        >
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
@@ -494,13 +525,21 @@ export default function SourceofFund() {
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent>
                                                             <DropdownMenuItem
-                                                                onClick={() => handleEdit(fund)}
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        fund,
+                                                                    )
+                                                                }
                                                             >
                                                                 <Edit3 className="mr-2 h-4 w-4" />
                                                                 Edit
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                onClick={() => handleDelete(fund.id)}
+                                                                onClick={() =>
+                                                                    handleDelete(
+                                                                        fund.id,
+                                                                    )
+                                                                }
                                                                 className="text-red-600 focus:text-red-600 dark:text-red-400"
                                                             >
                                                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -546,8 +585,15 @@ export default function SourceofFund() {
                     description="Create a new fund with details"
                     fields={fundFormFields}
                     formData={formData}
-                    onInputChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                    onSelectChange={(name, value) => setFormData({ ...formData, [name]: value })}
+                    onInputChange={(e) =>
+                        setFormData({
+                            ...formData,
+                            [e.target.name]: e.target.value,
+                        })
+                    }
+                    onSelectChange={(name, value) =>
+                        setFormData({ ...formData, [name]: value })
+                    }
                     onSubmit={handleSubmitAdd}
                     submitButtonText="Add Fund"
                 />
@@ -560,8 +606,15 @@ export default function SourceofFund() {
                     description="Update fund details"
                     fields={fundFormFields}
                     formData={formData}
-                    onInputChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                    onSelectChange={(name, value) => setFormData({ ...formData, [name]: value })}
+                    onInputChange={(e) =>
+                        setFormData({
+                            ...formData,
+                            [e.target.name]: e.target.value,
+                        })
+                    }
+                    onSelectChange={(name, value) =>
+                        setFormData({ ...formData, [name]: value })
+                    }
                     onSubmit={handleSubmitEdit}
                     submitButtonText="Update Fund"
                     isEdit={true}
