@@ -13,8 +13,11 @@ class TravelExpense extends Model
         'date_of_travel',
         'destination',
         'purpose',
+        'travel_type',
         'amount',
         'fund_id',
+        'ppmp_project_id',
+        'ppmp_funding_detail_id',
         'status',
         'remarks',
         'user_id',
@@ -33,6 +36,16 @@ class TravelExpense extends Model
     public function fund(): BelongsTo
     {
         return $this->belongsTo(Fund::class);
+    }
+
+    public function ppmpProject(): BelongsTo
+    {
+        return $this->belongsTo(PpmpProject::class);
+    }
+
+    public function ppmpFundingDetail(): BelongsTo
+    {
+        return $this->belongsTo(PpmpFundingDetail::class);
     }
 
     protected static function booted()

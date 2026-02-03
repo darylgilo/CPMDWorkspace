@@ -90,6 +90,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/travel-expenses', [BudgetManagementController::class, 'storeTravelExpense'])->name('travel-expenses.store');
     Route::put('/travel-expenses/{expense}', [BudgetManagementController::class, 'updateTravelExpense'])->name('travel-expenses.update');
     Route::delete('/travel-expenses/{expense}', [BudgetManagementController::class, 'destroyTravelExpense'])->name('travel-expenses.destroy');
+    // PPMP Routes
+    Route::post('/budgetmanagement/ppmp', [BudgetManagementController::class, 'storePPMP'])->name('budgetmanagement.ppmp.store');
+    Route::post('/budgetmanagement/ppmp/funding-details', [BudgetManagementController::class, 'storeFundingDetails'])->name('budgetmanagement.ppmp.funding-details.store');
+    Route::put('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'updateFundingDetails'])->name('budgetmanagement.ppmp.funding-details.update');
+    Route::delete('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'destroyFundingDetails'])->name('budgetmanagement.ppmp.funding-details.destroy');
+    Route::put('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'updatePPMP'])->name('budgetmanagement.ppmp.update');
+    Route::delete('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'destroyPPMP'])->name('budgetmanagement.ppmp.destroy');
+    
+    // PPMP Subtotal Highlights Routes
+    Route::get('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'getHighlights'])->name('budgetmanagement.ppmp.highlights.index');
+    Route::post('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'storeHighlight'])->name('budgetmanagement.ppmp.highlights.store');
+    Route::put('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'updateHighlight'])->name('budgetmanagement.ppmp.highlights.update');
+    Route::delete('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'destroyHighlight'])->name('budgetmanagement.ppmp.highlights.destroy');
+    
     Route::get('/budget-management/analytics', [BudgetManagementController::class, 'analytics'])->name('budget-management.analytics');
     Route::get('/budget-management/export', [BudgetManagementController::class, 'exportFunds'])->name('budget-management.export');
     // Noticeboard - specific routes before parameterized routes

@@ -24,11 +24,20 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { router, usePage } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Edit3, MoreVertical, Plus, Trash2, Calendar, MapPin, DollarSign, FileText } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
-import { type ReactElement } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import { router, usePage } from '@inertiajs/react';
+import {
+    Calendar,
+    ChevronDown,
+    ChevronUp,
+    DollarSign,
+    Edit3,
+    MapPin,
+    MoreVertical,
+    Plus,
+    Trash2,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState, type ReactElement } from 'react';
 
 interface TravelExpense {
     id: number;
@@ -39,9 +48,21 @@ interface TravelExpense {
     purpose: string;
     amount: number;
     fund_id: number | null;
+    ppmp_project_id: number | null;
+    ppmp_funding_detail_id: number | null;
     fund?: {
         id: number;
         fund_name: string;
+    };
+    ppmp_project?: {
+        id: number;
+        general_description: string;
+        project_type: string;
+    };
+    ppmp_funding_detail?: {
+        id: number;
+        estimated_budget: number;
+        quantity_size: string;
     };
     status: 'pending' | 'approved' | 'rejected';
     remarks: string | null;
@@ -81,6 +102,17 @@ interface PageProps {
         per_page: number;
         total: number;
     };
+    ppmpItems?: Array<{
+        id: number;
+        general_description: string;
+        project_type: string;
+        funding_details: Array<{
+            id: number;
+            estimated_budget: number;
+            timelines: Array<any>;
+        }>;
+        fund_id: number;
+    }>;
     [key: string]: unknown;
 }
 
@@ -92,6 +124,7 @@ export default function TravelExpenses() {
         perPage: perPageProp = 10,
         expenseAnalytics: analytics,
         funds,
+        ppmpItems = [],
     } = props;
 
     // Get URL parameters
@@ -106,14 +139,15 @@ export default function TravelExpenses() {
     );
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [selectedExpense, setSelectedExpense] = useState<TravelExpense | null>(null);
+    const [selectedExpense, setSelectedExpense] =
+        useState<TravelExpense | null>(null);
     const [sortField, setSortField] = useState<string>('date_of_travel');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [selectedYear, setSelectedYear] = useState<number>(
-        urlYear ? parseInt(urlYear) : 2026
+        urlYear ? parseInt(urlYear) : 2026,
     );
     const [selectedFundId, setSelectedFundId] = useState<number | null>(
-        urlFundId ? parseInt(urlFundId) : null
+        urlFundId ? parseInt(urlFundId) : null,
     );
 
     // Add loading state to track when all required data is available
@@ -122,12 +156,16 @@ export default function TravelExpenses() {
     // Initialize with first available year and fund immediately (only if not set from URL)
     useEffect(() => {
         if (funds?.data && funds.data.length > 0 && !urlYear) {
-            const years = [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
+            const years = [
+                ...new Set(funds.data.map((fund) => fund.source_year)),
+            ].sort((a, b) => b - a);
             if (years.length > 0) {
                 const firstYear = years[0];
                 setSelectedYear(firstYear);
-                
-                const fundsForYear = funds.data.filter(fund => fund.source_year === firstYear);
+
+                const fundsForYear = funds.data.filter(
+                    (fund) => fund.source_year === firstYear,
+                );
                 if (fundsForYear.length > 0 && !urlFundId) {
                     setSelectedFundId(fundsForYear[0].id);
                 }
@@ -142,101 +180,180 @@ export default function TravelExpenses() {
         }
     }, [travelExpenses, funds?.data, analytics]);
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            maximumFractionDigits: 2,
+        }).format(amount);
+    };
+
+    // Create PPMP project options for dropdown
+    const ppmpProjectOptions = useMemo(() => {
+        if (!ppmpItems || !Array.isArray(ppmpItems)) return [];
+
+        // Filter projects that are travel-related and have funding details
+        const travelProjects = ppmpItems.filter((item) => {
+            const isTravelRelated =
+                item.general_description === 'Travelling Expenses - Local' ||
+                item.general_description === 'Travelling Expenses - Foreign';
+            const itemMatchesFund = selectedFundId
+                ? item.fund_id === selectedFundId
+                : true;
+            const hasFundingDetails =
+                item.funding_details && item.funding_details.length > 0;
+            return isTravelRelated && itemMatchesFund && hasFundingDetails;
+        });
+
+        // Create options with remaining balance information
+        const options = travelProjects.map((item) => {
+            const totalBudget =
+                item.funding_details?.reduce(
+                    (sum, detail) =>
+                        sum + (Number(detail.estimated_budget) || 0),
+                    0,
+                ) || 0;
+
+            // Calculate current expenses for this project (only approved expenses)
+            const currentExpenses = (travelExpenses?.data || [])
+                .filter(
+                    (expense) =>
+                        expense.ppmp_project_id === item.id &&
+                        expense.status === 'approved',
+                )
+                .reduce(
+                    (sum, expense) => sum + (Number(expense.amount) || 0),
+                    0,
+                );
+
+            const remainingBalance = totalBudget - currentExpenses;
+
+            return {
+                value: item.id.toString(),
+                label: `${item.general_description} - ${formatCurrency(remainingBalance)}`,
+                project: item,
+            };
+        });
+
+        return options;
+    }, [ppmpItems, selectedFundId, travelExpenses]);
+
     const fundYears = useMemo(() => {
         if (!funds?.data || !Array.isArray(funds.data)) return [];
-        return [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
+        return [...new Set(funds.data.map((fund) => fund.source_year))].sort(
+            (a, b) => b - a,
+        );
     }, [funds?.data]);
 
     const filteredFunds = useMemo(() => {
         if (!funds?.data || !Array.isArray(funds.data)) return [];
-        return funds.data.filter(fund => fund.source_year === selectedYear);
+        return funds.data.filter((fund) => fund.source_year === selectedYear);
     }, [funds?.data, selectedYear]);
 
     useEffect(() => {
-        if (filteredFunds && Array.isArray(filteredFunds) && filteredFunds.length > 0 && (!selectedFundId || !filteredFunds.find(f => f.id === selectedFundId))) {
+        if (
+            filteredFunds &&
+            Array.isArray(filteredFunds) &&
+            filteredFunds.length > 0 &&
+            (!selectedFundId ||
+                !filteredFunds.find((f) => f.id === selectedFundId))
+        ) {
             setSelectedFundId(filteredFunds[0].id);
         }
     }, [filteredFunds, selectedFundId]);
 
     const currentFund = useMemo(() => {
         if (!selectedFundId) return null;
-        return filteredFunds.find(fund => fund.id === selectedFundId) || null;
+        return filteredFunds.find((fund) => fund.id === selectedFundId) || null;
     }, [filteredFunds, selectedFundId]);
 
-    const expenseFormFields: FormField[] = useMemo(() => [
-        {
-            name: 'doctrack_no',
-            label: 'Document Tracking No.',
-            type: 'text',
-            required: true,
-            placeholder: 'e.g., DOC-2024-001',
-        },
-        {
-            name: 'name',
-            label: 'Traveler Name',
-            type: 'text',
-            required: true,
-            placeholder: 'e.g., Juan Dela Cruz',
-        },
-        {
-            name: 'date_of_travel',
-            label: 'Date of Travel',
-            type: 'date',
-            required: true,
-        },
-        {
-            name: 'destination',
-            label: 'Destination',
-            type: 'text',
-            required: true,
-            placeholder: 'e.g., Manila, Philippines',
-        },
-        {
-            name: 'purpose',
-            label: 'Purpose',
-            type: 'text',
-            required: true,
-            placeholder: 'e.g., Project meeting',
-        },
-        {
-            name: 'amount',
-            label: 'Amount',
-            type: 'number',
-            required: true,
-            step: '0.01',
-            min: '0',
-        },
-        {
-            name: 'fund_id',
-            label: 'Source of Fund',
-            type: 'select',
-            required: false,
-            options: filteredFunds ? filteredFunds.map(fund => ({
-                value: fund.id.toString(),
-                label: `${fund.fund_name} (${fund.source_year})`,
-            })) : [],
-            placeholder: 'Select fund',
-        },
-        {
-            name: 'status',
-            label: 'Status',
-            type: 'select',
-            required: true,
-            options: [
-                { value: 'pending', label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
-            ],
-            placeholder: 'Select status',
-        },
-        {
-            name: 'remarks',
-            label: 'Remarks',
-            type: 'text',
-            required: false,
-            placeholder: 'Additional notes...',
-        },
-    ], [filteredFunds]);
+    const expenseFormFields: FormField[] = useMemo(
+        () => [
+            {
+                name: 'doctrack_no',
+                label: 'Document Tracking No.',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g., DOC-2024-001',
+            },
+            {
+                name: 'name',
+                label: 'Traveler Name',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g., Juan Dela Cruz',
+            },
+            {
+                name: 'date_of_travel',
+                label: 'Date of Travel',
+                type: 'date',
+                required: true,
+            },
+            {
+                name: 'destination',
+                label: 'Destination',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g., Manila, Philippines',
+            },
+            {
+                name: 'purpose',
+                label: 'Purpose',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g., Project meeting',
+            },
+            {
+                name: 'ppmp_project_id',
+                label: 'Travel Type',
+                type: 'select',
+                required: true,
+                options: ppmpProjectOptions,
+                placeholder: 'Select a Travel Type',
+            },
+            {
+                name: 'amount',
+                label: 'Amount',
+                type: 'number',
+                required: true,
+                step: '0.01',
+                min: '0',
+            },
+            {
+                name: 'fund_id',
+                label: 'Source of Fund',
+                type: 'select',
+                required: false,
+                options: filteredFunds
+                    ? filteredFunds.map((fund) => ({
+                          value: fund.id.toString(),
+                          label: `${fund.fund_name} (${fund.source_year})`,
+                      }))
+                    : [],
+                placeholder: 'Select fund',
+            },
+            {
+                name: 'status',
+                label: 'Status',
+                type: 'select',
+                required: true,
+                options: [
+                    { value: 'pending', label: 'Pending' },
+                    { value: 'approved', label: 'Approved' },
+                    { value: 'rejected', label: 'Rejected' },
+                ],
+                placeholder: 'Select status',
+            },
+            {
+                name: 'remarks',
+                label: 'Remarks',
+                type: 'text',
+                required: false,
+                placeholder: 'Additional notes...',
+            },
+        ],
+        [filteredFunds, ppmpProjectOptions],
+    );
 
     const [formData, setFormData] = useState({
         doctrack_no: '',
@@ -244,6 +361,8 @@ export default function TravelExpenses() {
         date_of_travel: '',
         destination: '',
         purpose: '',
+        ppmp_project_id: '',
+        ppmp_funding_detail_id: '',
         amount: '',
         fund_id: '',
         status: 'pending',
@@ -257,6 +376,8 @@ export default function TravelExpenses() {
             date_of_travel: '',
             destination: '',
             purpose: '',
+            ppmp_project_id: '',
+            ppmp_funding_detail_id: '',
             amount: '',
             fund_id: '',
             status: 'pending',
@@ -267,7 +388,10 @@ export default function TravelExpenses() {
     const handleAdd = () => {
         resetForm();
         if (selectedFundId) {
-            setFormData(prev => ({ ...prev, fund_id: selectedFundId.toString() }));
+            setFormData((prev) => ({
+                ...prev,
+                fund_id: selectedFundId.toString(),
+            }));
         }
         setIsAddDialogOpen(true);
     };
@@ -277,9 +401,14 @@ export default function TravelExpenses() {
         setFormData({
             doctrack_no: expense.doctrack_no,
             name: expense.name,
-            date_of_travel: expense.date_of_travel ? new Date(expense.date_of_travel).toISOString().split('T')[0] : '',
+            date_of_travel: expense.date_of_travel
+                ? new Date(expense.date_of_travel).toISOString().split('T')[0]
+                : '',
             destination: expense.destination,
             purpose: expense.purpose,
+            ppmp_project_id: expense.ppmp_project_id?.toString() || '',
+            ppmp_funding_detail_id:
+                expense.ppmp_funding_detail_id?.toString() || '',
             amount: expense.amount.toString(),
             fund_id: expense.fund_id?.toString() || '',
             status: expense.status,
@@ -289,22 +418,80 @@ export default function TravelExpenses() {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this travel expense?')) {
-            router.delete(`/travel-expenses/${id}`);
+        if (
+            window.confirm(
+                'Are you sure you want to delete this travel expense?',
+            )
+        ) {
+            router.delete(`/travel-expenses/${id}`, {
+                onSuccess: () => {
+                    router.get(
+                        '/budgetmanagement',
+                        {
+                            tab: 'travel-expenses',
+                            search: searchValue,
+                            perPage,
+                            page: currentPage,
+                            sort: sortField,
+                            direction: sortDirection,
+                            year: selectedYear,
+                            fundId: selectedFundId,
+                        },
+                        { preserveState: true },
+                    );
+                },
+                onError: (errors) => {
+                    console.error('Error deleting travel expense:', errors);
+                },
+            });
         }
     };
 
     // Get fund from expense
     const getFundFromExpense = (expense: TravelExpense) => {
-        return funds?.data.find(fund => fund.id === expense.fund_id);
+        return funds?.data.find((fund) => fund.id === expense.fund_id);
     };
 
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const amount = parseFloat(formData.amount) || 0;
+        const ppmpProjectId = parseInt(formData.ppmp_project_id) || null;
+
+        // Find the selected PPMP project to check budget
+        const selectedProject = ppmpProjectOptions.find(
+            (option) => option.value === formData.ppmp_project_id,
+        )?.project;
+
+        if (selectedProject) {
+            const totalBudget =
+                selectedProject.funding_details?.reduce(
+                    (sum, detail) =>
+                        sum + (Number(detail.estimated_budget) || 0),
+                    0,
+                ) || 0;
+
+            // Calculate current expenses for this project
+            const currentExpenses = filteredExpenses
+                .filter(
+                    (expense) => expense.ppmp_project_id === selectedProject.id,
+                )
+                .reduce((sum, expense) => sum + expense.amount, 0);
+
+            const remainingBalance = totalBudget - currentExpenses;
+
+            if (amount > remainingBalance) {
+                alert(
+                    `Insufficient balance for this project. Available balance: ${formatCurrency(remainingBalance)}`,
+                );
+                return;
+            }
+        }
+
         const formattedData = {
             ...formData,
-            amount: parseFloat(formData.amount) || 0,
+            amount: amount,
+            ppmp_project_id: ppmpProjectId,
         };
 
         router.post('/travel-expenses', formattedData, {
@@ -336,35 +523,75 @@ export default function TravelExpenses() {
         e.preventDefault();
 
         if (selectedExpense) {
+            const amount = parseFloat(formData.amount) || 0;
+            const ppmpProjectId = parseInt(formData.ppmp_project_id) || null;
+
+            // Find the selected PPMP project to check budget
+            const selectedProject = ppmpProjectOptions.find(
+                (option) => option.value === formData.ppmp_project_id,
+            )?.project;
+
+            if (selectedProject) {
+                const totalBudget =
+                    selectedProject.funding_details?.reduce(
+                        (sum, detail) =>
+                            sum + (Number(detail.estimated_budget) || 0),
+                        0,
+                    ) || 0;
+
+                // Calculate current expenses for this project (excluding the current expense)
+                const currentExpenses = filteredExpenses
+                    .filter(
+                        (expense) =>
+                            expense.ppmp_project_id === selectedProject.id &&
+                            expense.id !== selectedExpense.id,
+                    )
+                    .reduce((sum, expense) => sum + expense.amount, 0);
+
+                const remainingBalance = totalBudget - currentExpenses;
+
+                if (amount > remainingBalance) {
+                    alert(
+                        `Insufficient balance for this project. Available balance: ${formatCurrency(remainingBalance)}`,
+                    );
+                    return;
+                }
+            }
+
             const formattedData = {
                 ...formData,
-                amount: parseFloat(formData.amount) || 0,
+                amount: amount,
+                ppmp_project_id: ppmpProjectId,
             };
 
-            router.put(`/travel-expenses/${selectedExpense.id}`, formattedData, {
-                onSuccess: () => {
-                    setIsEditDialogOpen(false);
-                    resetForm();
-                    setSelectedExpense(null);
-                    router.get(
-                        '/budgetmanagement',
-                        {
-                            tab: 'travel-expenses',
-                            search: searchValue,
-                            perPage,
-                            page: currentPage,
-                            sort: sortField,
-                            direction: sortDirection,
-                            year: selectedYear,
-                            fundId: selectedFundId,
-                        },
-                        { preserveState: true },
-                    );
+            router.put(
+                `/travel-expenses/${selectedExpense.id}`,
+                formattedData,
+                {
+                    onSuccess: () => {
+                        setIsEditDialogOpen(false);
+                        resetForm();
+                        setSelectedExpense(null);
+                        router.get(
+                            '/budgetmanagement',
+                            {
+                                tab: 'travel-expenses',
+                                search: searchValue,
+                                perPage,
+                                page: currentPage,
+                                sort: sortField,
+                                direction: sortDirection,
+                                year: selectedYear,
+                                fundId: selectedFundId,
+                            },
+                            { preserveState: true },
+                        );
+                    },
+                    onError: (errors) => {
+                        console.error('Error updating travel expense:', errors);
+                    },
                 },
-                onError: (errors) => {
-                    console.error('Error updating travel expense:', errors);
-                },
-            });
+            );
         }
     };
 
@@ -410,22 +637,25 @@ export default function TravelExpenses() {
 
     const filteredExpenses = useMemo(() => {
         if (!travelExpenses?.data) return [];
-        
+
         let expenses = travelExpenses.data;
-        
+
         // Filter by year (based on fund's source_year)
-        const fundIdsForYear = filteredFunds.map(f => f.id);
-        expenses = expenses.filter(expense => 
-            expense.fund_id && fundIdsForYear.includes(expense.fund_id)
+        const fundIdsForYear = filteredFunds.map((f) => f.id);
+        expenses = expenses.filter(
+            (expense) =>
+                expense.fund_id && fundIdsForYear.includes(expense.fund_id),
         );
-        
+
         // Filter by specific fund if selected
         if (selectedFundId) {
-            expenses = expenses.filter(expense => expense.fund_id === selectedFundId);
+            expenses = expenses.filter(
+                (expense) => expense.fund_id === selectedFundId,
+            );
         }
-        
+
         return expenses;
-    }, [travelExpenses, selectedYear, selectedFundId, filteredFunds]);
+    }, [travelExpenses, selectedFundId, filteredFunds]);
 
     const sortedExpenses = useMemo(() => {
         if (!filteredExpenses) return [];
@@ -467,16 +697,9 @@ export default function TravelExpenses() {
         );
     };
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-PH', {
-            style: 'currency',
-            currency: 'PHP',
-            maximumFractionDigits: 2,
-        }).format(amount);
-    };
-
     const getStatusBadge = (status: string) => {
-        const baseClasses = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium";
+        const baseClasses =
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium';
         switch (status) {
             case 'approved':
                 return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
@@ -487,6 +710,340 @@ export default function TravelExpenses() {
                 return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
         }
     };
+
+    const isLocalTravel = (destination: string) => {
+        const philippinesKeywords = [
+            'philippines',
+            'manila',
+            'quezon city',
+            'cebu',
+            'davao',
+            'iloilo',
+            'bacolod',
+            'cagayan de oro',
+            'general santos',
+            'makati',
+            'pasig',
+            'taguig',
+            'mandaluyong',
+            'san juan',
+            'pasay',
+            'parañaque',
+            'las piñas',
+            'muntinlupa',
+            'marikina',
+            'caloocan',
+            'malabon',
+            'navotas',
+            'valenzuela',
+            'san jose del monte',
+            'calamba',
+            'lipa',
+            'batangas',
+            'laguna',
+            'cavite',
+            'rizal',
+            'bulacan',
+            'pampanga',
+            'tarlac',
+            'nueva ecija',
+            'zambales',
+            'bataan',
+            'aurora',
+            'quezon',
+            'occidental mindoro',
+            'oriental mindoro',
+            'marinduque',
+            'romblon',
+            'palawan',
+            'albay',
+            'camarines norte',
+            'camarines sur',
+            'catanduanes',
+            'masbate',
+            'sorsogon',
+            'aklan',
+            'antique',
+            'capiz',
+            'guimaras',
+            'iloilo',
+            'negros occidental',
+            'negros oriental',
+            'bohol',
+            'cebu',
+            'siquijor',
+            'davao de oro',
+            'davao del norte',
+            'davao del sur',
+            'davao occidental',
+            'davao oriental',
+            'sarangani',
+            'south cotabato',
+            'sultan kudarat',
+            'cotabato',
+            'lanao del norte',
+            'lanao del sur',
+            'bukidnon',
+            'misamis occidental',
+            'misamis oriental',
+            'camiguin',
+            'surigao del norte',
+            'surigao del sur',
+            'dinagat islands',
+            'agusan del norte',
+            'agusan del sur',
+            'basilan',
+            'lamitan',
+            'lanao del sur',
+            'maguindanao',
+            'sulu',
+            'tawi-tawi',
+        ];
+
+        const lowerDestination = destination.toLowerCase();
+        return philippinesKeywords.some((keyword) =>
+            lowerDestination.includes(keyword),
+        );
+    };
+
+    // Calculate PPMP local travel subtotal separately for statistics
+    const ppmpLocalSubtotal = useMemo(() => {
+        const ppmpTravelExpenses = ppmpItems.filter((item) => {
+            const isLocalTravelExpense =
+                item.general_description === 'Travelling Expenses - Local';
+            const itemMatchesFund = selectedFundId
+                ? item.fund_id === selectedFundId
+                : true;
+            return isLocalTravelExpense && itemMatchesFund;
+        });
+
+        return ppmpTravelExpenses.reduce((sum, item) => {
+            const itemTotal =
+                item.funding_details?.reduce(
+                    (total, detail) =>
+                        total + (Number(detail.estimated_budget) || 0),
+                    0,
+                ) || 0;
+            return sum + itemTotal;
+        }, 0);
+    }, [ppmpItems, selectedFundId]);
+
+    // Calculate PPMP foreign travel subtotal separately for statistics
+    const ppmpForeignSubtotal = useMemo(() => {
+        const ppmpTravelExpenses = ppmpItems.filter((item) => {
+            const isForeignTravelExpense =
+                item.general_description === 'Travelling Expenses - Foreign';
+            const itemMatchesFund = selectedFundId
+                ? item.fund_id === selectedFundId
+                : true;
+            return isForeignTravelExpense && itemMatchesFund;
+        });
+
+        return ppmpTravelExpenses.reduce((sum, item) => {
+            const itemTotal =
+                item.funding_details?.reduce(
+                    (total, detail) =>
+                        total + (Number(detail.estimated_budget) || 0),
+                    0,
+                ) || 0;
+            return sum + itemTotal;
+        }, 0);
+    }, [ppmpItems, selectedFundId]);
+
+    const travelSubtotals = useMemo(() => {
+        if (!filteredExpenses || filteredExpenses.length === 0) {
+            return {
+                local: 0,
+                foreign: 0,
+                total: 0,
+            };
+        }
+
+        // Calculate TEV travel expenses using PPMP project general_description (only approved expenses)
+        const tevLocal = filteredExpenses
+            .filter(
+                (expense) =>
+                    expense.ppmp_project?.general_description ===
+                        'Travelling Expenses - Local' &&
+                    expense.status === 'approved',
+            )
+            .reduce((sum, expense) => sum + Number(expense.amount), 0);
+
+        const tevForeign = filteredExpenses
+            .filter(
+                (expense) =>
+                    expense.ppmp_project?.general_description ===
+                        'Travelling Expenses - Foreign' &&
+                    expense.status === 'approved',
+            )
+            .reduce((sum, expense) => sum + Number(expense.amount), 0);
+
+        // Calculate PPMP travel expense subtotals for the selected fund and year (budget allocations)
+        const ppmpTravelExpenses = ppmpItems.filter((item) => {
+            const isTravelExpense =
+                item.general_description === 'Travelling Expenses - Local' ||
+                item.general_description === 'Travelling Expenses - Foreign';
+            const itemMatchesFund = selectedFundId
+                ? item.fund_id === selectedFundId
+                : true;
+            return isTravelExpense && itemMatchesFund;
+        });
+
+        const ppmpLocal = ppmpTravelExpenses
+            .filter(
+                (item) =>
+                    item.general_description === 'Travelling Expenses - Local',
+            )
+            .reduce((sum, item) => {
+                const itemTotal =
+                    item.funding_details?.reduce(
+                        (total, detail) =>
+                            total + (Number(detail.estimated_budget) || 0),
+                        0,
+                    ) || 0;
+                return sum + itemTotal;
+            }, 0);
+
+        const ppmpForeign = ppmpTravelExpenses
+            .filter(
+                (item) =>
+                    item.general_description ===
+                    'Travelling Expenses - Foreign',
+            )
+            .reduce((sum, item) => {
+                const itemTotal =
+                    item.funding_details?.reduce(
+                        (total, detail) =>
+                            total + (Number(detail.estimated_budget) || 0),
+                        0,
+                    ) || 0;
+                return sum + itemTotal;
+            }, 0);
+
+        // Total = PPMP Budget Allocation + TEV Expenses
+        return {
+            local: tevLocal + ppmpLocal,
+            foreign: tevForeign + ppmpForeign,
+            total: tevLocal + tevForeign + (ppmpLocal + ppmpForeign),
+        };
+    }, [filteredExpenses, ppmpItems, selectedFundId]);
+
+    // Calculate remaining balance for each travel type (PPMP Budget - TEV Expenses)
+    const travelBalances = useMemo(() => {
+        // Get PPMP budget allocations from subtotals
+        const ppmpTravelExpenses = ppmpItems.filter((item) => {
+            const isTravelExpense =
+                item.general_description === 'Travelling Expenses - Local' ||
+                item.general_description === 'Travelling Expenses - Foreign';
+            const itemMatchesFund = selectedFundId
+                ? item.fund_id === selectedFundId
+                : true;
+            return isTravelExpense && itemMatchesFund;
+        });
+
+        const ppmpLocalBudget = ppmpTravelExpenses
+            .filter(
+                (item) =>
+                    item.general_description === 'Travelling Expenses - Local',
+            )
+            .reduce((sum, item) => {
+                const itemTotal =
+                    item.funding_details?.reduce(
+                        (total, detail) =>
+                            total + (Number(detail.estimated_budget) || 0),
+                        0,
+                    ) || 0;
+                return sum + itemTotal;
+            }, 0);
+
+        const ppmpForeignBudget = ppmpTravelExpenses
+            .filter(
+                (item) =>
+                    item.general_description ===
+                    'Travelling Expenses - Foreign',
+            )
+            .reduce((sum, item) => {
+                const itemTotal =
+                    item.funding_details?.reduce(
+                        (total, detail) =>
+                            total + (Number(detail.estimated_budget) || 0),
+                        0,
+                    ) || 0;
+                return sum + itemTotal;
+            }, 0);
+
+        // Calculate TEV expenses for each travel type (only approved expenses are deducted from balance)
+        const tevLocalExpenses = filteredExpenses
+            .filter(
+                (expense) =>
+                    expense.ppmp_project?.general_description ===
+                        'Travelling Expenses - Local' &&
+                    expense.status === 'approved',
+            )
+            .reduce((sum, expense) => sum + Number(expense.amount), 0);
+
+        const tevForeignExpenses = filteredExpenses
+            .filter(
+                (expense) =>
+                    expense.ppmp_project?.general_description ===
+                        'Travelling Expenses - Foreign' &&
+                    expense.status === 'approved',
+            )
+            .reduce((sum, expense) => sum + Number(expense.amount), 0);
+
+        // Debug logging
+        console.log('Balance Debug:', {
+            ppmpItemsCount: ppmpItems.length,
+            ppmpLocalBudget,
+            ppmpForeignBudget,
+            tevLocalExpenses,
+            tevForeignExpenses,
+            localBalance: ppmpLocalBudget - tevLocalExpenses,
+            foreignBalance: ppmpForeignBudget - tevForeignExpenses,
+            filteredExpenses: filteredExpenses.map((e) => ({
+                id: e.id,
+                amount: e.amount,
+                status: e.status,
+                project_desc: e.ppmp_project?.general_description,
+            })),
+            ppmpLocalItems: ppmpTravelExpenses
+                .filter(
+                    (item) =>
+                        item.general_description ===
+                        'Travelling Expenses - Local',
+                )
+                .map((item) => ({
+                    id: item.id,
+                    description: item.general_description,
+                    fund_id: item.fund_id,
+                    funding_details_count: item.funding_details?.length || 0,
+                    total_budget:
+                        item.funding_details?.reduce(
+                            (sum, detail) =>
+                                sum + (Number(detail.estimated_budget) || 0),
+                            0,
+                        ) || 0,
+                })),
+        });
+
+        // Balance = PPMP Budget Allocation - TEV Expenses
+        return {
+            local: ppmpLocalBudget - tevLocalExpenses,
+            foreign: ppmpForeignBudget - tevForeignExpenses,
+            total:
+                ppmpLocalBudget +
+                ppmpForeignBudget -
+                (tevLocalExpenses + tevForeignExpenses),
+        };
+    }, [filteredExpenses, ppmpItems, selectedFundId]);
+
+    // Calculate total amount from all expenses in the table for the Total Amount display
+    const totalExpensesAmount = useMemo(() => {
+        return filteredExpenses.reduce(
+            (sum, expense) => sum + Number(expense.amount),
+            0,
+        );
+    }, [filteredExpenses]);
 
     // Show loading state while data is being fetched
     if (isDataLoading || !travelExpenses || !funds?.data || !analytics) {
@@ -503,23 +1060,25 @@ export default function TravelExpenses() {
                 {/* Analytics Dashboard */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <SimpleStatistic
-                        label="Total Expenses"
-                        value={analytics?.totalExpenses || 0}
-                        icon={FileText}
+                        label="Total Amount"
+                        value={formatCurrency(totalExpensesAmount || 0)}
+                        icon={DollarSign}
                     />
                     <SimpleStatistic
-                        label="Total Amount"
-                        value={formatCurrency(analytics?.totalAmount || 0)}
+                        label="Local Travel Expenses"
+                        value={formatCurrency(ppmpLocalSubtotal || 0)}
                         icon={DollarSign}
+                        subtitle={`Balance: ${formatCurrency(travelBalances.local || 0)}`}
+                    />
+                    <SimpleStatistic
+                        label="Foreign Travel Expenses"
+                        value={formatCurrency(ppmpForeignSubtotal || 0)}
+                        icon={DollarSign}
+                        subtitle={`Balance: ${formatCurrency(travelBalances.foreign || 0)}`}
                     />
                     <SimpleStatistic
                         label="Pending"
                         value={analytics?.pendingCount || 0}
-                        icon={Calendar}
-                    />
-                    <SimpleStatistic
-                        label="Years Active"
-                        value={analytics?.totalByYear?.length || 0}
                         icon={Calendar}
                     />
                 </div>
@@ -535,7 +1094,7 @@ export default function TravelExpenses() {
                                     className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Add Expense
+                                    Add Status
                                 </Button>
                             )}
 
@@ -554,7 +1113,10 @@ export default function TravelExpenses() {
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                         {fundYears.map((year: number) => (
-                                            <SelectItem key={year} value={year.toString()}>
+                                            <SelectItem
+                                                key={year}
+                                                value={year.toString()}
+                                            >
                                                 {year}
                                             </SelectItem>
                                         ))}
@@ -574,12 +1136,22 @@ export default function TravelExpenses() {
                                 >
                                     <SelectTrigger className="w-[250px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
                                         <SelectValue>
-                                            {selectedFundId ? filteredFunds.find(f => f.id === selectedFundId)?.fund_name || 'Select a fund' : 'Select a fund'}
+                                            {selectedFundId
+                                                ? filteredFunds.find(
+                                                      (f) =>
+                                                          f.id ===
+                                                          selectedFundId,
+                                                  )?.fund_name ||
+                                                  'Select a fund'
+                                                : 'Select a fund'}
                                         </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                         {filteredFunds.map((fund) => (
-                                            <SelectItem key={fund.id} value={fund.id.toString()}>
+                                            <SelectItem
+                                                key={fund.id}
+                                                value={fund.id.toString()}
+                                            >
                                                 {fund.fund_name}
                                             </SelectItem>
                                         ))}
@@ -632,7 +1204,10 @@ export default function TravelExpenses() {
                                     placeholder="Search TEV..."
                                     className="w-full md:max-w-md"
                                     searchRoute="/budgetmanagement"
-                                    additionalParams={{ tab: 'travel-expenses', perPage: perPage }}
+                                    additionalParams={{
+                                        tab: 'travel-expenses',
+                                        perPage: perPage,
+                                    }}
                                 />
                             </div>
                         </div>
@@ -644,12 +1219,14 @@ export default function TravelExpenses() {
                             <div className="flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Year: <span className="font-semibold">{selectedYear}</span>
+                                        Year:{' '}
+                                        <span className="font-semibold">
+                                            {selectedYear}
+                                        </span>
                                     </div>
-                                    <h3 className="font-semibold text-lg">TEV {currentFund.fund_name}</h3>
-                                    <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        <span>Total: {formatCurrency(analytics?.totalAmount || 0)}</span>
-                                    </div>
+                                    <h3 className="text-lg font-semibold">
+                                        TEV {currentFund.fund_name}
+                                    </h3>
                                 </div>
                             </div>
                         </div>
@@ -663,8 +1240,10 @@ export default function TravelExpenses() {
                             <TableHeader>
                                 <TableRow className="border-b border-gray-200 dark:border-neutral-700">
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
-                                        onClick={() => handleSort('doctrack_no')}
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        onClick={() =>
+                                            handleSort('doctrack_no')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Doc Track No.
@@ -672,7 +1251,7 @@ export default function TravelExpenses() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
                                         onClick={() => handleSort('name')}
                                     >
                                         <div className="flex items-center">
@@ -681,8 +1260,10 @@ export default function TravelExpenses() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
-                                        onClick={() => handleSort('date_of_travel')}
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        onClick={() =>
+                                            handleSort('date_of_travel')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Date of Travel
@@ -690,19 +1271,21 @@ export default function TravelExpenses() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
-                                        onClick={() => handleSort('destination')}
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        onClick={() =>
+                                            handleSort('destination')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Destination
                                             <SortIndicator field="destination" />
                                         </div>
                                     </TableHead>
-                                    <TableHead className="whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 dark:text-gray-300">
+                                    <TableHead className="px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 dark:text-gray-300">
                                         Purpose
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
                                         onClick={() => handleSort('fund_name')}
                                     >
                                         <div className="flex items-center">
@@ -711,7 +1294,7 @@ export default function TravelExpenses() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
                                         onClick={() => handleSort('amount')}
                                     >
                                         <div className="flex items-center">
@@ -720,7 +1303,7 @@ export default function TravelExpenses() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer whitespace-nowrap px-4 py-3 text-left font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
+                                        className="cursor-pointer px-4 py-3 text-left font-medium whitespace-nowrap text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-neutral-800"
                                         onClick={() => handleSort('status')}
                                     >
                                         <div className="flex items-center">
@@ -728,7 +1311,7 @@ export default function TravelExpenses() {
                                             <SortIndicator field="status" />
                                         </div>
                                     </TableHead>
-                                    <TableHead className="whitespace-nowrap px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-300">
+                                    <TableHead className="px-4 py-3 text-center font-medium whitespace-nowrap text-gray-700 dark:text-gray-300">
                                         Actions
                                     </TableHead>
                                 </TableRow>
@@ -753,7 +1336,9 @@ export default function TravelExpenses() {
                                             <TableCell className="px-4 py-3">
                                                 <div className="flex items-center text-gray-900 dark:text-white">
                                                     <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                                                    {new Date(expense.date_of_travel).toLocaleDateString()}
+                                                    {new Date(
+                                                        expense.date_of_travel,
+                                                    ).toLocaleDateString()}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
@@ -763,18 +1348,24 @@ export default function TravelExpenses() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
-                                                <div className="max-w-xs truncate text-gray-900 dark:text-white" title={expense.purpose}>
+                                                <div
+                                                    className="max-w-xs truncate text-gray-900 dark:text-white"
+                                                    title={expense.purpose}
+                                                >
                                                     {expense.purpose}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                                 <div className="font-medium text-gray-900 dark:text-white">
-                                                    {expense.fund?.fund_name || 'No fund assigned'}
+                                                    {expense.fund?.fund_name ||
+                                                        'No fund assigned'}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
                                                 <div className="font-medium text-gray-900 dark:text-white">
-                                                    {formatCurrency(expense.amount)}
+                                                    {formatCurrency(
+                                                        expense.amount,
+                                                    )}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="px-4 py-3">
@@ -785,60 +1376,93 @@ export default function TravelExpenses() {
                                                             ...expense,
                                                             status: value,
                                                         };
-                                                        router.put(`/travel-expenses/${expense.id}`, updatedData, {
-                                                            onSuccess: () => {
-                                                                router.get(
-                                                                    '/budgetmanagement',
-                                                                    {
-                                                                        tab: 'travel-expenses',
-                                                                        search: searchValue,
-                                                                        perPage,
-                                                                        page: currentPage,
-                                                                        sort: sortField,
-                                                                        direction: sortDirection,
-                                                                        year: selectedYear,
-                                                                        fundId: selectedFundId,
+                                                        router.put(
+                                                            `/travel-expenses/${expense.id}`,
+                                                            updatedData,
+                                                            {
+                                                                onSuccess:
+                                                                    () => {
+                                                                        router.get(
+                                                                            '/budgetmanagement',
+                                                                            {
+                                                                                tab: 'travel-expenses',
+                                                                                search: searchValue,
+                                                                                perPage,
+                                                                                page: currentPage,
+                                                                                sort: sortField,
+                                                                                direction:
+                                                                                    sortDirection,
+                                                                                year: selectedYear,
+                                                                                fundId: selectedFundId,
+                                                                            },
+                                                                            {
+                                                                                preserveState: true,
+                                                                            },
+                                                                        );
                                                                     },
-                                                                    { preserveState: true },
-                                                                );
+                                                                onError: (
+                                                                    errors,
+                                                                ) => {
+                                                                    console.error(
+                                                                        'Error updating status:',
+                                                                        errors,
+                                                                    );
+                                                                },
                                                             },
-                                                            onError: (errors) => {
-                                                                console.error('Error updating status:', errors);
-                                                            },
-                                                        });
+                                                        );
                                                     }}
                                                 >
-                                                    <SelectTrigger className={`w-24 h-8 border-0 ${getStatusBadge(expense.status)} cursor-pointer hover:opacity-80`}>
+                                                    <SelectTrigger
+                                                        className={`h-8 w-24 border-0 ${getStatusBadge(expense.status)} cursor-pointer hover:opacity-80`}
+                                                    >
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="pending">Pending</SelectItem>
-                                                        <SelectItem value="approved">Approved</SelectItem>
-                                                        <SelectItem value="rejected">Rejected</SelectItem>
+                                                        <SelectItem value="pending">
+                                                            Pending
+                                                        </SelectItem>
+                                                        <SelectItem value="approved">
+                                                            Approved
+                                                        </SelectItem>
+                                                        <SelectItem value="rejected">
+                                                            Rejected
+                                                        </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
                                             <TableCell className="px-4 py-3 text-center">
                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
+                                                    <DropdownMenuTrigger
+                                                        asChild
+                                                    >
                                                         <Button
                                                             variant="ghost"
                                                             className="h-8 w-8 p-0"
                                                         >
-                                                            <span className="sr-only">Open menu</span>
+                                                            <span className="sr-only">
+                                                                Open menu
+                                                            </span>
                                                             <MoreVertical className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuItem
-                                                            onClick={() => handleEdit(expense)}
+                                                            onClick={() =>
+                                                                handleEdit(
+                                                                    expense,
+                                                                )
+                                                            }
                                                             className="cursor-pointer"
                                                         >
                                                             <Edit3 className="mr-2 h-4 w-4" />
                                                             Edit
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
-                                                            onClick={() => handleDelete(expense.id)}
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    expense.id,
+                                                                )
+                                                            }
                                                             className="cursor-pointer text-red-600 focus:text-red-600"
                                                         >
                                                             <Trash2 className="mr-2 h-4 w-4" />
@@ -866,7 +1490,8 @@ export default function TravelExpenses() {
                     {/* Pagination */}
                     <div className="mt-4 flex items-center justify-between">
                         <div className="text-sm text-gray-700 dark:text-gray-300">
-                            Showing {sortedExpenses.length} of {filteredExpenses.length} results
+                            Showing {sortedExpenses.length} of{' '}
+                            {filteredExpenses.length} results
                         </div>
                         <CustomPagination
                             currentPage={travelExpenses.current_page}
@@ -884,12 +1509,19 @@ export default function TravelExpenses() {
                 onOpenChange={setIsAddDialogOpen}
                 onSubmit={handleSubmitAdd}
                 formData={formData}
-                onInputChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                onSelectChange={(name, value) => setFormData({ ...formData, [name]: value })}
+                onInputChange={(e) =>
+                    setFormData({
+                        ...formData,
+                        [e.target.name]: e.target.value,
+                    })
+                }
+                onSelectChange={(name, value) =>
+                    setFormData({ ...formData, [name]: value })
+                }
                 fields={expenseFormFields}
                 title={`Add Travel Expense - ${currentFund?.fund_name || 'Select Fund'} (${currentFund?.source_year || selectedYear})`}
                 description="Add a new travel expense record"
-                submitButtonText="Add Expense"
+                submitButtonText="Add Status"
             />
 
             {/* Edit Dialog */}
@@ -904,10 +1536,17 @@ export default function TravelExpenses() {
                 }}
                 onSubmit={handleSubmitEdit}
                 formData={formData}
-                onInputChange={(e) => setFormData({ ...formData, [e.target.name]: e.target.value })}
-                onSelectChange={(name, value) => setFormData({ ...formData, [name]: value })}
+                onInputChange={(e) =>
+                    setFormData({
+                        ...formData,
+                        [e.target.name]: e.target.value,
+                    })
+                }
+                onSelectChange={(name, value) =>
+                    setFormData({ ...formData, [name]: value })
+                }
                 fields={expenseFormFields}
-                title={`Edit Travel Expense - ${getFundFromExpense(selectedExpense || {} as TravelExpense)?.fund_name || currentFund?.fund_name || 'No Fund'} (${getFundFromExpense(selectedExpense || {} as TravelExpense)?.source_year || currentFund?.source_year || selectedYear})`}
+                title={`Edit Travel Expense - ${getFundFromExpense(selectedExpense || ({} as TravelExpense))?.fund_name || currentFund?.fund_name || 'No Fund'} (${getFundFromExpense(selectedExpense || ({} as TravelExpense))?.source_year || currentFund?.source_year || selectedYear})`}
                 description="Edit travel expense record"
                 submitButtonText="Update Expense"
                 isEdit={true}

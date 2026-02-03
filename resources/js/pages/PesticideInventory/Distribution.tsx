@@ -681,7 +681,7 @@ export default function Distribution() {
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data &&
-                                    distributions.data.length > 0 ? (
+                                distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>

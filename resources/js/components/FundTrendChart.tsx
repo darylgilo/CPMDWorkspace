@@ -6,7 +6,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import React, { useMemo, useState, useEffect } from 'react';
+import { useAppearance } from '@/hooks/use-appearance';
+import { useEffect, useMemo, useState } from 'react';
 import {
     CartesianGrid,
     Legend,
@@ -17,7 +18,6 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { useAppearance } from '@/hooks/use-appearance';
 
 interface FundData {
     year: number;
@@ -72,15 +72,18 @@ export default function FundTrendChart({
     onYearChange,
 }: FundTrendChartProps) {
     const { appearance } = useAppearance();
-    const isDark = appearance === 'dark' || (appearance === 'system' && 
-        (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches));
-    
+    const isDark =
+        appearance === 'dark' ||
+        (appearance === 'system' &&
+            typeof window !== 'undefined' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+
     const lineColors = isDark ? DARK_LINE_COLORS : LIGHT_LINE_COLORS;
 
     const [selectedYear, setSelectedYear] = useState(() => {
         // Set initial selected year to the latest year in data or current year
         if (data && data.length > 0) {
-            const latestYear = Math.max(...data.map(item => item.year));
+            const latestYear = Math.max(...data.map((item) => item.year));
             return latestYear;
         }
         return new Date().getFullYear();
@@ -89,7 +92,7 @@ export default function FundTrendChart({
     // Update selected year when data changes to always show the latest year
     useEffect(() => {
         if (data && data.length > 0) {
-            const latestYear = Math.max(...data.map(item => item.year));
+            const latestYear = Math.max(...data.map((item) => item.year));
             setSelectedYear(latestYear);
             onYearChange?.(latestYear);
         }
@@ -102,16 +105,16 @@ export default function FundTrendChart({
             return Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
         }
 
-        const dataYears = data.map(item => item.year);
+        const dataYears = data.map((item) => item.year);
         const minYear = Math.min(...dataYears);
         const maxYear = Math.max(...dataYears);
-        
+
         // Extend range by 2 years on each side
         const years = [];
         for (let year = minYear - 2; year <= maxYear + 2; year++) {
             years.push(year);
         }
-        
+
         return years;
     }, [data]);
 
@@ -120,10 +123,10 @@ export default function FundTrendChart({
         if (!data || data.length === 0) return [];
 
         return data
-            .filter(item => item.year <= selectedYear)
-            .map(item => ({
+            .filter((item) => item.year <= selectedYear)
+            .map((item) => ({
                 name: item.year.toString(),
-                ...item.funds
+                ...item.funds,
             }))
             .sort((a, b) => parseInt(a.name) - parseInt(b.name));
     }, [data, selectedYear]);
@@ -132,8 +135,10 @@ export default function FundTrendChart({
     const fundNames = useMemo(() => {
         if (!data || data.length === 0) return [];
         const allFunds = new Set<string>();
-        data.forEach(item => {
-            Object.keys(item.funds).forEach(fundName => allFunds.add(fundName));
+        data.forEach((item) => {
+            Object.keys(item.funds).forEach((fundName) =>
+                allFunds.add(fundName),
+            );
         });
         return Array.from(allFunds).sort();
     }, [data]);
@@ -154,40 +159,54 @@ export default function FundTrendChart({
                 totalAmount: 0,
                 totalCount: 0,
                 averageAmount: 0,
-                trend: 'stable' as 'up' | 'down' | 'stable'
+                trend: 'stable' as 'up' | 'down' | 'stable',
             };
         }
 
         // Get data for the selected year only
-        const selectedYearData = chartData.find(item => parseInt(item.name) === selectedYear);
-        const totalAmount = selectedYearData 
+        const selectedYearData = chartData.find(
+            (item) => parseInt(item.name) === selectedYear,
+        );
+        const totalAmount = selectedYearData
             ? Object.values(selectedYearData).reduce((fundSum, value) => {
-                return fundSum + (typeof value === 'number' ? value : 0);
-            }, 0)
+                  return fundSum + (typeof value === 'number' ? value : 0);
+              }, 0)
             : 0;
-        
-        const fundCount = selectedYearData 
-            ? Object.keys(selectedYearData).filter(key => key !== 'name').length
+
+        const fundCount = selectedYearData
+            ? Object.keys(selectedYearData).filter((key) => key !== 'name')
+                  .length
             : 0;
-        
+
         const averageAmount = fundCount > 0 ? totalAmount / fundCount : 0;
 
         // Calculate trend based on year-over-year comparison
         let trend: 'up' | 'down' | 'stable' = 'stable';
         if (chartData.length >= 2) {
-            const sortedData = [...chartData].sort((a, b) => parseInt(a.name) - parseInt(b.name));
-            const currentIndex = sortedData.findIndex(item => parseInt(item.name) === selectedYear);
-            
+            const sortedData = [...chartData].sort(
+                (a, b) => parseInt(a.name) - parseInt(b.name),
+            );
+            const currentIndex = sortedData.findIndex(
+                (item) => parseInt(item.name) === selectedYear,
+            );
+
             if (currentIndex > 0) {
                 const currentYearTotal = totalAmount;
                 const previousYearTotal = sortedData[currentIndex - 1]
-                    ? Object.values(sortedData[currentIndex - 1]).reduce((fundSum, value) => {
-                        return fundSum + (typeof value === 'number' ? value : 0);
-                    }, 0)
+                    ? Object.values(sortedData[currentIndex - 1]).reduce(
+                          (fundSum, value) => {
+                              return (
+                                  fundSum +
+                                  (typeof value === 'number' ? value : 0)
+                              );
+                          },
+                          0,
+                      )
                     : 0;
-                
+
                 if (currentYearTotal > previousYearTotal * 1.05) trend = 'up';
-                else if (currentYearTotal < previousYearTotal * 0.95) trend = 'down';
+                else if (currentYearTotal < previousYearTotal * 0.95)
+                    trend = 'down';
             }
         }
 
@@ -195,7 +214,7 @@ export default function FundTrendChart({
             totalAmount,
             totalCount: fundCount,
             averageAmount,
-            trend
+            trend,
         };
     }, [chartData, selectedYear]);
 
@@ -214,7 +233,7 @@ export default function FundTrendChart({
     const trendColors = {
         up: '#10b981',
         down: '#ef4444',
-        stable: '#6b7280'
+        stable: '#6b7280',
     };
 
     return (
@@ -231,14 +250,19 @@ export default function FundTrendChart({
                         </span>
                         <Select
                             value={selectedYear.toString()}
-                            onValueChange={(value) => handleYearChange(parseInt(value))}
+                            onValueChange={(value) =>
+                                handleYearChange(parseInt(value))
+                            }
                         >
                             <SelectTrigger className="w-24">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                                 {years.map((year) => (
-                                    <SelectItem key={year} value={year.toString()}>
+                                    <SelectItem
+                                        key={year}
+                                        value={year.toString()}
+                                    >
                                         {year}
                                     </SelectItem>
                                 ))}
@@ -250,13 +274,17 @@ export default function FundTrendChart({
                 {/* Statistics Summary */}
                 <div className="mt-4 grid grid-cols-2 gap-4">
                     <div className="text-center">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Total Amount
+                        </p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">
                             {formatCurrency(stats.totalAmount)}
                         </p>
                     </div>
                     <div className="text-center">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Entries</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Entries
+                        </p>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">
                             {stats.totalCount}
                         </p>
@@ -265,11 +293,18 @@ export default function FundTrendChart({
 
                 {/* Trend Indicator */}
                 <div className="mt-2 flex items-center justify-center">
-                    <div 
+                    <div
                         className="flex items-center gap-1 text-sm"
                         style={{ color: trendColors[stats.trend] }}
                     >
-                        <span>Trend: {stats.trend === 'up' ? '↗' : stats.trend === 'down' ? '↘' : '→'}</span>
+                        <span>
+                            Trend:{' '}
+                            {stats.trend === 'up'
+                                ? '↗'
+                                : stats.trend === 'down'
+                                  ? '↘'
+                                  : '→'}
+                        </span>
                         <span className="capitalize">{stats.trend}</span>
                     </div>
                 </div>
@@ -296,8 +331,8 @@ export default function FundTrendChart({
                         tick={{ fontSize: 12 }}
                         stroke={isDark ? '#9ca3af' : '#6b7280'}
                     />
-                    <YAxis 
-                        tick={{ fontSize: 12 }} 
+                    <YAxis
+                        tick={{ fontSize: 12 }}
                         stroke={isDark ? '#9ca3af' : '#6b7280'}
                         tickFormatter={(value) => {
                             if (value === 0) return '0';
@@ -312,12 +347,20 @@ export default function FundTrendChart({
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                            backgroundColor: isDark
+                                ? 'rgba(17, 24, 39, 0.95)'
+                                : 'rgba(255, 255, 255, 0.95)',
                             border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
                             borderRadius: '8px',
                         }}
-                        labelStyle={{ color: isDark ? '#f3f4f6' : '#111827', fontWeight: 600 }}
-                        formatter={(value: number | undefined) => [formatCurrency(value || 0), 'Amount']}
+                        labelStyle={{
+                            color: isDark ? '#f3f4f6' : '#111827',
+                            fontWeight: 600,
+                        }}
+                        formatter={(value: number | undefined) => [
+                            formatCurrency(value || 0),
+                            'Amount',
+                        ]}
                     />
                     <Legend
                         wrapperStyle={{

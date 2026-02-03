@@ -135,7 +135,12 @@ export default function Welcome() {
                                     CPMD Workspace
                                 </h1>
                                 <p className="text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
-                                    A streamlined all-in-one digital workspace designed to enhance operational efficiency. Bring together team collaboration, resource management, and communication tools in a single unified platform for seamless workflow coordination.
+                                    A streamlined all-in-one digital workspace
+                                    designed to enhance operational efficiency.
+                                    Bring together team collaboration, resource
+                                    management, and communication tools in a
+                                    single unified platform for seamless
+                                    workflow coordination.
                                 </p>
                             </div>
 

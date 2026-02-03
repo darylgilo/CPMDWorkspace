@@ -28,12 +28,12 @@ import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
     ChevronUp,
+    DollarSign,
     Edit3,
     MoreVertical,
     Plus,
     Trash2,
     Wallet,
-    DollarSign,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
@@ -110,26 +110,39 @@ export default function BudgetAllocation() {
 
     // Category options matching the database enum
     const categoryOptions = [
-        { value: 'Office Supplies and Materials', label: 'Office Supplies and Materials' },
-        { value: 'Agricultural and Marine Supplies', label: 'Agricultural and Marine Supplies' },
-        { value: 'Chemical and Filtering Suplies Expenses', label: 'Chemical and Filtering Suplies Expenses' },
-        { value: 'Other Supplies and Materials', label: 'Other Supplies and Materials' }
+        {
+            value: 'Office Supplies and Materials',
+            label: 'Office Supplies and Materials',
+        },
+        {
+            value: 'Agricultural and Marine Supplies',
+            label: 'Agricultural and Marine Supplies',
+        },
+        {
+            value: 'Chemical and Filtering Suplies Expenses',
+            label: 'Chemical and Filtering Suplies Expenses',
+        },
+        {
+            value: 'Other Supplies and Materials',
+            label: 'Other Supplies and Materials',
+        },
     ];
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
-    const [currentPage, setCurrentPage] = useState(
-        funds?.current_page || 1,
-    );
-    const [isEditTransactionDialogOpen, setIsEditTransactionDialogOpen] = useState(false);
-    const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(funds?.current_page || 1);
+    const [isEditTransactionDialogOpen, setIsEditTransactionDialogOpen] =
+        useState(false);
+    const [isTransactionDialogOpen, setIsTransactionDialogOpen] =
+        useState(false);
     const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
-    const [selectedTransaction, setSelectedTransaction] = useState<FundTransaction | null>(null);
+    const [selectedTransaction, setSelectedTransaction] =
+        useState<FundTransaction | null>(null);
     const [activeFundId, setActiveFundId] = useState<number | 'all'>(
-        urlFundId ? parseInt(urlFundId) : 'all'
+        urlFundId ? parseInt(urlFundId) : 'all',
     );
     const [selectedYear, setSelectedYear] = useState<number | 'all'>(
-        urlYear ? parseInt(urlYear) : 'all'
+        urlYear ? parseInt(urlYear) : 'all',
     );
     const [sortField, setSortField] = useState<string>('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -137,12 +150,16 @@ export default function BudgetAllocation() {
     // Initialize with first available year and fund immediately (only if not set from URL)
     React.useEffect(() => {
         if (funds?.data && funds.data.length > 0 && selectedYear === 'all') {
-            const years = [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
+            const years = [
+                ...new Set(funds.data.map((fund) => fund.source_year)),
+            ].sort((a, b) => b - a);
             if (years.length > 0) {
                 const firstYear = years[0];
                 setSelectedYear(firstYear);
-                
-                const fundsForYear = funds.data.filter(fund => fund.source_year === firstYear);
+
+                const fundsForYear = funds.data.filter(
+                    (fund) => fund.source_year === firstYear,
+                );
                 if (fundsForYear.length > 0 && activeFundId === 'all') {
                     setActiveFundId(fundsForYear[0].id);
                 }
@@ -299,13 +316,18 @@ export default function BudgetAllocation() {
     const handleAddTransaction = (fund: Fund) => {
         setSelectedFund(fund);
         resetTransactionForm();
-        setTransactionFormData(prev => ({ ...prev, fund_id: fund.id.toString() }));
+        setTransactionFormData((prev) => ({
+            ...prev,
+            fund_id: fund.id.toString(),
+        }));
         setIsTransactionDialogOpen(true);
     };
 
     // Get fund from transaction
-    const getFundFromTransaction = (transaction: FundTransaction): Fund | undefined => {
-        return funds?.data.find(fund => fund.id === transaction.fund_id);
+    const getFundFromTransaction = (
+        transaction: FundTransaction,
+    ): Fund | undefined => {
+        return funds?.data.find((fund) => fund.id === transaction.fund_id);
     };
 
     const handleEditTransaction = (transaction: FundTransaction) => {
@@ -321,17 +343,25 @@ export default function BudgetAllocation() {
             supplier: transaction.supplier,
             po_no: transaction.po_no,
             amount_po: transaction.amount_po.toString(),
-            delivery_date: transaction.delivery_date ? new Date(transaction.delivery_date).toISOString().split('T')[0] : '',
+            delivery_date: transaction.delivery_date
+                ? new Date(transaction.delivery_date)
+                      .toISOString()
+                      .split('T')[0]
+                : '',
             dv_no: transaction.dv_no || '',
             amount_dv: transaction.amount_dv?.toString() || '',
-            payment_date: transaction.payment_date ? new Date(transaction.payment_date).toISOString().split('T')[0] : '',
+            payment_date: transaction.payment_date
+                ? new Date(transaction.payment_date).toISOString().split('T')[0]
+                : '',
             remarks: transaction.remarks || '',
         });
         setIsEditTransactionDialogOpen(true);
     };
 
     const handleDeleteTransaction = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this transaction?')) {
+        if (
+            window.confirm('Are you sure you want to delete this transaction?')
+        ) {
             router.delete(`/fund-transactions/${id}`, {
                 onSuccess: () => {
                     router.get(
@@ -365,10 +395,14 @@ export default function BudgetAllocation() {
             amount_po: parseFloat(transactionFormData.amount_po) || 0,
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
-                ? new Date(transactionFormData.delivery_date).toISOString().split('T')[0]
+                ? new Date(transactionFormData.delivery_date)
+                      .toISOString()
+                      .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
-                ? new Date(transactionFormData.payment_date).toISOString().split('T')[0]
+                ? new Date(transactionFormData.payment_date)
+                      .toISOString()
+                      .split('T')[0]
                 : null,
         };
 
@@ -409,37 +443,45 @@ export default function BudgetAllocation() {
             amount_po: parseFloat(transactionFormData.amount_po) || 0,
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
-                ? new Date(transactionFormData.delivery_date).toISOString().split('T')[0]
+                ? new Date(transactionFormData.delivery_date)
+                      .toISOString()
+                      .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
-                ? new Date(transactionFormData.payment_date).toISOString().split('T')[0]
+                ? new Date(transactionFormData.payment_date)
+                      .toISOString()
+                      .split('T')[0]
                 : null,
         };
 
-        router.put(`/fund-transactions/${selectedTransaction.id}`, formattedData, {
-            onSuccess: () => {
-                setIsEditTransactionDialogOpen(false);
-                resetTransactionForm();
-                setSelectedTransaction(null);
-                router.get(
-                    '/budgetmanagement',
-                    {
-                        tab: 'allocation',
-                        search: searchValue,
-                        perPage,
-                        page: currentPage,
-                        sort: sortField,
-                        direction: sortDirection,
-                        year: selectedYear,
-                        fundId: activeFundId,
-                    },
-                    { preserveState: true },
-                );
+        router.put(
+            `/fund-transactions/${selectedTransaction.id}`,
+            formattedData,
+            {
+                onSuccess: () => {
+                    setIsEditTransactionDialogOpen(false);
+                    resetTransactionForm();
+                    setSelectedTransaction(null);
+                    router.get(
+                        '/budgetmanagement',
+                        {
+                            tab: 'allocation',
+                            search: searchValue,
+                            perPage,
+                            page: currentPage,
+                            sort: sortField,
+                            direction: sortDirection,
+                            year: selectedYear,
+                            fundId: activeFundId,
+                        },
+                        { preserveState: true },
+                    );
+                },
+                onError: (errors) => {
+                    console.error('Error updating transaction:', errors);
+                },
             },
-            onError: (errors) => {
-                console.error('Error updating transaction:', errors);
-            },
-        });
+        );
     };
 
     const handlePageChange = (page: number) => {
@@ -500,26 +542,35 @@ export default function BudgetAllocation() {
     // Get unique years from funds
     const availableYears = useMemo(() => {
         if (!funds?.data) return [];
-        const years = [...new Set(funds.data.map(fund => fund.source_year))].sort((a, b) => b - a);
+        const years = [
+            ...new Set(funds.data.map((fund) => fund.source_year)),
+        ].sort((a, b) => b - a);
         return years;
     }, [funds]);
 
     // Filter funds based on selected year
     const filteredFunds = useMemo(() => {
         if (!funds?.data) return [];
-        return funds.data.filter(fund => fund.source_year === selectedYear);
+        return funds.data.filter((fund) => fund.source_year === selectedYear);
     }, [funds, selectedYear]);
 
     // Initialize fund selection when year or filtered funds change
     React.useEffect(() => {
-        if (filteredFunds.length > 0 && (!activeFundId || !filteredFunds.find(f => f.id === activeFundId))) {
+        if (
+            filteredFunds.length > 0 &&
+            (!activeFundId || !filteredFunds.find((f) => f.id === activeFundId))
+        ) {
             setActiveFundId(filteredFunds[0].id);
         }
     }, [filteredFunds, activeFundId]);
 
     // Sync form data when edit dialog opens (only when opening, not continuously)
     React.useEffect(() => {
-        if (isEditTransactionDialogOpen && selectedTransaction && !transactionFormData.doctrack_no) {
+        if (
+            isEditTransactionDialogOpen &&
+            selectedTransaction &&
+            !transactionFormData.doctrack_no
+        ) {
             setTransactionFormData({
                 fund_id: selectedTransaction.fund_id.toString(),
                 doctrack_no: selectedTransaction.doctrack_no,
@@ -531,10 +582,18 @@ export default function BudgetAllocation() {
                 supplier: selectedTransaction.supplier,
                 po_no: selectedTransaction.po_no,
                 amount_po: selectedTransaction.amount_po.toString(),
-                delivery_date: selectedTransaction.delivery_date ? new Date(selectedTransaction.delivery_date).toISOString().split('T')[0] : '',
+                delivery_date: selectedTransaction.delivery_date
+                    ? new Date(selectedTransaction.delivery_date)
+                          .toISOString()
+                          .split('T')[0]
+                    : '',
                 dv_no: selectedTransaction.dv_no || '',
                 amount_dv: selectedTransaction.amount_dv?.toString() || '',
-                payment_date: selectedTransaction.payment_date ? new Date(selectedTransaction.payment_date).toISOString().split('T')[0] : '',
+                payment_date: selectedTransaction.payment_date
+                    ? new Date(selectedTransaction.payment_date)
+                          .toISOString()
+                          .split('T')[0]
+                    : '',
                 remarks: selectedTransaction.remarks || '',
             });
         }
@@ -543,18 +602,22 @@ export default function BudgetAllocation() {
     // Filter transactions based on selected fund and year
     const filteredTransactions = useMemo(() => {
         if (!fundTransactions?.data) return [];
-        
+
         let transactions = fundTransactions.data;
-        
+
         // Filter by year (always applied since no 'all' option)
-        const fundIdsForYear = filteredFunds.map(f => f.id);
-        transactions = transactions.filter(transaction => fundIdsForYear.includes(transaction.fund_id));
-        
+        const fundIdsForYear = filteredFunds.map((f) => f.id);
+        transactions = transactions.filter((transaction) =>
+            fundIdsForYear.includes(transaction.fund_id),
+        );
+
         // Filter by fund if specific fund is selected
         if (activeFundId !== 'all') {
-            transactions = transactions.filter(transaction => transaction.fund_id === activeFundId);
+            transactions = transactions.filter(
+                (transaction) => transaction.fund_id === activeFundId,
+            );
         }
-        
+
         return transactions;
     }, [fundTransactions, activeFundId, selectedYear, filteredFunds]);
 
@@ -564,7 +627,11 @@ export default function BudgetAllocation() {
             let aValue = a[sortField as keyof FundTransaction];
             let bValue = b[sortField as keyof FundTransaction];
 
-            if (sortField.includes('_date') || sortField === 'created_at' || sortField === 'updated_at') {
+            if (
+                sortField.includes('_date') ||
+                sortField === 'created_at' ||
+                sortField === 'updated_at'
+            ) {
                 aValue = aValue ? new Date(aValue as string).getTime() : 0;
                 bValue = bValue ? new Date(bValue as string).getTime() : 0;
             }
@@ -598,7 +665,7 @@ export default function BudgetAllocation() {
     };
 
     // Get current fund info
-    const currentFund = filteredFunds.find(f => f.id === activeFundId);
+    const currentFund = filteredFunds.find((f) => f.id === activeFundId);
 
     if (!funds) {
         return (
@@ -625,7 +692,11 @@ export default function BudgetAllocation() {
                     />
                     <SimpleStatistic
                         label="Total by Year"
-                        value={Array.isArray(analytics?.totalByYear) ? analytics.totalByYear.length : 0}
+                        value={
+                            Array.isArray(analytics?.totalByYear)
+                                ? analytics.totalByYear.length
+                                : 0
+                        }
                         icon={Wallet}
                     />
                 </div>
@@ -637,7 +708,9 @@ export default function BudgetAllocation() {
                             {/* Add Transaction Button */}
                             {currentFund && (
                                 <Button
-                                    onClick={() => handleAddTransaction(currentFund)}
+                                    onClick={() =>
+                                        handleAddTransaction(currentFund)
+                                    }
                                     className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 >
                                     <Plus className="h-4 w-4" />
@@ -654,8 +727,14 @@ export default function BudgetAllocation() {
                                         const newYear = parseInt(value);
                                         setSelectedYear(newYear);
                                         // Auto-select first fund when year changes
-                                        const fundsForYear = funds?.data.filter(fund => fund.source_year === newYear);
-                                        if (fundsForYear && fundsForYear.length > 0) {
+                                        const fundsForYear = funds?.data.filter(
+                                            (fund) =>
+                                                fund.source_year === newYear,
+                                        );
+                                        if (
+                                            fundsForYear &&
+                                            fundsForYear.length > 0
+                                        ) {
                                             setActiveFundId(fundsForYear[0].id);
                                         }
                                     }}
@@ -665,7 +744,10 @@ export default function BudgetAllocation() {
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                         {availableYears.map((year: number) => (
-                                            <SelectItem key={year} value={year.toString()}>
+                                            <SelectItem
+                                                key={year}
+                                                value={year.toString()}
+                                            >
                                                 {year}
                                             </SelectItem>
                                         ))}
@@ -684,12 +766,16 @@ export default function BudgetAllocation() {
                                 >
                                     <SelectTrigger className="w-[250px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
                                         <SelectValue>
-                                            {currentFund?.fund_name || "Select a fund"}
+                                            {currentFund?.fund_name ||
+                                                'Select a fund'}
                                         </SelectValue>
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                         {filteredFunds.map((fund: Fund) => (
-                                            <SelectItem key={fund.id} value={fund.id.toString()}>
+                                            <SelectItem
+                                                key={fund.id}
+                                                value={fund.id.toString()}
+                                            >
                                                 {fund.fund_name}
                                             </SelectItem>
                                         ))}
@@ -742,7 +828,10 @@ export default function BudgetAllocation() {
                                     placeholder="Search PRs, POs Status..."
                                     className="w-full md:max-w-md"
                                     searchRoute="/budgetmanagement"
-                                    additionalParams={{ tab: 'allocation', perPage }}
+                                    additionalParams={{
+                                        tab: 'allocation',
+                                        perPage,
+                                    }}
                                 />
                             </div>
                         </div>
@@ -754,11 +843,21 @@ export default function BudgetAllocation() {
                             <div className="flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Year: <span className="font-semibold">{selectedYear}</span>
+                                        Year:{' '}
+                                        <span className="font-semibold">
+                                            {selectedYear}
+                                        </span>
                                     </div>
-                                    <h3 className="font-semibold text-lg">{currentFund.fund_name}</h3>
+                                    <h3 className="text-lg font-semibold">
+                                        {currentFund.fund_name}
+                                    </h3>
                                     <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        <span>Total: {formatCurrency(currentFund.total_amount)}</span>
+                                        <span>
+                                            Total:{' '}
+                                            {formatCurrency(
+                                                currentFund.total_amount,
+                                            )}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -774,7 +873,9 @@ export default function BudgetAllocation() {
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('doctrack_no')}
+                                        onClick={() =>
+                                            handleSort('doctrack_no')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             DocTrack No.
@@ -792,7 +893,9 @@ export default function BudgetAllocation() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('specific_items')}
+                                        onClick={() =>
+                                            handleSort('specific_items')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Specific Items
@@ -819,7 +922,9 @@ export default function BudgetAllocation() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('resolution_no')}
+                                        onClick={() =>
+                                            handleSort('resolution_no')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Resolution No.
@@ -864,7 +969,9 @@ export default function BudgetAllocation() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('delivery_date')}
+                                        onClick={() =>
+                                            handleSort('delivery_date')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Delivery Date
@@ -891,7 +998,9 @@ export default function BudgetAllocation() {
                                     </TableHead>
                                     <TableHead
                                         className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
-                                        onClick={() => handleSort('payment_date')}
+                                        onClick={() =>
+                                            handleSort('payment_date')
+                                        }
                                     >
                                         <div className="flex items-center">
                                             Payment Date
@@ -916,66 +1025,127 @@ export default function BudgetAllocation() {
                                             <SortIndicator field="remarks" />
                                         </div>
                                     </TableHead>
-                                    <TableHead className="font-semibold">Actions</TableHead>
+                                    <TableHead className="font-semibold">
+                                        Actions
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {sortedTransactions.length > 0 ? (
-                                    sortedTransactions.map((transaction: FundTransaction) => (
-                                        <TableRow key={transaction.id}>
-                                            <TableCell>{transaction.doctrack_no}</TableCell>
-                                            <TableCell>{transaction.pr_no}</TableCell>
-                                            <TableCell>{transaction.specific_items}</TableCell>
-                                            <TableCell>{transaction.category}</TableCell>
-                                            <TableCell>{formatCurrency(transaction.amount_pr)}</TableCell>
-                                            <TableCell>{transaction.resolution_no}</TableCell>
-                                            <TableCell>{transaction.supplier}</TableCell>
-                                            <TableCell>{transaction.po_no}</TableCell>
-                                            <TableCell>{formatCurrency(transaction.amount_po)}</TableCell>
-                                            <TableCell className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(transaction.amount_pr - transaction.amount_po)}</TableCell>
-                                            <TableCell>
-                                                {transaction.delivery_date ? formatDate(transaction.delivery_date) : '-'}
-                                            </TableCell>
-                                            <TableCell>{transaction.dv_no || '-'}</TableCell>
-                                            <TableCell>
-                                                {transaction.amount_dv ? formatCurrency(transaction.amount_dv) : '-'}
-                                            </TableCell>
-                                            <TableCell>
-                                                {transaction.payment_date ? formatDate(transaction.payment_date) : '-'}
-                                            </TableCell>
-                                            <TableCell>{formatDate(transaction.created_at)}</TableCell>
-                                            <TableCell>{transaction.remarks || '-'}</TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
+                                    sortedTransactions.map(
+                                        (transaction: FundTransaction) => (
+                                            <TableRow key={transaction.id}>
+                                                <TableCell>
+                                                    {transaction.doctrack_no}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.pr_no}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.specific_items}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.category}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatCurrency(
+                                                        transaction.amount_pr,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.resolution_no}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.supplier}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.po_no}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatCurrency(
+                                                        transaction.amount_po,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="font-semibold text-red-600 dark:text-red-400">
+                                                    {formatCurrency(
+                                                        transaction.amount_pr -
+                                                            transaction.amount_po,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.delivery_date
+                                                        ? formatDate(
+                                                              transaction.delivery_date,
+                                                          )
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.dv_no || '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.amount_dv
+                                                        ? formatCurrency(
+                                                              transaction.amount_dv,
+                                                          )
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.payment_date
+                                                        ? formatDate(
+                                                              transaction.payment_date,
+                                                          )
+                                                        : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatDate(
+                                                        transaction.created_at,
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {transaction.remarks || '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                asChild
                                                             >
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleEditTransaction(transaction)}
-                                                            >
-                                                                <Edit3 className="mr-2 h-4 w-4" />
-                                                                Edit
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleDeleteTransaction(transaction.id)}
-                                                                className="text-red-600 focus:text-red-600 dark:text-red-400"
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                >
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent>
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleEditTransaction(
+                                                                            transaction,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <Edit3 className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleDeleteTransaction(
+                                                                            transaction.id,
+                                                                        )
+                                                                    }
+                                                                    className="text-red-600 focus:text-red-600 dark:text-red-400"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ),
+                                    )
                                 ) : (
                                     <TableRow>
                                         <TableCell
@@ -989,7 +1159,7 @@ export default function BudgetAllocation() {
                             </TableBody>
                         </Table>
                     </div>
-                    
+
                     {/* Pagination */}
                     {sortedTransactions.length > 0 && (
                         <div className="mt-4">
@@ -1007,13 +1177,25 @@ export default function BudgetAllocation() {
             {/* Add Transaction Dialog */}
             <FormDialog
                 isOpen={isTransactionDialogOpen}
-                onOpenChange={(open) => !open && setIsTransactionDialogOpen(false)}
+                onOpenChange={(open) =>
+                    !open && setIsTransactionDialogOpen(false)
+                }
                 title={`Source of Fund - ${selectedFund?.fund_name} (${selectedFund?.source_year || selectedYear})`}
                 description="Add a new status PRs, POs to this fund"
                 fields={transactionFormFields}
                 formData={transactionFormData}
-                onInputChange={(e) => setTransactionFormData({ ...transactionFormData, [e.target.name]: e.target.value })}
-                onSelectChange={(name, value) => setTransactionFormData({ ...transactionFormData, [name]: value })}
+                onInputChange={(e) =>
+                    setTransactionFormData({
+                        ...transactionFormData,
+                        [e.target.name]: e.target.value,
+                    })
+                }
+                onSelectChange={(name, value) =>
+                    setTransactionFormData({
+                        ...transactionFormData,
+                        [name]: value,
+                    })
+                }
                 onSubmit={handleSubmitTransaction}
                 submitButtonText="Add Status"
             />
@@ -1021,13 +1203,25 @@ export default function BudgetAllocation() {
             {/* Edit Transaction Dialog */}
             <FormDialog
                 isOpen={isEditTransactionDialogOpen}
-                onOpenChange={(open) => !open && setIsEditTransactionDialogOpen(false)}
-                title={`Source of Fund - ${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.fund_name || selectedFund?.fund_name} (${getFundFromTransaction(selectedTransaction || {} as FundTransaction)?.source_year || selectedFund?.source_year || selectedYear})`}
+                onOpenChange={(open) =>
+                    !open && setIsEditTransactionDialogOpen(false)
+                }
+                title={`Source of Fund - ${getFundFromTransaction(selectedTransaction || ({} as FundTransaction))?.fund_name || selectedFund?.fund_name} (${getFundFromTransaction(selectedTransaction || ({} as FundTransaction))?.source_year || selectedFund?.source_year || selectedYear})`}
                 description="Update Status PRs, POs details"
                 fields={transactionFormFields}
                 formData={transactionFormData}
-                onInputChange={(e) => setTransactionFormData({ ...transactionFormData, [e.target.name]: e.target.value })}
-                onSelectChange={(name, value) => setTransactionFormData({ ...transactionFormData, [name]: value })}
+                onInputChange={(e) =>
+                    setTransactionFormData({
+                        ...transactionFormData,
+                        [e.target.name]: e.target.value,
+                    })
+                }
+                onSelectChange={(name, value) =>
+                    setTransactionFormData({
+                        ...transactionFormData,
+                        [name]: value,
+                    })
+                }
                 onSubmit={handleSubmitEditTransaction}
                 submitButtonText="Update Transaction"
                 isEdit={true}

@@ -16,11 +16,17 @@ return new class extends Migration
             $table->string('destination');
             $table->text('purpose');
             $table->foreignId('fund_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('ppmp_project_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('ppmp_funding_detail_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('amount', 10, 2);
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('remarks')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            
+            // Indexes
+            $table->index(['fund_id', 'ppmp_project_id']);
+            $table->index('ppmp_funding_detail_id');
         });
     }
 

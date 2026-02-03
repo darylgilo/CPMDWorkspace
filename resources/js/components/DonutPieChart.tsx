@@ -1,14 +1,14 @@
 import { Card } from '@/components/ui/card';
-import React, { useMemo } from 'react';
+import { useAppearance } from '@/hooks/use-appearance';
+import { useMemo } from 'react';
 import {
     Cell,
+    Legend,
     Pie,
     PieChart,
     ResponsiveContainer,
     Tooltip,
-    Legend,
 } from 'recharts';
-import { useAppearance } from '@/hooks/use-appearance';
 
 interface PieDataPoint {
     name: string;
@@ -81,9 +81,12 @@ export default function DonutPieChart({
     onYearChange,
 }: DonutPieChartProps) {
     const { appearance } = useAppearance();
-    const isDark = appearance === 'dark' || (appearance === 'system' && 
-        (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches));
-    
+    const isDark =
+        appearance === 'dark' ||
+        (appearance === 'system' &&
+            typeof window !== 'undefined' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+
     const colors = isDark ? DARK_COLORS : LIGHT_COLORS;
 
     // Process data and assign colors
@@ -114,7 +117,8 @@ export default function DonutPieChart({
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const data = payload[0];
-            const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
+            const percentage =
+                total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
             return (
                 <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900">
                     <p className="font-semibold text-gray-900 dark:text-white">
@@ -133,7 +137,8 @@ export default function DonutPieChart({
     };
 
     const renderCustomLabel = (entry: any) => {
-        const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(0) : '0';
+        const percentage =
+            total > 0 ? ((entry.value / total) * 100).toFixed(0) : '0';
         const numPercentage = parseFloat(percentage);
         return numPercentage > 5 ? `${percentage}%` : '';
     };
@@ -141,17 +146,17 @@ export default function DonutPieChart({
     const CustomizedLabel = ({ cx, cy }: any) => {
         if (centerLabel || centerValue !== undefined) {
             return (
-                <text 
-                    x={cx} 
-                    y={cy} 
-                    fill={isDark ? '#ffffff' : '#111827'} 
-                    textAnchor="middle" 
+                <text
+                    x={cx}
+                    y={cy}
+                    fill={isDark ? '#ffffff' : '#111827'}
+                    textAnchor="middle"
                     dominantBaseline="middle"
                 >
                     {centerLabel && (
-                        <tspan 
-                            x={cx} 
-                            dy="-0.5em" 
+                        <tspan
+                            x={cx}
+                            dy="-0.5em"
                             className="text-sm font-medium"
                             fill={isDark ? '#9ca3af' : '#6b7280'}
                         >
@@ -159,12 +164,10 @@ export default function DonutPieChart({
                         </tspan>
                     )}
                     {centerValue !== undefined && (
-                        <tspan 
-                            x={cx} 
-                            dy="1.2em" 
-                            className="text-lg font-bold"
-                        >
-                            {typeof centerValue === 'number' ? formatCurrency(centerValue) : centerValue}
+                        <tspan x={cx} dy="1.2em" className="text-lg font-bold">
+                            {typeof centerValue === 'number'
+                                ? formatCurrency(centerValue)
+                                : centerValue}
                         </tspan>
                     )}
                 </text>
@@ -176,8 +179,10 @@ export default function DonutPieChart({
     if (!data || data.length === 0) {
         return (
             <Card className={`p-6 ${className}`}>
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500 dark:text-gray-400">No data available</p>
+                <div className="flex h-64 items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400">
+                        No data available
+                    </p>
                 </div>
             </Card>
         );
@@ -197,8 +202,10 @@ export default function DonutPieChart({
                         </span>
                         <select
                             value={selectedYear?.toString() || ''}
-                            onChange={(e) => onYearChange?.(parseInt(e.target.value))}
-                            className="w-24 px-2 py-1 border border border-gray-300 rounded bg-white text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            onChange={(e) =>
+                                onYearChange?.(parseInt(e.target.value))
+                            }
+                            className="w-24 rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         >
                             {availableYears.map((year) => (
                                 <option key={year} value={year.toString()}>
@@ -226,17 +233,18 @@ export default function DonutPieChart({
                             dataKey="value"
                         >
                             {processedData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={entry.color}
+                                />
                             ))}
                         </Pie>
-                        
-                        {showTooltip && (
-                            <Tooltip content={<CustomTooltip />} />
-                        )}
-                        
+
+                        {showTooltip && <Tooltip content={<CustomTooltip />} />}
+
                         {showLegend && (
-                            <Legend 
-                                verticalAlign="bottom" 
+                            <Legend
+                                verticalAlign="bottom"
                                 height={36}
                                 formatter={(value, entry: any) => (
                                     <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -254,13 +262,17 @@ export default function DonutPieChart({
             {/* Summary Statistics */}
             <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Total
+                    </p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {formatCurrency(total)}
                     </p>
                 </div>
                 <div className="text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Items</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Items
+                    </p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">
                         {data.length}
                     </p>
