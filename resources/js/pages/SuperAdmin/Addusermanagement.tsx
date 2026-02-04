@@ -10,11 +10,15 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
 export default function AddUserManagement() {
+    // Initialize popup alert hook
+    const { showSuccess, showError } = usePopupAlert();
+    
     // Basic user fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -127,7 +131,11 @@ export default function AddUserManagement() {
         router.post('/superadmin/users', formData, {
             onFinish: () => setIsSubmitting(false),
             onSuccess: () => {
+                showSuccess("User Added", "New user account has been successfully created.");
                 router.get('/superadmin/usermanagement');
+            },
+            onError: (errors) => {
+                showError("Add Failed", "Unable to create user. Please try again.");
             },
         });
     };

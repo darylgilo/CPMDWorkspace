@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
@@ -73,6 +74,9 @@ interface PageProps {
 export default function Posted() {
     const { props } = usePage<PageProps>();
     const { documents, search = '', perPage: perPageProp = 10, auth } = props;
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError, showDeleted } = usePopupAlert();
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -205,7 +209,14 @@ export default function Posted() {
 
     const handleDelete = (document: Document) => {
         if (confirm('Are you sure you want to delete this posted document?')) {
-            router.delete(`/documents/${document.id}`);
+            router.delete(`/documents/${document.id}`, {
+                onSuccess: () => {
+                    showDeleted("Document Deleted", "Posted document has been successfully removed.");
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete document. Please try again.");
+                },
+            });
         }
     };
 

@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import {
@@ -208,6 +209,7 @@ export default function Whereabouts({
     whereabouts,
     currentDate,
 }: Props) {
+    const { showSuccess, showError, showInfo } = usePopupAlert();
     const { auth } = usePage<PageProps>().props;
     const [date] = useState(parseISO(currentDate));
     const [selectedCell, setSelectedCell] = useState<{
@@ -400,7 +402,13 @@ export default function Whereabouts({
                 ...formData,
             },
             {
-                onSuccess: () => setSelectedCell(null),
+                onSuccess: () => {
+                    showSuccess("Whereabouts Updated", "Employee whereabouts has been successfully updated.");
+                    setSelectedCell(null);
+                },
+                onError: (errors) => {
+                    showError("Update Failed", "Unable to update whereabouts. Please try again.");
+                },
             },
         );
     };
@@ -418,7 +426,13 @@ export default function Whereabouts({
         }
 
         router.delete(`/whereabouts/${existing.id}`, {
-            onSuccess: () => setSelectedCell(null),
+            onSuccess: () => {
+                showSuccess("Whereabouts Reset", "Employee whereabouts has been successfully reset.");
+                setSelectedCell(null);
+            },
+            onError: (errors) => {
+                showError("Reset Failed", "Unable to reset whereabouts. Please try again.");
+            },
         });
     };
 

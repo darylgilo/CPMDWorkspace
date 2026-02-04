@@ -106,7 +106,10 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return Inertia::location('/pesticidesindex?tab=distribution');
+            // Debug: Log the redirect
+            \Log::info('Distribution created, using regular redirect like PesticideController');
+            
+            return redirect('/pesticidesindex?tab=distribution')->with('success', 'Distribution created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to record distribution: ' . $e->getMessage());
@@ -172,7 +175,8 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return Inertia::location('/pesticidesindex?tab=distribution');
+            return redirect()->route('pesticidesindex.index', ['tab' => 'distribution'])
+                ->with('success', 'Distribution updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to update distribution: ' . $e->getMessage());
@@ -195,7 +199,8 @@ class DistributionController extends Controller
 
             DB::commit();
 
-            return Inertia::location('/pesticidesindex?tab=distribution');
+            return redirect()->route('pesticidesindex.index', ['tab' => 'distribution'])
+                ->with('success', 'Distribution deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to delete distribution: ' . $e->getMessage());

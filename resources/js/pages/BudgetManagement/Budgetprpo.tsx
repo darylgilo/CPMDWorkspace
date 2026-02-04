@@ -24,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
@@ -94,6 +95,7 @@ interface PageProps {
 }
 
 export default function BudgetAllocation() {
+    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
     const { props, url } = usePage<PageProps>();
     const {
         funds,
@@ -364,6 +366,7 @@ export default function BudgetAllocation() {
         ) {
             router.delete(`/fund-transactions/${id}`, {
                 onSuccess: () => {
+                    showDeleted("Transaction Deleted", "Fund transaction has been successfully removed.");
                     router.get(
                         '/budgetmanagement',
                         {
@@ -380,6 +383,7 @@ export default function BudgetAllocation() {
                     );
                 },
                 onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete transaction. Please try again.");
                     console.error('Error deleting transaction:', errors);
                 },
             });
@@ -408,6 +412,7 @@ export default function BudgetAllocation() {
 
         router.post('/fund-transactions', formattedData, {
             onSuccess: () => {
+                showSuccess("Transaction Added", "New fund transaction has been successfully created.");
                 setIsTransactionDialogOpen(false);
                 resetTransactionForm();
                 setSelectedFund(null);
@@ -427,6 +432,7 @@ export default function BudgetAllocation() {
                 );
             },
             onError: (errors) => {
+                showError("Add Failed", "Unable to add transaction. Please try again.");
                 console.error('Error adding transaction:', errors);
             },
         });
@@ -459,6 +465,7 @@ export default function BudgetAllocation() {
             formattedData,
             {
                 onSuccess: () => {
+                    showSuccess("Transaction Updated", "Fund transaction has been successfully updated.");
                     setIsEditTransactionDialogOpen(false);
                     resetTransactionForm();
                     setSelectedTransaction(null);
@@ -478,6 +485,7 @@ export default function BudgetAllocation() {
                     );
                 },
                 onError: (errors) => {
+                    showError("Update Failed", "Unable to update transaction. Please try again.");
                     console.error('Error updating transaction:', errors);
                 },
             },

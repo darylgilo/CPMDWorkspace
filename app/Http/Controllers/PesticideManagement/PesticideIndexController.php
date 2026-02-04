@@ -112,6 +112,9 @@ class PesticideIndexController extends Controller
             'distributions' => $distributions,
             'distributionAnalytics' => $distributionAnalytics,
             'availablePesticides' => $availablePesticides,
+            // Include flash messages
+            'success' => session()->get('success'),
+            'error' => session()->get('error'),
         ]);
 
         return Inertia::render('PesticideInventory/PesticideIndex', $data);

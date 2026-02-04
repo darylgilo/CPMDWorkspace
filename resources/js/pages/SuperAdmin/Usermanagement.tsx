@@ -17,6 +17,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
@@ -115,6 +116,7 @@ interface PageProps extends InertiaPageProps {
 }
 
 export default function UserManagement() {
+    const { showSuccess, showError, showDeleted, showInfo } = usePopupAlert();
     // Get users data and search term from page props
     const { props } = usePage<PageProps>();
     const {
@@ -236,7 +238,15 @@ export default function UserManagement() {
     // Handle user deletion with confirmation
     const handleDelete = (id: number) => {
         if (window.confirm('Are you sure you want to delete this user?')) {
-            router.delete(`/superadmin/users/${id}`, { preserveScroll: true });
+            router.delete(`/superadmin/users/${id}`, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    showDeleted("User Deleted", "User account has been successfully removed.");
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete user. Please try again.");
+                },
+            });
         }
     };
 
@@ -253,7 +263,12 @@ export default function UserManagement() {
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    const statusText = status === 'active' ? 'activated' : 'deactivated';
+                    showSuccess(`User ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`, `User account has been ${statusText}.`);
                     router.reload({ only: ['users'] });
+                },
+                onError: (errors) => {
+                    showError("Status Update Failed", "Unable to update user status. Please try again.");
                 },
             },
         );

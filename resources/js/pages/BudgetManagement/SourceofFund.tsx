@@ -25,6 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
@@ -65,6 +66,7 @@ interface PageProps {
 }
 
 export default function SourceofFund() {
+    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
     const { props } = usePage<PageProps>();
     const {
         funds,
@@ -150,7 +152,27 @@ export default function SourceofFund() {
 
     const handleDelete = (id: number) => {
         if (window.confirm('Are you sure you want to delete this fund?')) {
-            router.delete(`/funds/${id}`);
+            router.delete(`/funds/${id}`, {
+                onSuccess: () => {
+                    showDeleted("Fund Deleted", "Fund source has been successfully removed.");
+                    router.get(
+                        '/budgetmanagement',
+                        {
+                            tab: 'source',
+                            search: searchValue,
+                            perPage,
+                            page: currentPage,
+                            sort: sortField,
+                            direction: sortDirection,
+                        },
+                        { preserveState: false }, // Force refresh to get updated analytics
+                    );
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete fund. Please try again.");
+                    console.error('Error deleting fund:', errors);
+                },
+            });
         }
     };
 
@@ -165,6 +187,7 @@ export default function SourceofFund() {
 
         router.post('/funds', formattedData, {
             onSuccess: () => {
+                showSuccess("Fund Added", "New fund source has been successfully created.");
                 setIsAddDialogOpen(false);
                 resetForm();
                 router.get(
@@ -181,6 +204,7 @@ export default function SourceofFund() {
                 );
             },
             onError: (errors) => {
+                showError("Add Failed", "Unable to add fund. Please try again.");
                 console.error('Error adding fund:', errors);
             },
         });
@@ -198,6 +222,7 @@ export default function SourceofFund() {
 
             router.put(`/funds/${selectedFund.id}`, formattedData, {
                 onSuccess: () => {
+                    showSuccess("Fund Updated", "Fund source has been successfully updated.");
                     setIsEditDialogOpen(false);
                     resetForm();
                     setSelectedFund(null);
@@ -215,6 +240,7 @@ export default function SourceofFund() {
                     );
                 },
                 onError: (errors) => {
+                    showError("Update Failed", "Unable to update fund. Please try again.");
                     console.error('Error updating fund:', errors);
                 },
             });

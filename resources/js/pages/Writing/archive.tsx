@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Calendar,
@@ -73,6 +74,9 @@ interface PageProps {
 export default function Archive() {
     const { props } = usePage<PageProps>();
     const { documents, search = '', perPage: perPageProp = 10, auth } = props;
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError, showDeleted } = usePopupAlert();
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -203,7 +207,10 @@ export default function Archive() {
         if (confirm('Are you sure you want to delete this document?')) {
             router.delete(`/documents/${id}`, {
                 onSuccess: () => {
-                    router.reload();
+                    showDeleted("Document Deleted", "Archived document has been successfully removed.");
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete document. Please try again.");
                 },
             });
         }
