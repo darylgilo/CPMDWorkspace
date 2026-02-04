@@ -26,6 +26,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Calendar,
@@ -38,7 +39,7 @@ import {
     Trash2,
     TruckIcon,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface PesticideType {
     id: string;
@@ -86,10 +87,13 @@ interface PageProps {
         totalDistributed: number;
         thisYear: number;
     };
+    success?: string; // Success message from flash session
+    error?: string; // Error message from flash session
     [key: string]: unknown;
 }
 
 export default function Distribution() {
+    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
     const { props } = usePage<PageProps>();
     const {
         distributions,
@@ -304,15 +308,58 @@ export default function Distribution() {
                 'Are you sure you want to delete this distribution record?',
             )
         ) {
-            router.delete(`/distributions/${id}`);
+            router.delete(`/distributions/${id}`, {
+                onSuccess: () => {
+                    showDeleted("Distribution Deleted", "Distribution record has been successfully removed.");
+                    
+                    // Small delay to ensure alert is visible before navigation
+                    setTimeout(() => {
+                        router.get(
+                            '/pesticidesindex',
+                            {
+                                tab: 'distribution',
+                                search: searchValue,
+                                perPage,
+                                page: currentPage,
+                                sort: sortField,
+                                direction: sortDirection,
+                            },
+                            { preserveState: true },
+                        );
+                    }, 100);
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete distribution. Please try again.");
+                    console.error('Error deleting distribution:', errors);
+                },
+            });
         }
     };
 
-    const handleSubmitAdd = () => {
+    const handleSubmitAdd = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+        
         router.post('/distributions', formData, {
             onSuccess: () => {
+                showSuccess("Distribution Added", "New distribution has been successfully created.");
                 setIsAddDialogOpen(false);
                 resetForm();
+                router.get(
+                    '/pesticidesindex',
+                    {
+                        tab: 'distribution',
+                        search: searchValue,
+                        perPage,
+                        page: currentPage,
+                        sort: sortField,
+                        direction: sortDirection,
+                    },
+                    { preserveState: false }, // Force refresh to get updated analytics
+                );
+            },
+            onError: (errors) => {
+                showError("Add Failed", "Unable to add distribution. Please try again.");
+                console.error('Error adding distribution:', errors);
             },
         });
     };
@@ -321,9 +368,30 @@ export default function Distribution() {
         if (selectedDistribution) {
             router.put(`/distributions/${selectedDistribution.id}`, formData, {
                 onSuccess: () => {
+                    showSuccess("Distribution Updated", "Distribution has been successfully updated.");
                     setIsEditDialogOpen(false);
                     resetForm();
                     setSelectedDistribution(null);
+                    
+                    // Small delay to ensure alert is visible before navigation
+                    setTimeout(() => {
+                        router.get(
+                            '/pesticidesindex',
+                            {
+                                tab: 'distribution',
+                                search: searchValue,
+                                perPage,
+                                page: currentPage,
+                                sort: sortField,
+                                direction: sortDirection,
+                            },
+                            { preserveState: true },
+                        );
+                    }, 100);
+                },
+                onError: (errors) => {
+                    showError("Update Failed", "Unable to update distribution. Please try again.");
+                    console.error('Error updating distribution:', errors);
                 },
             });
         }

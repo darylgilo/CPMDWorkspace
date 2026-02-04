@@ -1,4 +1,5 @@
 import SearchBar from '@/components/SearchBar';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { Head, usePage } from '@inertiajs/react';
 import {
     Calendar as CalendarIcon,
@@ -69,6 +70,7 @@ function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 export default function AnnouncementPage() {
+    const { showInfo, showSuccess } = usePopupAlert();
     const pageProps = usePage().props as Record<string, unknown>;
     const serverNotices = useMemo(
         () => (pageProps?.notices as Array<Record<string, unknown>>) ?? [],

@@ -3,6 +3,7 @@ import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { NavUser } from '@/components/nav-user';
+import { PopupAlertContainer } from '@/components/ui/popup-alert';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
 
@@ -29,6 +30,8 @@ export default function AppSidebarLayout({
             >
                 <NavUser />
             </div>
+            {/* Popup Alert Container */}
+            <PopupAlertContainer />
         </AppShell>
     );
 }

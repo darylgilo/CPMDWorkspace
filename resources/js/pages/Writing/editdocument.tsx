@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -40,6 +41,9 @@ export default function EditDocument() {
     const { props } = usePage<PageProps>();
     const document = props.document;
     const sourceTab = props.tab || 'writeup';
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError } = usePopupAlert();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -71,6 +75,13 @@ export default function EditDocument() {
             router.put(`/documents/${document.id}`, {
                 ...formData,
                 tab: sourceTab,
+            }, {
+                onSuccess: () => {
+                    showSuccess("Document Updated", "Document has been successfully updated.");
+                },
+                onError: (errors) => {
+                    showError("Update Failed", "Unable to update document. Please try again.");
+                },
             });
         }
     };

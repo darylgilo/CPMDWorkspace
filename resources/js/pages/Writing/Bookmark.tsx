@@ -22,6 +22,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Bookmark as BookmarkIcon,
@@ -70,6 +71,7 @@ interface PageProps {
 }
 
 export default function Bookmark() {
+    const { showSuccess, showError, showBookmarked } = usePopupAlert();
     const { props } = usePage<PageProps>();
     const { documents, search = '', perPage: perPageProp = 10 } = props;
 
@@ -205,7 +207,11 @@ export default function Bookmark() {
                 {},
                 {
                     onSuccess: () => {
+                        showSuccess("Bookmark Removed", "Document has been removed from your bookmarks.");
                         router.reload();
+                    },
+                    onError: (errors) => {
+                        showError("Remove Failed", "Unable to remove bookmark. Please try again.");
                     },
                 },
             );

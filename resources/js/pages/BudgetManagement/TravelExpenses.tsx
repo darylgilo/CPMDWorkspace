@@ -24,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { router, usePage } from '@inertiajs/react';
 import {
@@ -109,7 +110,7 @@ interface PageProps {
         funding_details: Array<{
             id: number;
             estimated_budget: number;
-            timelines: Array<any>;
+            timelines: Array<Record<string, unknown>>;
         }>;
         fund_id: number;
     }>;
@@ -117,6 +118,7 @@ interface PageProps {
 }
 
 export default function TravelExpenses() {
+    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
     const { props, url } = usePage<PageProps>();
     const {
         travelExpenses,
@@ -425,6 +427,7 @@ export default function TravelExpenses() {
         ) {
             router.delete(`/travel-expenses/${id}`, {
                 onSuccess: () => {
+                    showDeleted("Travel Expense Deleted", "Travel expense has been successfully removed.");
                     router.get(
                         '/budgetmanagement',
                         {
@@ -442,6 +445,7 @@ export default function TravelExpenses() {
                 },
                 onError: (errors) => {
                     console.error('Error deleting travel expense:', errors);
+                    showError("Delete Failed", "Unable to delete travel expense. Please try again.");
                 },
             });
         }
@@ -481,8 +485,9 @@ export default function TravelExpenses() {
             const remainingBalance = totalBudget - currentExpenses;
 
             if (amount > remainingBalance) {
-                alert(
-                    `Insufficient balance for this project. Available balance: ${formatCurrency(remainingBalance)}`,
+                showError(
+                    "Insufficient Balance",
+                    `Available balance: ${formatCurrency(remainingBalance)}`,
                 );
                 return;
             }
@@ -496,6 +501,7 @@ export default function TravelExpenses() {
 
         router.post('/travel-expenses', formattedData, {
             onSuccess: () => {
+                showSuccess("Travel Expense Added", "New travel expense has been successfully created.");
                 setIsAddDialogOpen(false);
                 resetForm();
                 router.get(
@@ -514,6 +520,7 @@ export default function TravelExpenses() {
                 );
             },
             onError: (errors) => {
+                showError("Add Failed", "Unable to add travel expense. Please try again.");
                 console.error('Error adding travel expense:', errors);
             },
         });
@@ -551,8 +558,9 @@ export default function TravelExpenses() {
                 const remainingBalance = totalBudget - currentExpenses;
 
                 if (amount > remainingBalance) {
-                    alert(
-                        `Insufficient balance for this project. Available balance: ${formatCurrency(remainingBalance)}`,
+                    showError(
+                        "Insufficient Balance",
+                        `Available balance: ${formatCurrency(remainingBalance)}`,
                     );
                     return;
                 }
@@ -569,6 +577,7 @@ export default function TravelExpenses() {
                 formattedData,
                 {
                     onSuccess: () => {
+                        showSuccess("Travel Expense Updated", "Travel expense has been successfully updated.");
                         setIsEditDialogOpen(false);
                         resetForm();
                         setSelectedExpense(null);
@@ -588,6 +597,7 @@ export default function TravelExpenses() {
                         );
                     },
                     onError: (errors) => {
+                        showError("Update Failed", "Unable to update travel expense. Please try again.");
                         console.error('Error updating travel expense:', errors);
                     },
                 },
@@ -711,101 +721,6 @@ export default function TravelExpenses() {
         }
     };
 
-    const isLocalTravel = (destination: string) => {
-        const philippinesKeywords = [
-            'philippines',
-            'manila',
-            'quezon city',
-            'cebu',
-            'davao',
-            'iloilo',
-            'bacolod',
-            'cagayan de oro',
-            'general santos',
-            'makati',
-            'pasig',
-            'taguig',
-            'mandaluyong',
-            'san juan',
-            'pasay',
-            'parañaque',
-            'las piñas',
-            'muntinlupa',
-            'marikina',
-            'caloocan',
-            'malabon',
-            'navotas',
-            'valenzuela',
-            'san jose del monte',
-            'calamba',
-            'lipa',
-            'batangas',
-            'laguna',
-            'cavite',
-            'rizal',
-            'bulacan',
-            'pampanga',
-            'tarlac',
-            'nueva ecija',
-            'zambales',
-            'bataan',
-            'aurora',
-            'quezon',
-            'occidental mindoro',
-            'oriental mindoro',
-            'marinduque',
-            'romblon',
-            'palawan',
-            'albay',
-            'camarines norte',
-            'camarines sur',
-            'catanduanes',
-            'masbate',
-            'sorsogon',
-            'aklan',
-            'antique',
-            'capiz',
-            'guimaras',
-            'iloilo',
-            'negros occidental',
-            'negros oriental',
-            'bohol',
-            'cebu',
-            'siquijor',
-            'davao de oro',
-            'davao del norte',
-            'davao del sur',
-            'davao occidental',
-            'davao oriental',
-            'sarangani',
-            'south cotabato',
-            'sultan kudarat',
-            'cotabato',
-            'lanao del norte',
-            'lanao del sur',
-            'bukidnon',
-            'misamis occidental',
-            'misamis oriental',
-            'camiguin',
-            'surigao del norte',
-            'surigao del sur',
-            'dinagat islands',
-            'agusan del norte',
-            'agusan del sur',
-            'basilan',
-            'lamitan',
-            'lanao del sur',
-            'maguindanao',
-            'sulu',
-            'tawi-tawi',
-        ];
-
-        const lowerDestination = destination.toLowerCase();
-        return philippinesKeywords.some((keyword) =>
-            lowerDestination.includes(keyword),
-        );
-    };
-
     // Calculate PPMP local travel subtotal separately for statistics
     const ppmpLocalSubtotal = useMemo(() => {
         const ppmpTravelExpenses = ppmpItems.filter((item) => {
@@ -849,84 +764,6 @@ export default function TravelExpenses() {
             return sum + itemTotal;
         }, 0);
     }, [ppmpItems, selectedFundId]);
-
-    const travelSubtotals = useMemo(() => {
-        if (!filteredExpenses || filteredExpenses.length === 0) {
-            return {
-                local: 0,
-                foreign: 0,
-                total: 0,
-            };
-        }
-
-        // Calculate TEV travel expenses using PPMP project general_description (only approved expenses)
-        const tevLocal = filteredExpenses
-            .filter(
-                (expense) =>
-                    expense.ppmp_project?.general_description ===
-                        'Travelling Expenses - Local' &&
-                    expense.status === 'approved',
-            )
-            .reduce((sum, expense) => sum + Number(expense.amount), 0);
-
-        const tevForeign = filteredExpenses
-            .filter(
-                (expense) =>
-                    expense.ppmp_project?.general_description ===
-                        'Travelling Expenses - Foreign' &&
-                    expense.status === 'approved',
-            )
-            .reduce((sum, expense) => sum + Number(expense.amount), 0);
-
-        // Calculate PPMP travel expense subtotals for the selected fund and year (budget allocations)
-        const ppmpTravelExpenses = ppmpItems.filter((item) => {
-            const isTravelExpense =
-                item.general_description === 'Travelling Expenses - Local' ||
-                item.general_description === 'Travelling Expenses - Foreign';
-            const itemMatchesFund = selectedFundId
-                ? item.fund_id === selectedFundId
-                : true;
-            return isTravelExpense && itemMatchesFund;
-        });
-
-        const ppmpLocal = ppmpTravelExpenses
-            .filter(
-                (item) =>
-                    item.general_description === 'Travelling Expenses - Local',
-            )
-            .reduce((sum, item) => {
-                const itemTotal =
-                    item.funding_details?.reduce(
-                        (total, detail) =>
-                            total + (Number(detail.estimated_budget) || 0),
-                        0,
-                    ) || 0;
-                return sum + itemTotal;
-            }, 0);
-
-        const ppmpForeign = ppmpTravelExpenses
-            .filter(
-                (item) =>
-                    item.general_description ===
-                    'Travelling Expenses - Foreign',
-            )
-            .reduce((sum, item) => {
-                const itemTotal =
-                    item.funding_details?.reduce(
-                        (total, detail) =>
-                            total + (Number(detail.estimated_budget) || 0),
-                        0,
-                    ) || 0;
-                return sum + itemTotal;
-            }, 0);
-
-        // Total = PPMP Budget Allocation + TEV Expenses
-        return {
-            local: tevLocal + ppmpLocal,
-            foreign: tevForeign + ppmpForeign,
-            total: tevLocal + tevForeign + (ppmpLocal + ppmpForeign),
-        };
-    }, [filteredExpenses, ppmpItems, selectedFundId]);
 
     // Calculate remaining balance for each travel type (PPMP Budget - TEV Expenses)
     const travelBalances = useMemo(() => {

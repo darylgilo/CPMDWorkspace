@@ -18,6 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
@@ -62,6 +63,9 @@ interface PageProps {
 export default function EditUserManagement() {
     const { props } = usePage<PageProps>();
     const { user, errors } = props;
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError } = usePopupAlert();
 
     // Basic user fields
     const [name, setName] = useState('');
@@ -255,16 +259,15 @@ export default function EditUserManagement() {
         router.post(`/superadmin/users/${user?.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
+                showSuccess("User Updated", "User information has been successfully updated.");
                 console.log('Form submitted successfully');
                 // Reset the remove flag after successful submission
                 setRemoveProfilePicture(false);
-                // Clear password fields
-                setPassword('');
-                setConfirmPassword('');
                 setSuperadminPassword('');
                 setPasswordError('');
             },
             onError: (errors) => {
+                showError("Update Failed", "Unable to update user. Please try again.");
                 console.log('Form submission errors:', errors);
             },
         });

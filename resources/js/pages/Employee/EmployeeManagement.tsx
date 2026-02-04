@@ -8,6 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -54,6 +55,7 @@ interface PageProps extends InertiaPageProps {
 
 // Employee Management list page component
 export default function EmployeeManagement() {
+    const { showSuccess, showError, showInfo } = usePopupAlert();
     const { props } = usePage<PageProps>();
     const {
         users = {

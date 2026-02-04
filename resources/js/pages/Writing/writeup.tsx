@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Bookmark,
@@ -111,6 +112,9 @@ export default function Writeup() {
         flash,
         current_user,
     } = props;
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError, showDeleted, showBookmarked, showInfo } = usePopupAlert();
 
     const [searchValue, setSearchValue] = useState(search);
     const [perPage, setPerPage] = useState(perPageProp);
@@ -210,7 +214,14 @@ export default function Writeup() {
 
     const handleDelete = (id: number) => {
         if (window.confirm('Are you sure you want to delete this document?')) {
-            router.delete(`/documents/${id}`);
+            router.delete(`/documents/${id}`, {
+                onSuccess: () => {
+                    showDeleted("Document Deleted", "Document has been successfully removed.");
+                },
+                onError: (errors) => {
+                    showError("Delete Failed", "Unable to delete document. Please try again.");
+                },
+            });
         }
     };
 
@@ -218,6 +229,7 @@ export default function Writeup() {
         e.preventDefault();
         router.post('/documents', formData, {
             onSuccess: () => {
+                showSuccess("Document Added", "New document has been successfully created.");
                 setIsAddDialogOpen(false);
                 resetForm();
                 router.get(
@@ -230,8 +242,11 @@ export default function Writeup() {
                         sort: sortField,
                         direction: sortDirection,
                     },
-                    { preserveState: true },
+                    { preserveState: false },
                 );
+            },
+            onError: (errors) => {
+                showError("Add Failed", "Unable to create document. Please try again.");
             },
         });
     };
@@ -340,12 +355,14 @@ export default function Writeup() {
             },
             {
                 onSuccess: () => {
+                    showSuccess("Comment Added", "Your comment has been posted successfully.");
                     // Clear the comment input
                     setNewComments((prev) => ({ ...prev, [documentId]: '' }));
                     // The page props will be automatically updated by Inertia
                     // No need for manual state updates or page reload
                 },
                 onError: (errors) => {
+                    showError("Comment Failed", "Unable to post comment. Please try again.");
                     console.error('Error adding comment:', errors);
                 },
                 preserveScroll: true,
@@ -359,10 +376,12 @@ export default function Writeup() {
             {},
             {
                 onSuccess: () => {
+                    showInfo("Like Toggled", "Document like status has been updated.");
                     // The page props will be automatically updated by Inertia
                     // No need for manual state updates or page reload
                 },
                 onError: (errors) => {
+                    showError("Like Failed", "Unable to toggle like. Please try again.");
                     console.error('Error toggling like:', errors);
                 },
                 preserveScroll: true,
@@ -376,10 +395,11 @@ export default function Writeup() {
             {},
             {
                 onSuccess: () => {
-                    // The page props will be automatically updated by Inertia
+                    showBookmarked("Bookmark Toggled", "Document bookmark status has been updated.");
                     console.log('Bookmark toggled successfully');
                 },
                 onError: (errors) => {
+                    showError("Bookmark Failed", "Unable to toggle bookmark. Please try again.");
                     console.error('Error toggling bookmark:', errors);
                 },
                 preserveScroll: true,
@@ -453,6 +473,7 @@ export default function Writeup() {
                     }
                 },
                 onError: (errors) => {
+                    showError("Approval Failed", "Unable to toggle approval. Please try again.");
                     console.error('Error toggling approval:', errors);
                 },
                 preserveScroll: true,
@@ -480,10 +501,11 @@ export default function Writeup() {
             { content: updatedContent },
             {
                 onSuccess: () => {
+                    showSuccess("Comment Updated", "Your comment has been updated successfully.");
                     // Clear editing state
                     setEditingComments((prev) => ({
                         ...prev,
-                        [commentId]: '',
+                        [commentId]: false,
                     }));
                     setEditCommentTexts((prev) => ({
                         ...prev,
@@ -491,6 +513,7 @@ export default function Writeup() {
                     }));
                 },
                 onError: (errors) => {
+                    showError("Update Failed", "Unable to update comment. Please try again.");
                     console.error('Error updating comment:', errors);
                 },
                 preserveScroll: true,
@@ -502,10 +525,12 @@ export default function Writeup() {
         if (window.confirm('Are you sure you want to delete this comment?')) {
             router.delete(`/comments/${commentId}`, {
                 onSuccess: () => {
+                    showDeleted("Comment Deleted", "Comment has been successfully removed.");
                     // The page props will be automatically updated by Inertia
                     // No need for manual state updates or page reload
                 },
                 onError: (errors: Record<string, string>) => {
+                    showError("Delete Failed", "Unable to delete comment. Please try again.");
                     console.error('Error deleting comment:', errors);
                 },
                 preserveScroll: true,

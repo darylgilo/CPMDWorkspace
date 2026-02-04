@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -153,6 +154,9 @@ interface PageProps {
 export default function CategoriesPage() {
     const { props } = usePage<PageProps>();
     const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
+    
+    // Initialize popup alert hook
+    const { showSuccess, showError, showDeleted } = usePopupAlert();
 
     // Local form state for creating a notice
     const [title, setTitle] = useState('');
@@ -428,10 +432,12 @@ export default function CategoriesPage() {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
+                showSuccess("Notice Created", "New notice has been successfully created.");
                 resetForm();
                 setOpen(false);
             },
             onError: (errors: Record<string, string>) => {
+                showError("Create Failed", "Unable to create notice. Please try again.");
                 console.error('Error submitting notice:', errors);
             },
         });
@@ -475,11 +481,13 @@ export default function CategoriesPage() {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
+                showSuccess("Notice Updated", "Notice has been successfully updated.");
                 resetEditForm();
                 setEditOpen(false);
                 setEditingNotice(null);
             },
             onError: (errors: Record<string, string>) => {
+                showError("Update Failed", "Unable to update notice. Please try again.");
                 console.error('Error updating notice:', errors);
             },
         });
@@ -998,8 +1006,12 @@ export default function CategoriesPage() {
                                                     {
                                                         preserveScroll: true,
                                                         onSuccess: () => {
+                                                            showDeleted("Notice Deleted", "Notice has been successfully removed.");
                                                             setEditOpen(false);
                                                             resetEditForm();
+                                                        },
+                                                        onError: (errors) => {
+                                                            showError("Delete Failed", "Unable to delete notice. Please try again.");
                                                         },
                                                     },
                                                 );

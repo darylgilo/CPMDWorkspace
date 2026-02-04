@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { edit } from '@/routes/profile';
@@ -36,6 +37,7 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
+    const { showSuccess, showError, showInfo } = usePopupAlert();
     const { auth } = usePage<SharedData>().props;
     const [officeValue, setOfficeValue] = useState<string>(
         auth.user.office ?? 'CPMD',

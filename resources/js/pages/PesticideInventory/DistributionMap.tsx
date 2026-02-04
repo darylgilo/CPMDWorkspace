@@ -411,7 +411,7 @@ export default function DistributionMap() {
             provinceData: Array.from(provinceMap.values()),
             municipalityData: Array.from(municipalityMap.values()),
         };
-    }, [distributions, locationDetails, NCR_CITIES]);
+    }, [distributions, locationDetails]);
 
     // Pick dataset based on selected admin level
     const mapData = useMemo(() => {
