@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { LoadingButton } from '@/components/ui/loading-button';
 import {
     Dialog,
     DialogContent,
@@ -9,6 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -16,7 +17,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import {
@@ -406,11 +406,17 @@ export default function Whereabouts({
             },
             {
                 onSuccess: () => {
-                    showSuccess("Whereabouts Updated", "Employee whereabouts has been successfully updated.");
+                    showSuccess(
+                        'Whereabouts Updated',
+                        'Employee whereabouts has been successfully updated.',
+                    );
                     setSelectedCell(null);
                 },
                 onError: (errors) => {
-                    showError("Update Failed", "Unable to update whereabouts. Please try again.");
+                    showError(
+                        'Update Failed',
+                        'Unable to update whereabouts. Please try again.',
+                    );
                 },
                 onFinish: () => setIsSubmitting(false),
             },
@@ -432,11 +438,17 @@ export default function Whereabouts({
 
         router.delete(`/whereabouts/${existing.id}`, {
             onSuccess: () => {
-                showSuccess("Whereabouts Reset", "Employee whereabouts has been successfully reset.");
+                showSuccess(
+                    'Whereabouts Reset',
+                    'Employee whereabouts has been successfully reset.',
+                );
                 setSelectedCell(null);
             },
             onError: (errors) => {
-                showError("Reset Failed", "Unable to reset whereabouts. Please try again.");
+                showError(
+                    'Reset Failed',
+                    'Unable to reset whereabouts. Please try again.',
+                );
             },
             onFinish: () => setIsSubmitting(false),
         });

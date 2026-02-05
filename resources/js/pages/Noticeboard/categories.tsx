@@ -1,7 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import CustomCardPin from '@/components/ui/CustomCardPin';
-import { LoadingButton } from '@/components/ui/loading-button';
 import {
     Dialog,
     DialogContent,
@@ -9,6 +8,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -16,7 +17,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -155,7 +155,7 @@ interface PageProps {
 export default function CategoriesPage() {
     const { props } = usePage<PageProps>();
     const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
-    
+
     // Initialize popup alert hook
     const { showSuccess, showError, showDeleted } = usePopupAlert();
 
@@ -433,12 +433,18 @@ export default function CategoriesPage() {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                showSuccess("Notice Created", "New notice has been successfully created.");
+                showSuccess(
+                    'Notice Created',
+                    'New notice has been successfully created.',
+                );
                 resetForm();
                 setOpen(false);
             },
             onError: (errors: Record<string, string>) => {
-                showError("Create Failed", "Unable to create notice. Please try again.");
+                showError(
+                    'Create Failed',
+                    'Unable to create notice. Please try again.',
+                );
                 console.error('Error submitting notice:', errors);
             },
         });
@@ -482,13 +488,19 @@ export default function CategoriesPage() {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                showSuccess("Notice Updated", "Notice has been successfully updated.");
+                showSuccess(
+                    'Notice Updated',
+                    'Notice has been successfully updated.',
+                );
                 resetEditForm();
                 setEditOpen(false);
                 setEditingNotice(null);
             },
             onError: (errors: Record<string, string>) => {
-                showError("Update Failed", "Unable to update notice. Please try again.");
+                showError(
+                    'Update Failed',
+                    'Unable to update notice. Please try again.',
+                );
                 console.error('Error updating notice:', errors);
             },
         });
@@ -505,14 +517,14 @@ export default function CategoriesPage() {
                     <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                    <LoadingButton
-                                        loading={form.processing}
-                                        loadingText="Creating..."
-                                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                    >
-                                        Create Notice
-                                    </LoadingButton>
-                                </DialogTrigger>
+                                <LoadingButton
+                                    loading={form.processing}
+                                    loadingText="Creating..."
+                                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                >
+                                    Create Notice
+                                </LoadingButton>
+                            </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Create a Notice</DialogTitle>
@@ -1007,12 +1019,18 @@ export default function CategoriesPage() {
                                                     {
                                                         preserveScroll: true,
                                                         onSuccess: () => {
-                                                            showDeleted("Notice Deleted", "Notice has been successfully removed.");
+                                                            showDeleted(
+                                                                'Notice Deleted',
+                                                                'Notice has been successfully removed.',
+                                                            );
                                                             setEditOpen(false);
                                                             resetEditForm();
                                                         },
                                                         onError: (errors) => {
-                                                            showError("Delete Failed", "Unable to delete notice. Please try again.");
+                                                            showError(
+                                                                'Delete Failed',
+                                                                'Unable to delete notice. Please try again.',
+                                                            );
                                                         },
                                                     },
                                                 );

@@ -1,6 +1,7 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 // Custom card components removed as they're no longer used
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -8,7 +9,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';

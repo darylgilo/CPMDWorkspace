@@ -42,7 +42,7 @@ export default function EditDocument() {
     const { props } = usePage<PageProps>();
     const document = props.document;
     const sourceTab = props.tab || 'writeup';
-    
+
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
@@ -75,18 +75,28 @@ export default function EditDocument() {
         setIsSubmitting(true);
 
         if (document) {
-            router.put(`/documents/${document.id}`, {
-                ...formData,
-                tab: sourceTab,
-            }, {
-                onSuccess: () => {
-                    showSuccess("Document Updated", "Document has been successfully updated.");
+            router.put(
+                `/documents/${document.id}`,
+                {
+                    ...formData,
+                    tab: sourceTab,
                 },
-                onError: (errors) => {
-                    showError("Update Failed", "Unable to update document. Please try again.");
+                {
+                    onSuccess: () => {
+                        showSuccess(
+                            'Document Updated',
+                            'Document has been successfully updated.',
+                        );
+                    },
+                    onError: (errors) => {
+                        showError(
+                            'Update Failed',
+                            'Unable to update document. Please try again.',
+                        );
+                    },
+                    onFinish: () => setIsSubmitting(false),
                 },
-                onFinish: () => setIsSubmitting(false),
-            });
+            );
         }
     };
 

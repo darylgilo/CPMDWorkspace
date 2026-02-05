@@ -2,6 +2,7 @@ import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import ToggleButton from '@/components/ToggleButton';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -17,7 +18,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
@@ -241,10 +241,16 @@ export default function UserManagement() {
             router.delete(`/superadmin/users/${id}`, {
                 preserveScroll: true,
                 onSuccess: () => {
-                    showDeleted("User Deleted", "User account has been successfully removed.");
+                    showDeleted(
+                        'User Deleted',
+                        'User account has been successfully removed.',
+                    );
                 },
                 onError: (errors) => {
-                    showError("Delete Failed", "Unable to delete user. Please try again.");
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete user. Please try again.',
+                    );
                 },
             });
         }
@@ -263,12 +269,19 @@ export default function UserManagement() {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    const statusText = status === 'active' ? 'activated' : 'deactivated';
-                    showSuccess(`User ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`, `User account has been ${statusText}.`);
+                    const statusText =
+                        status === 'active' ? 'activated' : 'deactivated';
+                    showSuccess(
+                        `User ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
+                        `User account has been ${statusText}.`,
+                    );
                     router.reload({ only: ['users'] });
                 },
                 onError: (errors) => {
-                    showError("Status Update Failed", "Unable to update user status. Please try again.");
+                    showError(
+                        'Status Update Failed',
+                        'Unable to update user status. Please try again.',
+                    );
                 },
             },
         );

@@ -7,6 +7,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -22,7 +23,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     CheckCircle,
@@ -73,7 +73,7 @@ interface PageProps {
 export default function Approved() {
     const { props } = usePage<PageProps>();
     const { documents, search = '', perPage: perPageProp = 10, auth } = props;
-    
+
     // Initialize popup alert hook
     const { showSuccess, showError, showDeleted } = usePopupAlert();
 
@@ -208,10 +208,16 @@ export default function Approved() {
         ) {
             router.delete(`/documents/${document.id}`, {
                 onSuccess: () => {
-                    showDeleted("Document Deleted", "Approved document has been successfully removed.");
+                    showDeleted(
+                        'Document Deleted',
+                        'Approved document has been successfully removed.',
+                    );
                 },
                 onError: (errors) => {
-                    showError("Delete Failed", "Unable to delete document. Please try again.");
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete document. Please try again.',
+                    );
                 },
             });
         }

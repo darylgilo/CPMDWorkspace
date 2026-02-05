@@ -11,6 +11,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -26,7 +27,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
@@ -243,10 +243,16 @@ export default function PesticideIndex() {
         if (window.confirm('Are you sure you want to delete this pesticide?')) {
             router.delete(`/pesticides/${id}`, {
                 onSuccess: () => {
-                    showDeleted("Pesticide Deleted", "Pesticide record has been successfully removed.");
+                    showDeleted(
+                        'Pesticide Deleted',
+                        'Pesticide record has been successfully removed.',
+                    );
                 },
                 onError: (errors) => {
-                    showError("Delete Failed", "Unable to delete pesticide. Please try again.");
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete pesticide. Please try again.',
+                    );
                 },
             });
         }
@@ -273,7 +279,10 @@ export default function PesticideIndex() {
 
         router.post('/pesticides', formattedData, {
             onSuccess: () => {
-                showSuccess("Pesticide Added", "New pesticide record has been successfully created.");
+                showSuccess(
+                    'Pesticide Added',
+                    'New pesticide record has been successfully created.',
+                );
                 setIsAddDialogOpen(false);
                 resetForm();
                 // Refresh the data by re-fetching the current page
@@ -302,7 +311,10 @@ export default function PesticideIndex() {
             },
             onError: (errors) => {
                 console.error('Error adding pesticide:', errors);
-                showError("Add Failed", "Unable to add pesticide. Please check your input and try again.");
+                showError(
+                    'Add Failed',
+                    'Unable to add pesticide. Please check your input and try again.',
+                );
             },
             onFinish: () => setIsSubmitting(false),
         });
@@ -334,7 +346,10 @@ export default function PesticideIndex() {
 
             router.put(`/pesticides/${selectedPesticide.id}`, formattedData, {
                 onSuccess: () => {
-                    showSuccess("Pesticide Updated", "Pesticide record has been successfully updated.");
+                    showSuccess(
+                        'Pesticide Updated',
+                        'Pesticide record has been successfully updated.',
+                    );
                     setIsEditDialogOpen(false);
                     resetForm();
                     setSelectedPesticide(null);
@@ -354,7 +369,10 @@ export default function PesticideIndex() {
                 },
                 onError: (errors) => {
                     console.error('Error updating pesticide:', errors);
-                    showError("Update Failed", "Unable to update pesticide. Please check your input and try again.");
+                    showError(
+                        'Update Failed',
+                        'Unable to update pesticide. Please check your input and try again.',
+                    );
                 },
                 onFinish: () => setIsSubmitting(false),
             });

@@ -113,7 +113,7 @@ let globalAlerts: Array<{
   duration?: number
 }> = []
 
-let alertListeners: Set<() => void> = new Set()
+const alertListeners: Set<() => void> = new Set()
 
 function notifyListeners() {
   alertListeners.forEach(listener => listener())

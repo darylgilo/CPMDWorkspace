@@ -11,6 +11,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -26,7 +27,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Calendar,
@@ -39,7 +39,7 @@ import {
     Trash2,
     TruckIcon,
 } from 'lucide-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface PesticideType {
     id: string;
@@ -93,7 +93,8 @@ interface PageProps {
 }
 
 export default function Distribution() {
-    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
+    const { showSuccess, showError, showDeleted, showWarning } =
+        usePopupAlert();
     const { props } = usePage<PageProps>();
     const {
         distributions,
@@ -311,8 +312,11 @@ export default function Distribution() {
         ) {
             router.delete(`/distributions/${id}`, {
                 onSuccess: () => {
-                    showDeleted("Distribution Deleted", "Distribution record has been successfully removed.");
-                    
+                    showDeleted(
+                        'Distribution Deleted',
+                        'Distribution record has been successfully removed.',
+                    );
+
                     // Small delay to ensure alert is visible before navigation
                     setTimeout(() => {
                         router.get(
@@ -330,7 +334,10 @@ export default function Distribution() {
                     }, 100);
                 },
                 onError: (errors) => {
-                    showError("Delete Failed", "Unable to delete distribution. Please try again.");
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete distribution. Please try again.',
+                    );
                     console.error('Error deleting distribution:', errors);
                 },
             });
@@ -340,10 +347,13 @@ export default function Distribution() {
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
         setIsSubmitting(true);
-        
+
         router.post('/distributions', formData, {
             onSuccess: () => {
-                showSuccess("Distribution Added", "New distribution has been successfully created.");
+                showSuccess(
+                    'Distribution Added',
+                    'New distribution has been successfully created.',
+                );
                 setIsAddDialogOpen(false);
                 resetForm();
                 router.get(
@@ -360,7 +370,10 @@ export default function Distribution() {
                 );
             },
             onError: (errors) => {
-                showError("Add Failed", "Unable to add distribution. Please try again.");
+                showError(
+                    'Add Failed',
+                    'Unable to add distribution. Please try again.',
+                );
                 console.error('Error adding distribution:', errors);
             },
             onFinish: () => {
@@ -374,11 +387,14 @@ export default function Distribution() {
             setIsSubmitting(true);
             router.put(`/distributions/${selectedDistribution.id}`, formData, {
                 onSuccess: () => {
-                    showSuccess("Distribution Updated", "Distribution has been successfully updated.");
+                    showSuccess(
+                        'Distribution Updated',
+                        'Distribution has been successfully updated.',
+                    );
                     setIsEditDialogOpen(false);
                     resetForm();
                     setSelectedDistribution(null);
-                    
+
                     // Small delay to ensure alert is visible before navigation
                     setTimeout(() => {
                         router.get(
@@ -396,7 +412,10 @@ export default function Distribution() {
                     }, 100);
                 },
                 onError: (errors) => {
-                    showError("Update Failed", "Unable to update distribution. Please try again.");
+                    showError(
+                        'Update Failed',
+                        'Unable to update distribution. Please try again.',
+                    );
                     console.error('Error updating distribution:', errors);
                 },
                 onFinish: () => {
