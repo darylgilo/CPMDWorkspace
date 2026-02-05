@@ -38,6 +38,7 @@ class ProfileUpdateRequest extends FormRequest
             
             // Government identification numbers
             'tin_number' => ['nullable', 'string', 'max:255'],
+            'landbank_number' => ['nullable', 'string', 'max:255'],
             'gsis_number' => ['nullable', 'string', 'max:255'],
             
             // Personal information

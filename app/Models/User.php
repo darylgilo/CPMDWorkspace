@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'tin_number',
         'gsis_number',
         'address',
+        'landbank_number',
         'date_of_birth',
         'gender',
         'mobile_number',

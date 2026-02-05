@@ -19,6 +19,7 @@ interface User {
     item_number?: string;
     gender?: string;
     tin_number?: string;
+    landbank_number?: string;
     gsis_number?: string;
     address?: string;
     date_of_birth?: string;
@@ -219,6 +220,12 @@ export default function EmployeeDirectoryView() {
                                 </div>
                                 <div className="text-base text-gray-900 dark:text-gray-100">
                                     {user?.tin_number || '—'}
+                                </div>
+                                <div className="mt-4 text-sm text-gray-500 dark:text-neutral-400">
+                                    Landbank Number
+                                </div>
+                                <div className="text-base text-gray-900 dark:text-gray-100">
+                                    {user?.landbank_number || '—'}
                                 </div>
                                 <div className="mt-4 text-sm text-gray-500 dark:text-neutral-400">
                                     GSIS Number

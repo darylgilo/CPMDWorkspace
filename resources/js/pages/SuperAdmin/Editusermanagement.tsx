@@ -36,6 +36,7 @@ interface UserType {
     office?: string;
     cpmd?: string;
     tin_number?: string;
+    landbank_number?: string;
     gsis_number?: string;
     address?: string;
     date_of_birth?: string;
@@ -85,6 +86,7 @@ export default function EditUserManagement() {
     const [office, setOffice] = useState('Others');
     const [cpmd, setCpmd] = useState('Others');
     const [tin_number, setTinNumber] = useState('');
+    const [landbank_number, setLandbankNumber] = useState('');
     const [gsis_number, setGsisNumber] = useState('');
     const [address, setAddress] = useState('');
     const [date_of_birth, setDateOfBirth] = useState('');
@@ -121,6 +123,7 @@ export default function EditUserManagement() {
             setOffice(user.office || 'Others');
             setCpmd(user.cpmd || 'Others');
             setTinNumber(user.tin_number || '');
+            setLandbankNumber(user.landbank_number || '');
             setGsisNumber(user.gsis_number || '');
             setAddress(user.address || '');
             setDateOfBirth(user.date_of_birth || '');
@@ -220,6 +223,7 @@ export default function EditUserManagement() {
         formData.append('office', office);
         formData.append('cpmd', cpmd);
         formData.append('tin_number', tin_number);
+        formData.append('landbank_number', landbank_number);
         formData.append('gsis_number', gsis_number);
         formData.append('address', address);
         formData.append('date_of_birth', date_of_birth);
@@ -751,6 +755,35 @@ export default function EditUserManagement() {
                                                                 className="mt-1"
                                                                 message={getErrorMessage(
                                                                     'tin_number',
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell className="font-medium">
+                                                            Landbank Number
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Input
+                                                                id="landbank_number"
+                                                                name="landbank_number"
+                                                                type="text"
+                                                                value={
+                                                                    landbank_number
+                                                                }
+                                                                onChange={(e) =>
+                                                                    setLandbankNumber(
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full"
+                                                                placeholder="Landbank Number"
+                                                            />
+                                                            <InputError
+                                                                className="mt-1"
+                                                                message={getErrorMessage(
+                                                                    'landbank_number',
                                                                 )}
                                                             />
                                                         </TableCell>

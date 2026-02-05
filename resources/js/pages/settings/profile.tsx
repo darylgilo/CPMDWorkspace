@@ -433,10 +433,7 @@ export default function Profile({
                                                 </Label>
                                                 <Input
                                                     id="tin_number"
-                                                    defaultValue={
-                                                        auth.user.tin_number ??
-                                                        ''
-                                                    }
+                                                    defaultValue={auth.user.tin_number ?? ''}
                                                     name="tin_number"
                                                     placeholder="TIN number"
                                                 />
@@ -445,15 +442,26 @@ export default function Profile({
                                                 />
                                             </div>
                                             <div className="space-y-2">
+                                                <Label htmlFor="landbank_number">
+                                                    Landbank Number
+                                                </Label>
+                                                <Input
+                                                    id="landbank_number"
+                                                    defaultValue={auth.user.landbank_number ?? ''}
+                                                    name="landbank_number"
+                                                    placeholder="Landbank number"
+                                                />
+                                                <InputError
+                                                    message={errors.landbank_number}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
                                                 <Label htmlFor="gsis_number">
                                                     GSIS Number
                                                 </Label>
                                                 <Input
                                                     id="gsis_number"
-                                                    defaultValue={
-                                                        auth.user.gsis_number ??
-                                                        ''
-                                                    }
+                                                    defaultValue={auth.user.gsis_number ?? ''}
                                                     name="gsis_number"
                                                     placeholder="GSIS number"
                                                 />

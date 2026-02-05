@@ -53,6 +53,7 @@ export default function EmployeeView() {
         office: Office;
         cpmd: CPMDSection;
         tin_number: string;
+        landbank_number: string;
         gsis_number: string;
         address: string;
         date_of_birth: string;
@@ -106,6 +107,7 @@ export default function EmployeeView() {
             | 'PHPS Section'
             | 'Others';
         tin_number: string;
+        landbank_number: string;
         gsis_number: string;
         address: string;
         date_of_birth: string;
@@ -177,6 +179,7 @@ export default function EmployeeView() {
             office: getEnumValue(user?.office, offices, 'Others'),
             cpmd: getEnumValue(user?.cpmd, cpmdSections, ''),
             tin_number: getStringValue(user?.tin_number),
+            landbank_number: getStringValue(user?.landbank_number),
             gsis_number: getStringValue(user?.gsis_number),
             address: getStringValue(user?.address),
             date_of_birth: getStringValue(user?.date_of_birth),
@@ -711,6 +714,22 @@ export default function EmployeeView() {
                                                 onChange={(e) =>
                                                     handleInputChange(
                                                         'tin_number',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="landbank_number">
+                                                Landbank Number
+                                            </Label>
+                                            <Input
+                                                id="landbank_number"
+                                                value={data.landbank_number}
+                                                onChange={(e) =>
+                                                    handleInputChange(
+                                                        'landbank_number',
                                                         e.target.value,
                                                     )
                                                 }
