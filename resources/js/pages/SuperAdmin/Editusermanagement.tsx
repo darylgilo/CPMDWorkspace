@@ -1,9 +1,10 @@
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
-import { LoadingButton } from '@/components/ui/loading-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -19,7 +20,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
@@ -64,7 +64,7 @@ interface PageProps {
 export default function EditUserManagement() {
     const { props } = usePage<PageProps>();
     const { user, errors } = props;
-    
+
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
@@ -264,7 +264,10 @@ export default function EditUserManagement() {
         router.post(`/superadmin/users/${user?.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
-                showSuccess("User Updated", "User information has been successfully updated.");
+                showSuccess(
+                    'User Updated',
+                    'User information has been successfully updated.',
+                );
                 console.log('Form submitted successfully');
                 // Reset the remove flag after successful submission
                 setRemoveProfilePicture(false);
@@ -272,7 +275,10 @@ export default function EditUserManagement() {
                 setPasswordError('');
             },
             onError: (errors) => {
-                showError("Update Failed", "Unable to update user. Please try again.");
+                showError(
+                    'Update Failed',
+                    'Unable to update user. Please try again.',
+                );
                 console.log('Form submission errors:', errors);
             },
             onFinish: () => setIsSubmitting(false),

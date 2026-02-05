@@ -1,8 +1,9 @@
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
-import { LoadingButton } from '@/components/ui/loading-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -11,7 +12,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
 import { ChangeEvent, useRef, useState } from 'react';
@@ -81,12 +81,18 @@ export default function AddEmployee() {
 
         if (password !== confirmPassword) {
             setPasswordError('Password and confirm password do not match');
-            showError("Password Mismatch", "Password and confirm password do not match.");
+            showError(
+                'Password Mismatch',
+                'Password and confirm password do not match.',
+            );
             return;
         }
         if (password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
-            showError("Password Too Short", "Password must be at least 8 characters long.");
+            showError(
+                'Password Too Short',
+                'Password must be at least 8 characters long.',
+            );
             return;
         }
 
@@ -119,11 +125,17 @@ export default function AddEmployee() {
         router.post('/employees', formData, {
             onFinish: () => setIsSubmitting(false),
             onSuccess: () => {
-                showSuccess("Employee Added", "New employee has been successfully created.");
+                showSuccess(
+                    'Employee Added',
+                    'New employee has been successfully created.',
+                );
                 router.get('/employees');
             },
             onError: (errors) => {
-                showError("Creation Failed", "Unable to create employee. Please check your input and try again.");
+                showError(
+                    'Creation Failed',
+                    'Unable to create employee. Please check your input and try again.',
+                );
             },
         });
     };

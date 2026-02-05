@@ -2,6 +2,7 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -10,7 +11,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
@@ -84,7 +84,7 @@ export default function EmployeeView() {
     // Grab server-provided user payload from Inertia page props
     const { props } = usePage<PageProps>();
     const { user, auth } = props;
-    
+
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
@@ -293,12 +293,18 @@ export default function EmployeeView() {
 
         const submitOptions = {
             onSuccess: () => {
-                showSuccess("Employee Updated", "Employee information has been successfully updated.");
+                showSuccess(
+                    'Employee Updated',
+                    'Employee information has been successfully updated.',
+                );
                 // Navigate back to employee management after successful update
                 router.get('/employees');
             },
             onError: (errors: Record<string, string>) => {
-                showError("Update Failed", "Unable to update employee. Please try again.");
+                showError(
+                    'Update Failed',
+                    'Unable to update employee. Please try again.',
+                );
                 // Handle errors
                 console.error('Error updating employee:', errors);
             },

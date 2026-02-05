@@ -9,6 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -24,7 +25,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { router, usePage } from '@inertiajs/react';
 import {
@@ -118,7 +118,8 @@ interface PageProps {
 }
 
 export default function TravelExpenses() {
-    const { showSuccess, showError, showDeleted, showWarning } = usePopupAlert();
+    const { showSuccess, showError, showDeleted, showWarning } =
+        usePopupAlert();
     const { props, url } = usePage<PageProps>();
     const {
         travelExpenses,
@@ -427,7 +428,10 @@ export default function TravelExpenses() {
         ) {
             router.delete(`/travel-expenses/${id}`, {
                 onSuccess: () => {
-                    showDeleted("Travel Expense Deleted", "Travel expense has been successfully removed.");
+                    showDeleted(
+                        'Travel Expense Deleted',
+                        'Travel expense has been successfully removed.',
+                    );
                     router.get(
                         '/budgetmanagement',
                         {
@@ -445,7 +449,10 @@ export default function TravelExpenses() {
                 },
                 onError: (errors) => {
                     console.error('Error deleting travel expense:', errors);
-                    showError("Delete Failed", "Unable to delete travel expense. Please try again.");
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete travel expense. Please try again.',
+                    );
                 },
             });
         }
@@ -486,7 +493,7 @@ export default function TravelExpenses() {
 
             if (amount > remainingBalance) {
                 showError(
-                    "Insufficient Balance",
+                    'Insufficient Balance',
                     `Available balance: ${formatCurrency(remainingBalance)}`,
                 );
                 return;
@@ -501,7 +508,10 @@ export default function TravelExpenses() {
 
         router.post('/travel-expenses', formattedData, {
             onSuccess: () => {
-                showSuccess("Travel Expense Added", "New travel expense has been successfully created.");
+                showSuccess(
+                    'Travel Expense Added',
+                    'New travel expense has been successfully created.',
+                );
                 setIsAddDialogOpen(false);
                 resetForm();
                 router.get(
@@ -520,7 +530,10 @@ export default function TravelExpenses() {
                 );
             },
             onError: (errors) => {
-                showError("Add Failed", "Unable to add travel expense. Please try again.");
+                showError(
+                    'Add Failed',
+                    'Unable to add travel expense. Please try again.',
+                );
                 console.error('Error adding travel expense:', errors);
             },
         });
@@ -559,7 +572,7 @@ export default function TravelExpenses() {
 
                 if (amount > remainingBalance) {
                     showError(
-                        "Insufficient Balance",
+                        'Insufficient Balance',
                         `Available balance: ${formatCurrency(remainingBalance)}`,
                     );
                     return;
@@ -577,7 +590,10 @@ export default function TravelExpenses() {
                 formattedData,
                 {
                     onSuccess: () => {
-                        showSuccess("Travel Expense Updated", "Travel expense has been successfully updated.");
+                        showSuccess(
+                            'Travel Expense Updated',
+                            'Travel expense has been successfully updated.',
+                        );
                         setIsEditDialogOpen(false);
                         resetForm();
                         setSelectedExpense(null);
@@ -597,7 +613,10 @@ export default function TravelExpenses() {
                         );
                     },
                     onError: (errors) => {
-                        showError("Update Failed", "Unable to update travel expense. Please try again.");
+                        showError(
+                            'Update Failed',
+                            'Unable to update travel expense. Please try again.',
+                        );
                         console.error('Error updating travel expense:', errors);
                     },
                 },

@@ -128,6 +128,11 @@ export function NavMain({
                                     asChild
                                     tooltip={item.title}
                                     isActive={isItemActive || hasActiveChild}
+                                    className={
+                                        isItemActive || hasActiveChild
+                                            ? 'bg-transparent font-semibold text-primary'
+                                            : ''
+                                    }
                                 >
                                     <Link href={item.url}>
                                         <item.icon />
@@ -163,6 +168,11 @@ export function NavMain({
                                                                 asChild
                                                                 isActive={
                                                                     isSubActive
+                                                                }
+                                                                className={
+                                                                    isSubActive
+                                                                        ? '!bg-transparent font-semibold !text-white'
+                                                                        : ''
                                                                 }
                                                             >
                                                                 <Link

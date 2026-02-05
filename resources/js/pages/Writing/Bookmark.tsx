@@ -7,6 +7,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
     SelectContent,
@@ -22,7 +23,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { usePopupAlert } from '@/components/ui/popup-alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     Bookmark as BookmarkIcon,
@@ -207,11 +207,17 @@ export default function Bookmark() {
                 {},
                 {
                     onSuccess: () => {
-                        showSuccess("Bookmark Removed", "Document has been removed from your bookmarks.");
+                        showSuccess(
+                            'Bookmark Removed',
+                            'Document has been removed from your bookmarks.',
+                        );
                         router.reload();
                     },
                     onError: (errors) => {
-                        showError("Remove Failed", "Unable to remove bookmark. Please try again.");
+                        showError(
+                            'Remove Failed',
+                            'Unable to remove bookmark. Please try again.',
+                        );
                     },
                 },
             );
