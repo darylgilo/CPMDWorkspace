@@ -79,34 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/distributions/{distribution}', [DistributionController::class, 'update'])->name('distributions.update');
     Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
 
-    // Budget Management
-    Route::get('/budgetmanagement', [BudgetManagementController::class, 'index'])->name('budgetmanagement.index');
-    Route::post('/funds', [BudgetManagementController::class, 'storeFund'])->name('funds.store');
-    Route::put('/funds/{fund}', [BudgetManagementController::class, 'updateFund'])->name('funds.update');
-    Route::delete('/funds/{fund}', [BudgetManagementController::class, 'destroyFund'])->name('funds.destroy');
-    Route::post('/fund-transactions', [BudgetManagementController::class, 'storeTransaction'])->name('fund-transactions.store');
-    Route::put('/fund-transactions/{transaction}', [BudgetManagementController::class, 'updateTransaction'])->name('fund-transactions.update');
-    Route::delete('/fund-transactions/{transaction}', [BudgetManagementController::class, 'destroyTransaction'])->name('fund-transactions.destroy');
-    Route::post('/travel-expenses', [BudgetManagementController::class, 'storeTravelExpense'])->name('travel-expenses.store');
-    Route::put('/travel-expenses/{expense}', [BudgetManagementController::class, 'updateTravelExpense'])->name('travel-expenses.update');
-    Route::delete('/travel-expenses/{expense}', [BudgetManagementController::class, 'destroyTravelExpense'])->name('travel-expenses.destroy');
-    // PPMP Routes
-    Route::post('/budgetmanagement/ppmp', [BudgetManagementController::class, 'storePPMP'])->name('budgetmanagement.ppmp.store');
-    Route::post('/budgetmanagement/ppmp/funding-details', [BudgetManagementController::class, 'storeFundingDetails'])->name('budgetmanagement.ppmp.funding-details.store');
-    Route::put('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'updateFundingDetails'])->name('budgetmanagement.ppmp.funding-details.update');
-    Route::delete('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'destroyFundingDetails'])->name('budgetmanagement.ppmp.funding-details.destroy');
-    Route::put('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'updatePPMP'])->name('budgetmanagement.ppmp.update');
-    Route::delete('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'destroyPPMP'])->name('budgetmanagement.ppmp.destroy');
-    
-    // PPMP Subtotal Highlights Routes
-    Route::get('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'getHighlights'])->name('budgetmanagement.ppmp.highlights.index');
-    Route::post('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'storeHighlight'])->name('budgetmanagement.ppmp.highlights.store');
-    Route::put('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'updateHighlight'])->name('budgetmanagement.ppmp.highlights.update');
-    Route::delete('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'destroyHighlight'])->name('budgetmanagement.ppmp.highlights.destroy');
-    
-    Route::get('/budget-management/analytics', [BudgetManagementController::class, 'analytics'])->name('budget-management.analytics');
-    Route::get('/budget-management/export', [BudgetManagementController::class, 'exportFunds'])->name('budget-management.export');
-    // Noticeboard - specific routes before parameterized routes
+        // Noticeboard - specific routes before parameterized routes
     Route::get('/noticeboard/announcements', [NoticeController::class, 'announcements'])->name('noticeboard.announcements');
     Route::get('/noticeboard/event', [NoticeController::class, 'events'])->name('noticeboard.event');
     Route::get('/noticeboard/meeting', [NoticeController::class, 'meetings'])->name('noticeboard.meeting');
@@ -149,6 +122,34 @@ Route::middleware(['auth', 'verified','role:admin,superadmin'])->group(function 
     Route::post('/employees', [EmployeeManagementController::class, 'store'])->name('employees.store');
     Route::put('/employees/{id}', [EmployeeManagementController::class, 'update'])->name('employees.update');
     Route::get('/employees/{id}', [EmployeeManagementController::class, 'show'])->name('employees.show');
+    
+    // Budget Management
+    Route::get('/budgetmanagement', [BudgetManagementController::class, 'index'])->name('budgetmanagement.index');
+    Route::post('/funds', [BudgetManagementController::class, 'storeFund'])->name('funds.store');
+    Route::put('/funds/{fund}', [BudgetManagementController::class, 'updateFund'])->name('funds.update');
+    Route::delete('/funds/{fund}', [BudgetManagementController::class, 'destroyFund'])->name('funds.destroy');
+    Route::post('/fund-transactions', [BudgetManagementController::class, 'storeTransaction'])->name('fund-transactions.store');
+    Route::put('/fund-transactions/{transaction}', [BudgetManagementController::class, 'updateTransaction'])->name('fund-transactions.update');
+    Route::delete('/fund-transactions/{transaction}', [BudgetManagementController::class, 'destroyTransaction'])->name('fund-transactions.destroy');
+    Route::post('/travel-expenses', [BudgetManagementController::class, 'storeTravelExpense'])->name('travel-expenses.store');
+    Route::put('/travel-expenses/{expense}', [BudgetManagementController::class, 'updateTravelExpense'])->name('travel-expenses.update');
+    Route::delete('/travel-expenses/{expense}', [BudgetManagementController::class, 'destroyTravelExpense'])->name('travel-expenses.destroy');
+    // PPMP Routes
+    Route::post('/budgetmanagement/ppmp', [BudgetManagementController::class, 'storePPMP'])->name('budgetmanagement.ppmp.store');
+    Route::post('/budgetmanagement/ppmp/funding-details', [BudgetManagementController::class, 'storeFundingDetails'])->name('budgetmanagement.ppmp.funding-details.store');
+    Route::put('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'updateFundingDetails'])->name('budgetmanagement.ppmp.funding-details.update');
+    Route::delete('/budgetmanagement/ppmp/funding-details/{fundingDetail}', [BudgetManagementController::class, 'destroyFundingDetails'])->name('budgetmanagement.ppmp.funding-details.destroy');
+    Route::put('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'updatePPMP'])->name('budgetmanagement.ppmp.update');
+    Route::delete('/budgetmanagement/ppmp/{ppmpProject}', [BudgetManagementController::class, 'destroyPPMP'])->name('budgetmanagement.ppmp.destroy');
+    
+    // PPMP Subtotal Highlights Routes
+    Route::get('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'getHighlights'])->name('budgetmanagement.ppmp.highlights.index');
+    Route::post('/budgetmanagement/ppmp/highlights', [BudgetManagementController::class, 'storeHighlight'])->name('budgetmanagement.ppmp.highlights.store');
+    Route::put('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'updateHighlight'])->name('budgetmanagement.ppmp.highlights.update');
+    Route::delete('/budgetmanagement/ppmp/highlights/{highlight}', [BudgetManagementController::class, 'destroyHighlight'])->name('budgetmanagement.ppmp.highlights.destroy');
+    
+    Route::get('/budget-management/analytics', [BudgetManagementController::class, 'analytics'])->name('budget-management.analytics');
+    Route::get('/budget-management/export', [BudgetManagementController::class, 'exportFunds'])->name('budget-management.export');
 });
 
 // Superadmin user management route, accessible only to superadmin role

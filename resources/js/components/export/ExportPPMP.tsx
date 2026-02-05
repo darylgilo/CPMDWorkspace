@@ -3,36 +3,9 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { Table as TableIcon } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
-// Types for PPMP data structure
-interface Timeline {
-    start_procurement: string;
-    end_procurement: string;
-    delivery_period: string;
-}
-
-interface FundingDetail {
-    quantity_size: string;
-    mode_of_procurement: string;
-    pre_procurement_conference: string;
-    estimated_budget: string;
-    source_of_funds: string;
-    supporting_documents: string;
-    remarks: string;
-    timelines?: Timeline[];
-}
-
-interface Project {
-    id: string;
-    general_description: string;
-    project_type: string;
-    category: string;
-    funding_details?: FundingDetail[];
-    fund?: {
-        fund_name: string;
-    };
-}
+import { PPMPProject as Project } from '@/types/ppmp';
 
 export interface ExportPPMPProps {
     data: Project[];
@@ -51,8 +24,6 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
     variant = 'outline',
     size = 'default',
 }) => {
-    const [isIndicative, setIsIndicative] = useState(true);
-    const [isFinal, setIsFinal] = useState(false);
 
     // Group projects by general_description and project_type (matching PPMP.tsx structure)
     const groupProjectsByCategory = (projects: Project[]) => {
@@ -68,317 +39,7 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
         return grouped;
     };
 
-    // Calculate totals
-    const calculateTotals = (projects: Project[]) => {
-        let grandTotal = 0;
-        const categoryTotals = new Map<string, number>();
 
-        projects.forEach((project) => {
-            const category = project.category || 'Uncategorized';
-            let projectTotal = 0;
-
-            if (project.funding_details) {
-                projectTotal = project.funding_details.reduce(
-                    (total, detail) =>
-                        total + parseFloat(detail.estimated_budget || '0'),
-                    0,
-                );
-            }
-
-            grandTotal += projectTotal;
-            categoryTotals.set(
-                category,
-                (categoryTotals.get(category) || 0) + projectTotal,
-            );
-        });
-
-        return { grandTotal, categoryTotals };
-    };
-
-    // Format currency
-    const formatCurrency = (amount: number) => {
-        return `₱ ${amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-    };
-
-    // Export to PDF
-    const exportToPDF = () => {
-        return; /*
-        // 8.5 x 13 inches (Long Bond Paper) in mm: 215.9 x 330.2
-        // We use 216 x 330 for simplicity
-        const doc = new jsPDF({
-            orientation: "landscape",
-            unit: "mm",
-            format: [216, 330]
-        });
-
-        // Title
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) NO. 001", 165, 15, { align: "center" });
-
-        // Checkboxes Section - Visual approximation
-        // Centered around 165
-
-        // Indicative
-        doc.setDrawColor(0);
-        doc.setFillColor(255, 255, 255);
-        doc.rect(130, 22, 5, 5, "FD"); // Empty box
-        doc.setFontSize(10);
-        doc.text("INDICATIVE", 137, 26);
-
-        // Final
-        doc.setFillColor(212, 160, 23); // Golden/Orange #D4A017
-        doc.rect(180, 22, 5, 5, "FD"); // Filled box
-        doc.text("FINAL", 187, 26);
-
-        // Header Info
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Fiscal Year: ${year}`, 15, 35);
-        doc.text("End-User / Implementing Unit: Crop Pest Management Division", 15, 40);
-
-        // Prepare table body data with calculated rowspans
-        const tableBody: any[] = [];
-        let grandTotal = 0;
-
-        Array.from(groupProjectsByCategory(data).entries()).forEach(([key, projects]) => {
-            let categoryTotal = 0;
-            const groupRows: any[] = [];
-
-            // Calculate total rows for entire Group (for Col 0 & 1 merging)
-            let groupTotalRows = 0;
-            projects.forEach(p => {
-                if (p.funding_details) {
-                    p.funding_details.forEach(fd => {
-                        groupTotalRows += (fd.timelines?.length || 1);
-                    });
-                }
-            });
-            if (groupTotalRows === 0) groupTotalRows = 1;
-
-            let groupRowCounter = 0;
-
-            // Helper to handle potential objects
-            const getText = (val: any) => {
-                if (!val) return '';
-                if (typeof val === 'object') return val.name || val.label || val.title || '';
-                return String(val);
-            };
-
-            // Iterate Projects within Group
-            projects.forEach(project => {
-                const fundingDetails = project.funding_details || [];
-
-                fundingDetails.forEach((fundingDetail, fdIndex) => {
-                    const budget = parseFloat(fundingDetail.estimated_budget || '0');
-                    categoryTotal += budget;
-                    grandTotal += budget;
-
-                    const timelines = fundingDetail.timelines && fundingDetail.timelines.length > 0
-                        ? fundingDetail.timelines
-                        : [{ start_procurement: '', end_procurement: '', delivery_period: '' }];
-
-                    timelines.forEach((timeline, tlIndex) => {
-                        // Initialize row with empty strings for potentially spanned columns
-                        const row: any = [
-                            '', // 0 (Group Span)
-                            '', // 1 (Group Span)
-                            '', // 2 (Detail Span)
-                            '', // 3 (Detail Span)
-                            '', // 4 (Detail Span)
-                            getText(timeline.start_procurement),      // 5
-                            getText(timeline.end_procurement),        // 6
-                            getText(timeline.delivery_period),        // 7
-                            '', // 8 (Detail Span)
-                            '', // 9 (Detail Span)
-                            '', // 10 (Detail Span)
-                            ''  // 11 (Detail Span)
-                        ];
-
-                        // GROUP LEVEL MERGE (Cols 0 & 1) - Only Apply on the Very First Row of the Group
-                        if (groupRowCounter === 0) {
-                            row[0] = { content: getText(project.general_description), rowSpan: groupTotalRows, styles: { valign: 'middle', halign: 'center' } };
-                            row[1] = { content: getText(project.project_type), rowSpan: groupTotalRows, styles: { valign: 'middle', halign: 'center' } };
-                        }
-
-                        // FUNDING DETAIL LEVEL MERGE (Cols 2,3,4,8,9,10,11)
-                        if (tlIndex === 0) {
-                            const detailSpan = timelines.length;
-                            row[2] = { content: getText(fundingDetail.quantity_size), rowSpan: detailSpan, styles: { valign: 'middle', halign: 'center' } };
-                            row[3] = { content: getText(fundingDetail.mode_of_procurement) || 'N/A', rowSpan: detailSpan, styles: { valign: 'middle', halign: 'center' } };
-                            row[4] = { content: getText(fundingDetail.pre_procurement_conference) || 'No', rowSpan: detailSpan, styles: { valign: 'middle', halign: 'center' } };
-
-                            // Cols 5,6,7 are distinct
-
-                            row[8] = { content: getText(fundingDetail.source_of_funds) || 'Corn Fund', rowSpan: detailSpan, styles: { valign: 'middle', halign: 'center' } };
-                            row[9] = { content: `₱ ${budget.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, rowSpan: detailSpan, styles: { valign: 'middle', halign: 'right' } };
-                            row[10] = { content: getText(fundingDetail.supporting_documents) || 'Market Scoping, Technical Specifications', rowSpan: detailSpan, styles: { valign: 'middle', halign: 'left' } };
-                            row[11] = { content: getText(fundingDetail.remarks), rowSpan: detailSpan, styles: { valign: 'middle', halign: 'left' } };
-                        }
-
-                        groupRows.push(row);
-                        groupRowCounter++;
-                    });
-                });
-            });
-
-            tableBody.push(...groupRows);
-
-            // Sub-Total Row
-            tableBody.push([
-                { content: '', colSpan: 8, styles: { fillColor: [212, 160, 23] } },
-                { content: 'Sub-Total:', styles: { halign: 'right', fontStyle: 'bold', fillColor: [212, 160, 23] } },
-                { content: `₱ ${categoryTotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [212, 160, 23] } },
-                { content: '', colSpan: 2, styles: { fillColor: [212, 160, 23] } }
-            ]);
-        });
-
-        // Add Grand Total Row
-        tableBody.push([
-            { content: '', colSpan: 8, styles: { fillColor: [255, 255, 255] } }, // White
-            { content: 'TOTAL BUDGET:', styles: { halign: 'right', fontStyle: 'bold', fillColor: [230, 230, 230], lineWidth: 0.5 } },
-            { content: `₱ ${grandTotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', fillColor: [230, 230, 230], lineWidth: 0.5 } },
-            { content: '', colSpan: 2, styles: { fillColor: [255, 255, 255] } }
-        ]);
-
-        autoTable(doc, {
-            startY: 45,
-            theme: 'grid',
-            head: [
-                [
-                    { content: 'PROCUREMENT PROJECT DETAILS', colSpan: 5, styles: { halign: 'center', valign: 'middle', fillColor: [217, 217, 217], fontStyle: 'bold', lineWidth: 0.1 } },
-                    { content: 'PROJECTED TIMELINE (MM/YYYY)', colSpan: 3, styles: { halign: 'center', valign: 'middle', fillColor: [217, 217, 217], fontStyle: 'bold', lineWidth: 0.1 } },
-                    { content: 'FUNDING DETAILS', colSpan: 2, styles: { halign: 'center', valign: 'middle', fillColor: [217, 217, 217], fontStyle: 'bold', lineWidth: 0.1 } },
-                    { content: 'OTHER COLUMNS', colSpan: 2, styles: { halign: 'center', valign: 'middle', fillColor: [217, 217, 217], fontStyle: 'bold', lineWidth: 0.1 } }
-                ],
-                [
-                    "General Description and Objective of the Project to be Procured",
-                    "Type of the Project to be Procured",
-                    "Quantity and Size of the Project to be Procured",
-                    "Recommended Mode of Procurement",
-                    "Pre-Procurement Conference",
-                    "Start of Procurement Activity",
-                    "End of Procurement Activity",
-                    "Expected Delivery / Implementation Period",
-                    "Source of Funds",
-                    "Estimated Budget / Authorized Budgetary Allocation (PHP)",
-                    "Attached Supporting Documents",
-                    "Remarks",
-                ],
-                [
-                    "Column 1", "Column 2", "Column 3", "Column 4", "Column 5", "Column 6",
-                    "Column 7", "Column 8", "Column 9", "Column 10", "Column 11", "Column 12"
-                ]
-            ],
-            body: tableBody,
-            styles: {
-                fontSize: 7.5,
-                cellPadding: 1.5,
-                lineWidth: 0.1,
-                lineColor: [0, 0, 0],
-                textColor: 0,
-                valign: 'middle',
-                overflow: 'linebreak'
-            },
-            headStyles: {
-                fillColor: [240, 240, 240], // Light gray default
-                textColor: 0,
-                lineWidth: 0.1,
-                lineColor: 0,
-                fontStyle: "bold",
-                halign: 'center',
-                valign: 'middle'
-            },
-            columnStyles: {
-                0: { cellWidth: 32 },
-                1: { cellWidth: 26 },
-                2: { cellWidth: 45 },
-                3: { cellWidth: 26 },
-                4: { cellWidth: 20 },
-                5: { cellWidth: 16 },
-                6: { cellWidth: 16 },
-                7: { cellWidth: 20 },
-                8: { cellWidth: 20 },
-                9: { cellWidth: 26, halign: 'right' },
-                10: { cellWidth: 32 },
-                11: { cellWidth: 20 }
-            },
-            didParseCell: (data) => {
-                // Header Styling Logic
-                if (data.section === 'head') {
-                    // Row 1 (Index 1) - Text Headers
-                    if (data.row.index === 1) {
-                        data.cell.styles.fillColor = [240, 240, 240];
-                    }
-                    // Row 2 (Index 2) - Columns Numbers
-                    if (data.row.index === 2) {
-                        data.cell.styles.fontStyle = 'italic';
-                        data.cell.styles.fontSize = 7;
-                        data.cell.styles.fillColor = [240, 240, 240];
-                    }
-                }
-            }
-        });
-
-        // Add Footer after table
-        // @ts-ignore
-        let finalY = doc.lastAutoTable.finalY || 150;
-
-        // Ensure space for footer
-        if (finalY > 150) {
-            doc.addPage();
-            finalY = 20;
-        } else {
-            finalY += 20;
-        }
-
-        const footerY = finalY;
-
-        // Prepared by (Left) - Column B approx
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text("Prepared by:", 25, footerY);
-
-        doc.setFont("helvetica", "normal");
-        doc.text("Name & Signature here", 25, footerY + 15);
-        // Underline Name
-        doc.setLineWidth(0.1);
-        doc.line(25, footerY + 16, 75, footerY + 16);
-
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8);
-        doc.text("Signature over Printed name", 25, footerY + 20);
-
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.text("Position Title", 25, footerY + 30);
-        doc.text("Crop Pest Management Division", 25, footerY + 35);
-        doc.text("Date: _______________", 25, footerY + 40);
-
-        // Submitted by (Right) - Column E approx
-        const rightColX = 140;
-        doc.text("Submitted by:", rightColX, footerY);
-
-        // Name
-        doc.setFont("helvetica", "bold");
-        doc.text("PETER M. MAGDARAOG Ph.D.", rightColX, footerY + 15);
-        const nameWidth = doc.getTextWidth("PETER M. MAGDARAOG Ph.D.");
-        doc.line(rightColX, footerY + 16, rightColX + nameWidth, footerY + 16); // Underline
-
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(8);
-        doc.text("Signature over Printed name", rightColX, footerY + 20);
-
-        doc.setFont("helvetica", "italic"); // Italic for title as per Excel
-        doc.setFontSize(10);
-        doc.text("Chief, Crop Pest Management Division", rightColX, footerY + 30);
-        doc.text("Crop Pest Management Division", rightColX, footerY + 35);
-
-        doc.setFont("helvetica", "normal");
-        doc.text("Date: _______________", rightColX, footerY + 40);
-
-        */
-    };
 
     // Export to Excel
     const exportToExcel = async () => {
@@ -429,8 +90,11 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
             vertical: 'middle',
         };
         // Ensure no borders/fill from default or previous references
-        sheet.getCell('D3').border = null as any;
-        sheet.getCell('D3').fill = { type: 'pattern', pattern: 'none' } as any;
+        sheet.getCell('D3').border = {} as Partial<ExcelJS.Borders>;
+        sheet.getCell('D3').fill = {
+            type: 'pattern',
+            pattern: 'none',
+        } as ExcelJS.Fill;
 
         // INDICATIVE label
         sheet.getCell('E3').value = 'INDICATIVE';
@@ -452,8 +116,11 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
             horizontal: 'right',
             vertical: 'middle',
         };
-        sheet.getCell('F3').border = null as any;
-        sheet.getCell('F3').fill = { type: 'pattern', pattern: 'none' } as any;
+        sheet.getCell('F3').border = {} as Partial<ExcelJS.Borders>;
+        sheet.getCell('F3').fill = {
+            type: 'pattern',
+            pattern: 'none',
+        } as ExcelJS.Fill;
 
         // FINAL label
         sheet.getCell('G3').value = 'FINAL';
@@ -627,7 +294,7 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
         const groupedProjects = groupProjectsByCategory(data);
         let grandTotal = 0;
 
-        Array.from(groupedProjects.entries()).forEach(([key, projects]) => {
+        Array.from(groupedProjects.entries()).forEach(([, projects]) => {
             let categoryTotal = 0;
             const groupStartRow = startRow;
 
@@ -643,12 +310,12 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
                 }
             });
 
-            projects.forEach((project, projectIndex) => {
+            projects.forEach((project) => {
                 if (project.funding_details) {
                     project.funding_details.forEach(
-                        (fundingDetail, detailIndex) => {
+                        (fundingDetail) => {
                             const budget = parseFloat(
-                                fundingDetail.estimated_budget || '0',
+                                String(fundingDetail.estimated_budget || '0'),
                             );
                             categoryTotal += budget;
                             grandTotal += budget;
@@ -663,22 +330,22 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
                             const timelineCount = timelines.length;
                             const fundingDetailStartRow = startRow;
 
-                            timelines.forEach((timeline, timelineIndex) => {
+                            timelines.forEach((timeline) => {
                                 sheet.addRow([
                                     project.general_description,
                                     project.project_type,
                                     fundingDetail.quantity_size,
                                     fundingDetail.mode_of_procurement || 'N/A',
                                     fundingDetail.pre_procurement_conference ||
-                                        'No',
+                                    'No',
                                     timeline.start_procurement || '',
                                     timeline.end_procurement || '',
                                     timeline.delivery_period || '',
                                     fundingDetail.source_of_funds ||
-                                        'Corn Fund',
+                                    'Corn Fund',
                                     budget,
                                     fundingDetail.supporting_documents ||
-                                        'Market Scoping, Technical Specifications',
+                                    'Market Scoping, Technical Specifications',
                                     fundingDetail.remarks || '',
                                 ]);
 
@@ -920,3 +587,5 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
 };
 
 export default ExportPPMP;
+
+
