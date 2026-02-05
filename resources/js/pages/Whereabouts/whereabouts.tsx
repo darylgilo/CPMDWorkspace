@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
     Dialog,
     DialogContent,
@@ -216,6 +217,7 @@ export default function Whereabouts({
         user: User;
         date: Date;
     } | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         status: 'ON DUTY',
         reason: '',
@@ -393,6 +395,7 @@ export default function Whereabouts({
 
     const handleSubmit = () => {
         if (!selectedCell) return;
+        setIsSubmitting(true);
 
         router.post(
             '/whereabouts',
@@ -409,6 +412,7 @@ export default function Whereabouts({
                 onError: (errors) => {
                     showError("Update Failed", "Unable to update whereabouts. Please try again.");
                 },
+                onFinish: () => setIsSubmitting(false),
             },
         );
     };
@@ -424,6 +428,7 @@ export default function Whereabouts({
             setSelectedCell(null);
             return;
         }
+        setIsSubmitting(true);
 
         router.delete(`/whereabouts/${existing.id}`, {
             onSuccess: () => {
@@ -433,6 +438,7 @@ export default function Whereabouts({
             onError: (errors) => {
                 showError("Reset Failed", "Unable to reset whereabouts. Please try again.");
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
@@ -744,20 +750,24 @@ export default function Whereabouts({
                                     whereabouts[selectedCell.user.id]?.[
                                         format(selectedCell.date, 'yyyy-MM-dd')
                                     ] && (
-                                        <Button
+                                        <LoadingButton
                                             variant="destructive"
                                             onClick={handleReset}
+                                            loading={isSubmitting}
+                                            loadingText="Resetting..."
                                         >
                                             Reset
-                                        </Button>
+                                        </LoadingButton>
                                     )}
                             </div>
-                            <Button
+                            <LoadingButton
                                 className="bg-[#163832] text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 onClick={handleSubmit}
+                                loading={isSubmitting}
+                                loadingText="Saving..."
                             >
                                 Save
-                            </Button>
+                            </LoadingButton>
                         </div>
                     </DialogFooter>
                 </DialogContent>

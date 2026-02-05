@@ -104,6 +104,7 @@ export default function PesticideIndex() {
     );
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedPesticide, setSelectedPesticide] =
         useState<Pesticide | null>(null);
     const [sortField, setSortField] = useState<string>('brand_name');
@@ -253,6 +254,7 @@ export default function PesticideIndex() {
 
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
+        setIsSubmitting(true);
 
         // Format the form data before sending
         const formattedData = {
@@ -302,11 +304,13 @@ export default function PesticideIndex() {
                 console.error('Error adding pesticide:', errors);
                 showError("Add Failed", "Unable to add pesticide. Please check your input and try again.");
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
     const handleSubmitEdit = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
+        setIsSubmitting(true);
 
         if (selectedPesticide) {
             // Format the form data before sending
@@ -352,6 +356,7 @@ export default function PesticideIndex() {
                     console.error('Error updating pesticide:', errors);
                     showError("Update Failed", "Unable to update pesticide. Please check your input and try again.");
                 },
+                onFinish: () => setIsSubmitting(false),
             });
         }
     };
@@ -875,6 +880,8 @@ export default function PesticideIndex() {
                 title="Add New Pesticide"
                 description="Fill in the details to add a new pesticide to the inventory."
                 submitButtonText="Add Pesticide"
+                isLoading={isSubmitting}
+                loadingText="Adding..."
             />
 
             {/* Edit Dialog */}
@@ -895,6 +902,8 @@ export default function PesticideIndex() {
                 description="Update the pesticide information."
                 submitButtonText="Update Pesticide"
                 isEdit
+                isLoading={isSubmitting}
+                loadingText="Updating..."
             />
         </>
     );

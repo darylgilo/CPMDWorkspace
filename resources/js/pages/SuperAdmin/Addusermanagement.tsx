@@ -1,5 +1,6 @@
 import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -812,15 +813,14 @@ export default function AddUserManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-4 pt-6">
-                                    <Button
+                                    <LoadingButton
                                         type="submit"
-                                        disabled={isSubmitting}
-                                        className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 disabled:opacity-70 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                        loading={isSubmitting}
+                                        loadingText="Creating..."
+                                        className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
-                                        {isSubmitting
-                                            ? 'Creating...'
-                                            : 'Create User'}
-                                    </Button>
+                                        Create User
+                                    </LoadingButton>
                                     <Button
                                         type="button"
                                         variant="outline"

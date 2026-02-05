@@ -113,6 +113,7 @@ export default function Distribution() {
     );
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedDistribution, setSelectedDistribution] =
         useState<Distribution | null>(null);
     const [sortField, setSortField] = useState<string>('received_date');
@@ -338,6 +339,7 @@ export default function Distribution() {
 
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault(); // Prevent default form submission
+        setIsSubmitting(true);
         
         router.post('/distributions', formData, {
             onSuccess: () => {
@@ -361,11 +363,15 @@ export default function Distribution() {
                 showError("Add Failed", "Unable to add distribution. Please try again.");
                 console.error('Error adding distribution:', errors);
             },
+            onFinish: () => {
+                setIsSubmitting(false);
+            },
         });
     };
 
     const handleSubmitEdit = () => {
         if (selectedDistribution) {
+            setIsSubmitting(true);
             router.put(`/distributions/${selectedDistribution.id}`, formData, {
                 onSuccess: () => {
                     showSuccess("Distribution Updated", "Distribution has been successfully updated.");
@@ -392,6 +398,9 @@ export default function Distribution() {
                 onError: (errors) => {
                     showError("Update Failed", "Unable to update distribution. Please try again.");
                     console.error('Error updating distribution:', errors);
+                },
+                onFinish: () => {
+                    setIsSubmitting(false);
                 },
             });
         }
@@ -872,6 +881,8 @@ export default function Distribution() {
                 title="Add New Distribution"
                 description="Fill in the details to record a new distribution."
                 submitButtonText="Add Distribution"
+                isLoading={isSubmitting}
+                loadingText="Adding..."
             />
 
             {/* Edit Dialog */}
@@ -890,6 +901,8 @@ export default function Distribution() {
                 description="Update the distribution information."
                 submitButtonText="Update Distribution"
                 isEdit
+                isLoading={isSubmitting}
+                loadingText="Updating..."
             />
         </>
     );

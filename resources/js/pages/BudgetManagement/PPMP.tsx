@@ -53,6 +53,7 @@ import {
     X,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export default function PPMP() {
     const { showSuccess, showError, showDeleted, showInfo } = usePopupAlert();
@@ -104,6 +105,7 @@ export default function PPMP() {
     const [isEditPPMPDialogOpen, setIsEditPPMPDialogOpen] = useState(false);
     const [isFundingDetailsDialogOpen, setIsFundingDetailsDialogOpen] =
         useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedPPMPItem, setSelectedPPMPItem] = useState<any>(null);
     const [selectedExistingProject, setSelectedExistingProject] =
         useState<any>(null);
@@ -231,6 +233,7 @@ export default function PPMP() {
     };
 
     const handleSubmitFundingDetails = () => {
+        setIsSubmitting(true);
         // Handle adding funding details to existing project from Add dialog
         if (selectedExistingProject) {
             // If we have selected an existing quantity, we're updating it
@@ -258,6 +261,7 @@ export default function PPMP() {
                                 errors,
                             );
                         },
+                        onFinish: () => setIsSubmitting(false),
                     },
                 );
             } else {
@@ -293,6 +297,7 @@ export default function PPMP() {
                                     errors,
                                 );
                             },
+                            onFinish: () => setIsSubmitting(false),
                         },
                     );
                 } else {
@@ -319,6 +324,7 @@ export default function PPMP() {
                                     errors,
                                 );
                             },
+                            onFinish: () => setIsSubmitting(false),
                         },
                     );
                 }
@@ -346,75 +352,72 @@ export default function PPMP() {
                             setSelectedFundingDetail(null);
                         },
                         onError: (errors) => {
-                            console.error(
-                                'Error updating funding detail:',
-                                errors,
-                            );
+                            showError("Update Failed", "Unable to update funding details. Please try again.");
+                            console.error('Error updating funding details:', errors);
                         },
-                    },
-                );
-                return;
-            }
-
-            // If we're editing a project but no specific funding detail is selected,
-            // check if the current quantity matches an existing funding detail
-            const existingDetail = selectedPPMPItem.funding_details?.find(
-                (detail: any) =>
-                    detail.quantity_size ===
-                    fundingDetailsFormData.quantities[0]?.quantity_size,
-            );
-
-            if (existingDetail) {
-                // Update existing funding detail
-                const fundingData = {
-                    ...fundingDetailsFormData,
-                    ppmp_project_id: selectedPPMPItem.id,
-                };
-
-                router.put(
-                    `/budgetmanagement/ppmp/funding-details/${existingDetail.id}`,
-                    fundingData,
-                    {
-                        onSuccess: () => {
-                            setIsFundingDetailsDialogOpen(false);
-                            setSelectedPPMPItem(null);
-                        },
-                        onError: (errors) => {
-                            console.error(
-                                'Error updating funding details:',
-                                errors,
-                            );
-                        },
-                    },
+                        onFinish: () => setIsSubmitting(false),
+                    }
                 );
             } else {
-                // Create new funding detail
-                const fundingData = {
-                    ...fundingDetailsFormData,
-                    ppmp_project_id: selectedPPMPItem.id,
-                };
+                // Check if we're editing an existing funding detail or creating a new one
+                const existingDetail =
+                    selectedPPMPItem.funding_details?.find(
+                        (detail: any) =>
+                            detail.quantity_size ===
+                            fundingDetailsFormData.quantities[0]?.quantity_size,
+                    );
 
-                router.post(
-                    '/budgetmanagement/ppmp/funding-details',
-                    fundingData,
-                    {
-                        onSuccess: () => {
-                            setIsFundingDetailsDialogOpen(false);
-                            setSelectedPPMPItem(null);
-                        },
-                        onError: (errors) => {
-                            console.error(
-                                'Error adding funding details:',
-                                errors,
-                            );
-                        },
-                    },
-                );
+                if (existingDetail) {
+                    // Update existing funding detail
+                    const fundingData = {
+                        ...fundingDetailsFormData,
+                        ppmp_project_id: selectedPPMPItem.id,
+                    };
+
+                    router.put(
+                        `/budgetmanagement/ppmp/funding-details/${existingDetail.id}`,
+                        fundingData,
+                        {
+                            onSuccess: () => {
+                                setIsFundingDetailsDialogOpen(false);
+                                setSelectedPPMPItem(null);
+                            },
+                            onError: (errors) => {
+                                showError("Update Failed", "Unable to update funding details. Please try again.");
+                                console.error('Error updating funding details:', errors);
+                            },
+                            onFinish: () => setIsSubmitting(false),
+                        }
+                    );
+                } else {
+                    // Create new funding detail
+                    const fundingData = {
+                        ...fundingDetailsFormData,
+                        ppmp_project_id: selectedPPMPItem.id,
+                    };
+
+                    router.post(
+                        '/budgetmanagement/ppmp/funding-details',
+                        fundingData,
+                        {
+                            onSuccess: () => {
+                                setIsFundingDetailsDialogOpen(false);
+                                setSelectedPPMPItem(null);
+                            },
+                            onError: (errors) => {
+                                showError("Add Failed", "Unable to add funding details. Please try again.");
+                                console.error('Error adding funding details:', errors);
+                            },
+                            onFinish: () => setIsSubmitting(false),
+                        }
+                    );
+                }
             }
         }
     };
 
     const handleSubmitPPMP = () => {
+        setIsSubmitting(true);
         router.post('/budgetmanagement/ppmp', ppmpFormData, {
             onSuccess: () => {
                 setIsPPMPDialogOpen(false);
@@ -425,6 +428,7 @@ export default function PPMP() {
                 console.error('Error adding PPMP item:', errors);
                 showError("Add Failed", "Unable to add PPMP item. Please check your input and try again.");
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
@@ -495,6 +499,7 @@ export default function PPMP() {
 
     const handleDeleteFundingDetail = (fundingDetailId: number) => {
         if (confirm('Are you sure you want to delete this funding detail?')) {
+            setIsSubmitting(true);
             router.delete(
                 `/budgetmanagement/ppmp/funding-details/${fundingDetailId}`,
                 {
@@ -507,6 +512,7 @@ export default function PPMP() {
                         console.error('Error deleting funding detail:', errors);
                         showError("Delete Failed", "Unable to delete funding detail. Please try again.");
                     },
+                    onFinish: () => setIsSubmitting(false),
                 },
             );
         }
@@ -594,6 +600,7 @@ export default function PPMP() {
     }, []);
 
     const handleSubmitEditPPMP = () => {
+        setIsSubmitting(true);
         router.put(
             `/budgetmanagement/ppmp/${selectedPPMPItem.id}`,
             ppmpFormData,
@@ -607,12 +614,14 @@ export default function PPMP() {
                     console.error('Error updating PPMP item:', errors);
                     showError("Update Failed", "Unable to update PPMP item. Please check your input and try again.");
                 },
-            },
+                onFinish: () => setIsSubmitting(false),
+            }
         );
     };
 
     const handleDeletePPMP = (item: any) => {
         if (confirm('Are you sure you want to delete this PPMP item?')) {
+            setIsSubmitting(true);
             router.delete(`/budgetmanagement/ppmp/${item.id}`, {
                 onSuccess: () => {
                     showDeleted("PPMP Item Deleted", "PPMP item has been successfully removed.");
@@ -621,6 +630,7 @@ export default function PPMP() {
                     console.error('Error deleting PPMP item:', errors);
                     showError("Delete Failed", "Unable to delete PPMP item. Please try again.");
                 },
+                onFinish: () => setIsSubmitting(false),
             });
         }
     };
@@ -2412,13 +2422,15 @@ export default function PPMP() {
                         >
                             Cancel
                         </Button>
-                        <Button
+                        <LoadingButton
                             onClick={
                                 selectedExistingProject
                                     ? handleSubmitFundingDetails
                                     : handleSubmitPPMP
                             }
                             className="bg-[#1a473b] text-white hover:bg-[#1a473b]/90"
+                            loading={isSubmitting}
+                            loadingText="Processing..."
                         >
                             {(() => {
                                 if (selectedExistingProject) {
@@ -2442,7 +2454,7 @@ export default function PPMP() {
                                     return 'Add Item';
                                 }
                             })()}
-                        </Button>
+                        </LoadingButton>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -2535,12 +2547,14 @@ export default function PPMP() {
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <LoadingButton 
                             onClick={handleSubmitEditPPMP}
                             className="bg-[#1a473b] text-white hover:bg-[#1a473b]/90"
+                            loading={isSubmitting}
+                            loadingText="Updating..."
                         >
                             Update Project
-                        </Button>
+                        </LoadingButton>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -2997,9 +3011,11 @@ export default function PPMP() {
                         >
                             Cancel
                         </Button>
-                        <Button
+                        <LoadingButton
                             onClick={handleSubmitFundingDetails}
                             className="bg-[#1a473b] text-white hover:bg-[#1a473b]/90"
+                            loading={isSubmitting}
+                            loadingText="Processing..."
                         >
                             {(() => {
                                 if (selectedFundingDetail) {
@@ -3021,7 +3037,7 @@ export default function PPMP() {
                                     return 'Add Details';
                                 }
                             })()}
-                        </Button>
+                        </LoadingButton>
                     </div>
                 </DialogContent>
             </Dialog>

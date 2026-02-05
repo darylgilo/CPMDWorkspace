@@ -1,6 +1,7 @@
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -101,7 +102,7 @@ export default function EditUserManagement() {
     const [superadminPassword, setSuperadminPassword] = useState('');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [removeProfilePicture, setRemoveProfilePicture] = useState(false);
-    const [isSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [passwordError, setPasswordError] = useState('');
 
     // References
@@ -173,6 +174,7 @@ export default function EditUserManagement() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
+        setIsSubmitting(true);
 
         console.log('Form submission started');
         console.log('User ID:', user?.id);
@@ -180,12 +182,14 @@ export default function EditUserManagement() {
         // Validate password confirmation
         if (password && password !== confirmPassword) {
             setPasswordError('Password and confirm password do not match');
+            setIsSubmitting(false);
             return;
         }
 
         // Validate password length if password is being changed
         if (password && password.length < 8) {
             setPasswordError('Password must be at least 8 characters long');
+            setIsSubmitting(false);
             return;
         }
 
@@ -194,6 +198,7 @@ export default function EditUserManagement() {
             setPasswordError(
                 'Please enter your password to confirm the user password change',
             );
+            setIsSubmitting(false);
             return;
         }
 
@@ -270,6 +275,7 @@ export default function EditUserManagement() {
                 showError("Update Failed", "Unable to update user. Please try again.");
                 console.log('Form submission errors:', errors);
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
@@ -1224,15 +1230,14 @@ export default function EditUserManagement() {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center gap-4 pt-6">
-                                    <Button
+                                    <LoadingButton
                                         type="submit"
-                                        disabled={isSubmitting}
-                                        className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 disabled:opacity-70 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                        loading={isSubmitting}
+                                        loadingText="Updating..."
+                                        className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
-                                        {isSubmitting
-                                            ? 'Updating...'
-                                            : 'Update Profile'}
-                                    </Button>
+                                        Update Profile
+                                    </LoadingButton>
                                     <Button
                                         type="button"
                                         variant="outline"
