@@ -3,6 +3,7 @@ import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -142,6 +143,7 @@ export default function TravelExpenses() {
     );
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedExpense, setSelectedExpense] =
         useState<TravelExpense | null>(null);
     const [sortField, setSortField] = useState<string>('date_of_travel');
@@ -426,6 +428,7 @@ export default function TravelExpenses() {
                 'Are you sure you want to delete this travel expense?',
             )
         ) {
+            setIsSubmitting(true);
             router.delete(`/travel-expenses/${id}`, {
                 onSuccess: () => {
                     showDeleted(
@@ -454,6 +457,7 @@ export default function TravelExpenses() {
                         'Unable to delete travel expense. Please try again.',
                     );
                 },
+                onFinish: () => setIsSubmitting(false),
             });
         }
     };
@@ -465,6 +469,7 @@ export default function TravelExpenses() {
 
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         const amount = parseFloat(formData.amount) || 0;
         const ppmpProjectId = parseInt(formData.ppmp_project_id) || null;
@@ -496,6 +501,7 @@ export default function TravelExpenses() {
                     'Insufficient Balance',
                     `Available balance: ${formatCurrency(remainingBalance)}`,
                 );
+                setIsSubmitting(false);
                 return;
             }
         }
@@ -536,11 +542,13 @@ export default function TravelExpenses() {
                 );
                 console.error('Error adding travel expense:', errors);
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
     const handleSubmitEdit = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         if (selectedExpense) {
             const amount = parseFloat(formData.amount) || 0;
@@ -575,6 +583,7 @@ export default function TravelExpenses() {
                         'Insufficient Balance',
                         `Available balance: ${formatCurrency(remainingBalance)}`,
                     );
+                    setIsSubmitting(false);
                     return;
                 }
             }
@@ -619,6 +628,7 @@ export default function TravelExpenses() {
                         );
                         console.error('Error updating travel expense:', errors);
                     },
+                    onFinish: () => setIsSubmitting(false),
                 },
             );
         }
@@ -1378,6 +1388,8 @@ export default function TravelExpenses() {
                 title={`Add Travel Expense - ${currentFund?.fund_name || 'Select Fund'} (${currentFund?.source_year || selectedYear})`}
                 description="Add a new travel expense record"
                 submitButtonText="Add Status"
+                isLoading={isSubmitting}
+                loadingText="Adding..."
             />
 
             {/* Edit Dialog */}
@@ -1406,6 +1418,8 @@ export default function TravelExpenses() {
                 description="Edit travel expense record"
                 submitButtonText="Update Expense"
                 isEdit={true}
+                isLoading={isSubmitting}
+                loadingText="Updating..."
             />
         </>
     );

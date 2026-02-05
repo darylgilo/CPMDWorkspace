@@ -63,6 +63,7 @@ export interface User {
 
     // Government Information
     gsis_number?: string | null;
+    landbank_number?: string | null;
     tin_number?: string | null;
 
     // Additional fields

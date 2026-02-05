@@ -57,6 +57,7 @@ export interface User {
     office?: string;
     cpmd?: string;
     tin_number?: string;
+    landbank_number?: string;
     gsis_number?: string;
     address?: string;
     date_of_birth?: string;

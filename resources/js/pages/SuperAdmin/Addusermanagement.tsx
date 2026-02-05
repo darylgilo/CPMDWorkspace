@@ -37,6 +37,7 @@ export default function AddUserManagement() {
     const [office, setOffice] = useState('Others');
     const [cpmd, setCpmd] = useState('Others');
     const [tin_number, setTinNumber] = useState('');
+    const [landbank_number, setLandbankNumber] = useState('');
     const [gsis_number, setGsisNumber] = useState('');
     const [address, setAddress] = useState('');
     const [date_of_birth, setDateOfBirth] = useState('');
@@ -115,6 +116,7 @@ export default function AddUserManagement() {
         formData.append('office', office);
         formData.append('cpmd', cpmd);
         formData.append('tin_number', tin_number);
+        formData.append('landbank_number', landbank_number);
         formData.append('gsis_number', gsis_number);
         formData.append('address', address);
         formData.append('date_of_birth', date_of_birth);
@@ -463,6 +465,25 @@ export default function AddUserManagement() {
                                                     }
                                                     className="mt-1"
                                                     placeholder="TIN Number"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label htmlFor="landbank_number">
+                                                    Landbank Number
+                                                </Label>
+                                                <Input
+                                                    id="landbank_number"
+                                                    name="landbank_number"
+                                                    type="text"
+                                                    value={landbank_number}
+                                                    onChange={(e) =>
+                                                        setLandbankNumber(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="mt-1"
+                                                    placeholder="Landbank Number"
                                                 />
                                             </div>
 
@@ -825,7 +846,7 @@ export default function AddUserManagement() {
                                         loadingText="Creating..."
                                         className="bg-[#163832] px-6 py-2 text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
-                                        Create User
+                                        Add User
                                     </LoadingButton>
                                     <Button
                                         type="button"

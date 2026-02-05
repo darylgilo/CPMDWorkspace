@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('position')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->date('hiring_date')->nullable();
+            $table->string('landbank_number')->nullable();
             $table->string('item_number')->nullable();
             $table->string('gsis_number')->unique()->nullable();
             $table->string('tin_number')->unique()->nullable();

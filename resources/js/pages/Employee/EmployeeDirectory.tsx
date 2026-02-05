@@ -22,9 +22,11 @@ export default function EmployeeDirectory() {
         email: string;
         position?: string | null;
         office?: string | null;
-        cpmd_section?: string | null;
+        cpmd?: string | null;
+        employment_status?: string | null;
         employee_id?: string | null;
         status?: 'active' | 'inactive' | null;
+        profile_picture?: string | null;
         [key: string]: unknown;
     }
 
@@ -48,8 +50,8 @@ export default function EmployeeDirectory() {
     // State for search and filters
     const [search, setSearch] = useState<string>('');
     const [perPage, setPerPage] = useState<number>(12);
-    const [office, setOffice] = useState<string>('');
     const [cpmd, setCpmd] = useState<string>('');
+    const [status, setStatus] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
 
     // Local state for all employees
@@ -66,14 +68,17 @@ export default function EmployeeDirectory() {
     const filteredEmployees = useMemo(() => {
         let result: User[] = [...allEmployees];
 
-        // Apply office filter
-        if (office) {
-            result = result.filter((emp) => emp.office === office);
+        // Filter for CPMD office only
+        result = result.filter((emp) => emp.office === 'CPMD');
+
+        // Apply CPMD section filter
+        if (cpmd) {
+            result = result.filter((emp) => emp.cpmd === cpmd);
         }
 
-        // Apply CPMD section filter if office is CPMD
-        if (office === 'CPMD' && cpmd) {
-            result = result.filter((emp) => emp.cpmd_section === cpmd);
+        // Apply status filter
+        if (status) {
+            result = result.filter((emp) => emp.employment_status === status);
         }
 
         // Apply search
@@ -88,7 +93,7 @@ export default function EmployeeDirectory() {
         }
 
         return result;
-    }, [allEmployees, search, office, cpmd]);
+    }, [allEmployees, search, cpmd, status]);
 
     // Get paginated employees
     const paginatedEmployees = useMemo(() => {
@@ -102,14 +107,14 @@ export default function EmployeeDirectory() {
             const params = new URLSearchParams();
             if (search) params.set('search', search);
             if (perPage !== 12) params.set('perPage', perPage.toString());
-            if (office) params.set('office', office);
             if (cpmd) params.set('cpmd', cpmd);
+            if (status) params.set('status', status);
             if (currentPage > 1) params.set('page', currentPage.toString());
 
             const url = `${window.location.pathname}?${params.toString()}`;
             window.history.replaceState({}, '', url);
         };
-    }, [search, perPage, office, cpmd, currentPage]);
+    }, [search, perPage, cpmd, status, currentPage]);
 
     // Handle page changes when filters or items per page changes
     useEffect(() => {
@@ -123,7 +128,7 @@ export default function EmployeeDirectory() {
         } else if (currentPage === 0 && newTotalPages > 0) {
             newPage = 1;
             shouldUpdate = true;
-        } else if (search || office || cpmd) {
+        } else if (search || cpmd || status) {
             newPage = 1;
             shouldUpdate = true;
         }
@@ -135,8 +140,8 @@ export default function EmployeeDirectory() {
         }
     }, [
         search,
-        office,
         cpmd,
+        status,
         perPage,
         filteredEmployees.length,
         currentPage,
@@ -159,8 +164,8 @@ export default function EmployeeDirectory() {
 
     const handleClearFilters = () => {
         setSearch('');
-        setOffice('');
         setCpmd('');
+        setStatus('');
         setCurrentPage(1);
     };
 
@@ -176,65 +181,22 @@ export default function EmployeeDirectory() {
                     {/* Filters on the left */}
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Select
-                            value={office || 'all'}
-                            onValueChange={(val) => {
-                                const newValue = val === 'all' ? '' : val;
-                                setOffice(newValue);
-                                setCpmd(''); // Reset CPMD when office changes
-                                setCurrentPage(1); // Reset to first page on filter change
-                            }}
-                        >
-                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue placeholder="All Offices" />
-                            </SelectTrigger>
-                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                <SelectItem
-                                    value="all"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Office
-                                </SelectItem>
-                                <SelectItem
-                                    value="CPMD"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    CPMD
-                                </SelectItem>
-                                <SelectItem
-                                    value="Others"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Others
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-
-                        <Select
                             value={cpmd || 'all'}
                             onValueChange={(val) => {
                                 const newValue = val === 'all' ? '' : val;
                                 setCpmd(newValue);
                                 setCurrentPage(1); // Reset to first page on filter change
                             }}
-                            disabled={office !== 'CPMD'}
                         >
-                            <SelectTrigger className="w-full border-gray-300 disabled:opacity-60 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue
-                                    placeholder={
-                                        office === 'CPMD'
-                                            ? 'All Sections'
-                                            : 'Select Office First'
-                                    }
-                                />
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue placeholder="All Sections" />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                 <SelectItem
                                     value="all"
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
-                                    {office === 'CPMD'
-                                        ? 'All Sections'
-                                        : 'Select Office First'}
+                                    All Sections
                                 </SelectItem>
                                 <SelectItem
                                     value="Office of the Chief"
@@ -279,6 +241,51 @@ export default function EmployeeDirectory() {
                                     className="cursor-pointer hover:bg-[#1a4d3e]"
                                 >
                                     PHPS Section
+                                </SelectItem>
+                                <SelectItem
+                                    value="Others"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    Others
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select
+                            value={status || 'all'}
+                            onValueChange={(val) => {
+                                const newValue = val === 'all' ? '' : val;
+                                setStatus(newValue);
+                                setCurrentPage(1); // Reset to first page on filter change
+                            }}
+                        >
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue placeholder="Employment Status" />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                <SelectItem
+                                    value="all"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    Employment Status
+                                </SelectItem>
+                                <SelectItem
+                                    value="Regular"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    Regular
+                                </SelectItem>
+                                <SelectItem
+                                    value="COS"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    COS (Contract of Service)
+                                </SelectItem>
+                                <SelectItem
+                                    value="Job Order"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    Job Order
                                 </SelectItem>
                                 <SelectItem
                                     value="Others"
@@ -341,7 +348,7 @@ export default function EmployeeDirectory() {
                             placeholder="Search employees..."
                             className="w-full"
                             searchRoute="/directory"
-                            additionalParams={{ perPage, office, cpmd }}
+                            additionalParams={{ perPage, cpmd, status }}
                         />
                     </div>
                 </div>
