@@ -2,6 +2,7 @@ import CustomPagination from '@/components/CustomPagination';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -122,6 +123,7 @@ export default function Writeup() {
         documents?.current_page || 1,
     );
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [sortField] = useState<string>('updated_at');
     const [sortDirection] = useState<'asc' | 'desc'>('desc');
     const [comments] = useState<Record<number, Comment[]>>({});
@@ -227,6 +229,7 @@ export default function Writeup() {
 
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         router.post('/documents', formData, {
             onSuccess: () => {
                 showSuccess("Document Added", "New document has been successfully created.");
@@ -248,6 +251,7 @@ export default function Writeup() {
             onError: (errors) => {
                 showError("Add Failed", "Unable to create document. Please try again.");
             },
+            onFinish: () => setIsSubmitting(false),
         });
     };
 
@@ -1160,6 +1164,8 @@ export default function Writeup() {
                 title="Add New Document"
                 description="Fill in the details to add a new document."
                 submitButtonText="Add Document"
+                isLoading={isSubmitting}
+                loadingText="Adding..."
             />
         </div>
     );

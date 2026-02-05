@@ -1,6 +1,7 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 import CustomCardPin from '@/components/ui/CustomCardPin';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
     Dialog,
     DialogContent,
@@ -504,13 +505,14 @@ export default function CategoriesPage() {
                     <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
-                                <button
-                                    disabled={form.processing}
-                                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                >
-                                    Create Notice
-                                </button>
-                            </DialogTrigger>
+                                    <LoadingButton
+                                        loading={form.processing}
+                                        loadingText="Creating..."
+                                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                    >
+                                        Create Notice
+                                    </LoadingButton>
+                                </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Create a Notice</DialogTitle>
@@ -661,15 +663,14 @@ export default function CategoriesPage() {
                                         >
                                             Reset
                                         </button>
-                                        <button
+                                        <LoadingButton
                                             type="submit"
-                                            disabled={form.processing}
-                                            className="inline-flex h-[38px] min-w-[120px] items-center justify-center rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#163832]/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                            loading={form.processing}
+                                            loadingText="Submitting..."
+                                            className="inline-flex h-[38px] min-w-[120px] items-center justify-center rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#163832]/90 active:scale-[0.98] dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                         >
-                                            {form.processing
-                                                ? 'Submitting...'
-                                                : 'Submit Notice'}
-                                        </button>
+                                            Submit Notice
+                                        </LoadingButton>
                                     </div>
                                 </form>
                             </DialogContent>
@@ -1034,15 +1035,14 @@ export default function CategoriesPage() {
                                         Edit Notice
                                     </button>
                                 ) : (
-                                    <button
+                                    <LoadingButton
                                         type="submit"
-                                        disabled={editForm.processing}
-                                        className="inline-flex h-[38px] min-w-[120px] items-center justify-center rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#163832]/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                        loading={editForm.processing}
+                                        loadingText="Updating..."
+                                        className="inline-flex h-[38px] min-w-[120px] items-center justify-center rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#163832]/90 active:scale-[0.98] dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
-                                        {editForm.processing
-                                            ? 'Updating...'
-                                            : 'Update Notice'}
-                                    </button>
+                                        Update Notice
+                                    </LoadingButton>
                                 )}
                             </div>
                         </form>

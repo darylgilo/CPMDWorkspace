@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
     Dialog,
     DialogContent,
@@ -55,6 +56,8 @@ export interface FormDialogProps {
     description: string;
     submitButtonText: string;
     isEdit?: boolean;
+    isLoading?: boolean;
+    loadingText?: string;
 }
 
 export default function FormDialog({
@@ -69,6 +72,8 @@ export default function FormDialog({
     description,
     submitButtonText,
     isEdit = false,
+    isLoading = false,
+    loadingText,
 }: FormDialogProps) {
     const renderField = (field: FormField) => {
         const fieldId = `${isEdit ? 'edit_' : ''}${field.name}`;
@@ -215,12 +220,14 @@ export default function FormDialog({
                         >
                             Cancel
                         </Button>
-                        <Button
+                        <LoadingButton
                             type="submit"
                             className="bg-[#163832] text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            loading={isLoading}
+                            loadingText={loadingText}
                         >
                             {submitButtonText}
-                        </Button>
+                        </LoadingButton>
                     </DialogFooter>
                 </form>
             </DialogContent>

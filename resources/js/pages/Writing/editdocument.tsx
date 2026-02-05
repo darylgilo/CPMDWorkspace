@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { usePopupAlert } from '@/components/ui/popup-alert';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -45,6 +46,7 @@ export default function EditDocument() {
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
@@ -70,6 +72,7 @@ export default function EditDocument() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
         if (document) {
             router.put(`/documents/${document.id}`, {
@@ -82,6 +85,7 @@ export default function EditDocument() {
                 onError: (errors) => {
                     showError("Update Failed", "Unable to update document. Please try again.");
                 },
+                onFinish: () => setIsSubmitting(false),
             });
         }
     };
@@ -275,13 +279,15 @@ export default function EditDocument() {
                                     >
                                         Cancel
                                     </Button>
-                                    <Button
+                                    <LoadingButton
                                         type="submit"
+                                        loading={isSubmitting}
+                                        loadingText="Updating..."
                                         className="bg-[#163832] text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                     >
                                         <Save className="mr-2 h-4 w-4" />
                                         Update Document
-                                    </Button>
+                                    </LoadingButton>
                                 </div>
                             </form>
                         </div>
