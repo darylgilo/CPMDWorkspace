@@ -36,6 +36,7 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
             { header: 'Hiring Date', key: 'hiring_date', width: 15 },
             { header: 'TIN Number', key: 'tin_number', width: 20 },
             { header: 'GSIS Number', key: 'gsis_number', width: 20 },
+            { header: 'Landbank Number', key: 'landbank_number', width: 20 },
             { header: 'Address', key: 'address', width: 35 },
             { header: 'Date of Birth', key: 'date_of_birth', width: 15 },
             { header: 'Gender', key: 'gender', width: 10 },
@@ -59,6 +60,7 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
                 hiring_date: employee.hiring_date || '',
                 tin_number: employee.tin_number || '',
                 gsis_number: employee.gsis_number || '',
+                landbank_number: employee.landbank_number || '',
                 address: employee.address || '',
                 date_of_birth: employee.date_of_birth || '',
                 gender: employee.gender || '',
@@ -114,7 +116,7 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
         // Create CSV content with all fields
         const headers = [
             'Employee ID', 'Name', 'Email', 'Position', 'Employment Status', 
-            'Office', 'Section/Unit', 'Hiring Date', 'TIN Number', 'GSIS Number',
+            'Office', 'Section/Unit', 'Hiring Date', 'TIN Number', 'GSIS Number', 'Landbank Number',
             'Address', 'Date of Birth', 'Gender', 'Mobile Number', 'Contact Person', 
             'Contact Number', 'Item Number', 'Status'
         ];
@@ -132,6 +134,7 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
                 employee.hiring_date || '',
                 employee.tin_number || '',
                 employee.gsis_number || '',
+                employee.landbank_number || '',
                 employee.address || '',
                 employee.date_of_birth || '',
                 employee.gender || '',

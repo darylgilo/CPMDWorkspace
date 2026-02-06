@@ -9,6 +9,7 @@ import {
     FileText,
     User,
 } from 'lucide-react';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { useEffect, useMemo, useState } from 'react';
 
 type Category =
@@ -124,11 +125,11 @@ export default function ReminderPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                      name: f.name ?? 'file',
-                      url: f.url,
-                      type: f.mime ?? '',
-                      size: Number(f.size ?? 0),
-                  }))
+                    name: f.name ?? 'file',
+                    url: f.url,
+                    type: f.mime ?? '',
+                    size: Number(f.size ?? 0),
+                }))
                 : [];
             return {
                 id: String(n.id),
@@ -142,11 +143,11 @@ export default function ReminderPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                          name: n.file_name ?? 'file',
-                          url: n.file_url,
-                          type: n.file_mime ?? '',
-                          size: Number(n.file_size ?? 0),
-                      }
+                        name: n.file_name ?? 'file',
+                        url: n.file_url,
+                        type: n.file_mime ?? '',
+                        size: Number(n.file_size ?? 0),
+                    }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -355,31 +356,28 @@ export default function ReminderPage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                         <button
                             onClick={() => setFilterType('all')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-                                filterType === 'all'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'all'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                            }`}
+                                }`}
                         >
                             All ({reminders.length})
                         </button>
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-                                filterType === 'upcoming'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'upcoming'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                            }`}
+                                }`}
                         >
                             Upcoming ({upcomingCount})
                         </button>
                         <button
                             onClick={() => setFilterType('overdue')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-                                filterType === 'overdue'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'overdue'
                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                            }`}
+                                }`}
                         >
                             Overdue ({overdueCount})
                         </button>
@@ -451,27 +449,25 @@ export default function ReminderPage() {
                                             isPastDate(new Date(reminder.date));
                                         const daysUntil = reminder.date
                                             ? getDaysUntilDeadline(
-                                                  new Date(reminder.date),
-                                              )
+                                                new Date(reminder.date),
+                                            )
                                             : null;
 
                                         return (
                                             <div
                                                 key={reminder.id}
-                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
-                                                    isOverdue
+                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${isOverdue
                                                         ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
                                                         : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
-                                                }`}
+                                                    }`}
                                             >
                                                 <div className="mb-3 flex items-start justify-between">
                                                     <div className="flex flex-1 items-start gap-3">
                                                         <AlertCircle
-                                                            className={`h-6 w-6 flex-shrink-0 ${
-                                                                isOverdue
+                                                            className={`h-6 w-6 flex-shrink-0 ${isOverdue
                                                                     ? 'text-red-600 dark:text-red-400'
                                                                     : 'text-[#163832] dark:text-[#235347]'
-                                                            }`}
+                                                                }`}
                                                             aria-hidden
                                                         />
                                                         <div className="flex-1">
@@ -498,50 +494,49 @@ export default function ReminderPage() {
                                                     {/* Deadline Badge */}
                                                     {daysUntil !== null && (
                                                         <div
-                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                                                                isOverdue
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${isOverdue
                                                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                                                     : daysUntil <=
                                                                         3
-                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
-                                                            }`}
+                                                                        ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                        : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                                }`}
                                                         >
                                                             {isOverdue
                                                                 ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`
                                                                 : daysUntil ===
                                                                     0
-                                                                  ? 'Due today'
-                                                                  : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
+                                                                    ? 'Due today'
+                                                                    : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                <p
-                                                    className={`mb-3 text-sm text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                <div
+                                                    className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                 >
-                                                    {reminder.description}
-                                                </p>
+                                                    {renderTextWithLinks(reminder.description)}
+                                                </div>
                                                 {reminder.description.length >
                                                     150 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            toggleCardExpansion(
-                                                                reminder.id,
-                                                            )
-                                                        }
-                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                    >
-                                                        {isExpanded
-                                                            ? 'Show less'
-                                                            : 'Read more'}
-                                                    </button>
-                                                )}
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleCardExpansion(
+                                                                    reminder.id,
+                                                                )
+                                                            }
+                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                        >
+                                                            {isExpanded
+                                                                ? 'Show less'
+                                                                : 'Read more'}
+                                                        </button>
+                                                    )}
 
                                                 {/* Attachments */}
                                                 {reminder.files &&
                                                     reminder.files.length >
-                                                        0 && (
+                                                    0 && (
                                                         <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                             <FileText className="h-4 w-4" />
                                                             <span>
@@ -617,10 +612,10 @@ export default function ReminderPage() {
                                             {selectedDate
                                                 ? 'No reminders scheduled for this date.'
                                                 : filterType === 'upcoming'
-                                                  ? 'No upcoming reminders.'
-                                                  : filterType === 'overdue'
-                                                    ? 'No overdue reminders.'
-                                                    : 'No reminders available.'}
+                                                    ? 'No upcoming reminders.'
+                                                    : filterType === 'overdue'
+                                                        ? 'No overdue reminders.'
+                                                        : 'No reminders available.'}
                                         </p>
                                     </div>
                                 )}

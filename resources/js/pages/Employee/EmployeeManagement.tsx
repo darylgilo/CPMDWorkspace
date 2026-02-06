@@ -12,9 +12,10 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Eye, RotateCcw, UserPlus } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Edit, RotateCcw, UserPlus, ChevronDown, ChevronUp, Users, UserCheck, Briefcase, Clock } from 'lucide-react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import ExportEmployee from '@/components/export/ExportEmployee';
+import SimpleStatistic from '@/components/SimpleStatistic';
 
 // Define types
 interface User {
@@ -29,6 +30,16 @@ interface User {
     landbank_number?: string | null;
     status?: 'active' | 'inactive' | null;
     profile_picture?: string | null;
+    tin_number?: string | null;
+    gsis_number?: string | null;
+    mobile_number?: string | null;
+    contact_number?: string | null;
+    item_number?: string | null;
+    address?: string | null;
+    hiring_date?: string | null;
+    date_of_birth?: string | null;
+    gender?: string | null;
+    contact_person?: string | null;
     [key: string]: unknown;
 }
 
@@ -55,6 +66,12 @@ interface PageProps extends InertiaPageProps {
         };
         [key: string]: unknown;
     };
+    stats?: {
+        total: number;
+        regular: number;
+        cos: number;
+        jobOrder: number;
+    };
 }
 
 // Employee Management list page component
@@ -71,6 +88,12 @@ export default function EmployeeManagement() {
             total: 0,
         } as PaginatedUsers,
         auth,
+        stats = {
+            total: 0,
+            regular: 0,
+            cos: 0,
+            jobOrder: 0,
+        },
     } = props;
 
     // Local state for search, filters, and employees
@@ -79,6 +102,17 @@ export default function EmployeeManagement() {
     const [cpmd, setCpmd] = useState<string>('');
     const [status, setStatus] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+
+    const toggleRow = (id: number) => {
+        const newExpandedRows = new Set(expandedRows);
+        if (newExpandedRows.has(id)) {
+            newExpandedRows.delete(id);
+        } else {
+            newExpandedRows.add(id);
+        }
+        setExpandedRows(newExpandedRows);
+    };
 
     // Load all employees once on component mount
     const [allEmployees, setAllEmployees] = useState(users.data || []);
@@ -175,22 +209,54 @@ export default function EmployeeManagement() {
         >
             <Head title="Employee Management" />
 
-            <div className="flex flex-col gap-4 p-4">
+            <div className="flex flex-col gap-6 p-4">
+                {/* Statistics Section */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <SimpleStatistic
+                        label="Total Employees"
+                        value={stats.total}
+                        icon={Users}
+                        subtitle="Total employees in CPMD"
+                        backgroundColor="#163832"
+                    />
+                    <SimpleStatistic
+                        label="Regular Employees"
+                        value={stats.regular}
+                        icon={UserCheck}
+                        subtitle="Permanent status"
+                        backgroundColor="#1a4d3e"
+                    />
+                    <SimpleStatistic
+                        label="COS Employees"
+                        value={stats.cos}
+                        icon={Briefcase}
+                        subtitle="Contract of Service"
+                        backgroundColor="#235347"
+                    />
+                    <SimpleStatistic
+                        label="Job Order"
+                        value={stats.jobOrder}
+                        icon={Clock}
+                        subtitle="Casual/Temporary"
+                        backgroundColor="#2a6358"
+                    />
+                </div>
+
                 {/* Header actions */}
                 <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-900">
                     {/* Filters and Add button on the left */}
                     <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         {(auth?.user?.role === 'superadmin' ||
                             auth?.user?.role === 'admin') && (
-                            <button
-                                onClick={() => router.get('/employees/create')} 
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                            >
-                                <UserPlus className="h-4 w-4" />
-                                <span>Add Employee</span>
-                            </button>
-                        )}
-                        
+                                <button
+                                    onClick={() => router.get('/employees/create')}
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    <span>Add Employee</span>
+                                </button>
+                            )}
+
                         <Select
                             value={cpmd || 'all'}
                             onValueChange={(val) => {
@@ -339,20 +405,6 @@ export default function EmployeeManagement() {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setCpmd('');
-                                setStatus('');
-                                setSearch('');
-                                // Update state only, no server request needed
-                            }}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                            title="Clear filters"
-                        >
-                            <RotateCcw className="h-4 w-4" />
-                            <span className="sr-only">Clear filters</span>
-                        </button>
                     </div>
 
                     {/* Search and Export on the right */}
@@ -382,6 +434,7 @@ export default function EmployeeManagement() {
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-neutral-800">
                                 <tr>
+                                    <th className="w-10 px-4 py-3"></th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                         Employee
                                     </th>
@@ -407,84 +460,162 @@ export default function EmployeeManagement() {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                                 {filteredEmployees.length > 0 ? (
-                                    paginatedEmployees.map((employee: User) => (
-                                        <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800/50">
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="h-10 w-10 flex-shrink-0">
-                                                        {employee.profile_picture ? (
-                                                            <img
-                                                                className="h-10 w-10 rounded-full object-cover"
-                                                                src={`/storage/${employee.profile_picture}`}
-                                                                alt={employee.name}
-                                                            />
+                                    paginatedEmployees.map((employee: User) => {
+                                        const isRowExpanded = expandedRows.has(employee.id);
+                                        return (
+                                            <Fragment key={employee.id}>
+                                                <tr
+                                                    className={`hover:bg-gray-50 dark:hover:bg-neutral-800/50 cursor-pointer ${isRowExpanded ? 'bg-gray-50/80 dark:bg-neutral-800/40' : ''}`}
+                                                    onClick={() => toggleRow(employee.id)}
+                                                >
+                                                    <td className="px-4 py-4 whitespace-nowrap">
+                                                        {isRowExpanded ? (
+                                                            <ChevronUp className="h-4 w-4 text-gray-400" />
                                                         ) : (
-                                                            <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
-                                                                <svg
-                                                                    className="h-6 w-6 text-gray-400 dark:text-neutral-500"
-                                                                    fill="currentColor"
-                                                                    viewBox="0 0 20 20"
-                                                                >
-                                                                    <path
-                                                                        fillRule="evenodd"
-                                                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                                                        clipRule="evenodd"
-                                                                    />
-                                                                </svg>
-                                                            </div>
+                                                            <ChevronDown className="h-4 w-4 text-gray-400" />
                                                         )}
-                                                    </div>
-                                                    <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {employee.name || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center">
+                                                            <div className="h-10 w-10 flex-shrink-0">
+                                                                {employee.profile_picture ? (
+                                                                    <img
+                                                                        className="h-10 w-10 rounded-full object-cover"
+                                                                        src={`/storage/${employee.profile_picture}`}
+                                                                        alt={employee.name}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
+                                                                        <svg
+                                                                            className="h-6 w-6 text-gray-400 dark:text-neutral-500"
+                                                                            fill="currentColor"
+                                                                            viewBox="0 0 20 20"
+                                                                        >
+                                                                            <path
+                                                                                fillRule="evenodd"
+                                                                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                                                clipRule="evenodd"
+                                                                            />
+                                                                        </svg>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="ml-4">
+                                                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {employee.name || '—'}
+                                                                </div>
+                                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                                    {employee.email || '—'}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                            {employee.email || '—'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                {employee.employee_id || '—'}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                {employee.position || '—'}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                {employee.office || '—'}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                {employee.cpmd || '—'}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        employee.status === 'active'
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                            : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
-                                                    }`}
-                                                >
-                                                    {employee.employment_status || '—'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm">
-                                                <button
-                                                    onClick={() =>
-                                                        router.get(
-                                                            `/employees/${employee.id}`,
-                                                        )
-                                                    }
-                                                    className="inline-flex items-center gap-1 rounded-md bg-[#163832] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#1a4d3e]"
-                                                >
-                                                    <Eye className="h-3.5 w-3.5" />
-                                                    <span>View</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {employee.employee_id || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {employee.position || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {employee.office || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                        {employee.cpmd || '—'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${employee.status === 'active'
+                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
+                                                                }`}
+                                                        >
+                                                            {employee.employment_status || '—'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                router.get(`/employees/${employee.id}`);
+                                                            }}
+                                                            className="inline-flex items-center gap-1 rounded-md bg-[#163832] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#1a4d3e]"
+                                                        >
+                                                            <Edit className="h-3.5 w-3.5" />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {isRowExpanded && (
+                                                    <tr className="bg-gray-50/50 dark:bg-neutral-800/20">
+                                                        <td colSpan={8} className="px-8 py-4">
+                                                            <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+                                                                {/* Column 1 */}
+                                                                <div className="space-y-4">
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Hiring Date</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.hiring_date || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Item Number</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.item_number || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">TIN Number</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.tin_number || '—'}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Column 2 */}
+                                                                <div className="space-y-4">
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">GSIS Number</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.gsis_number || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Landbank Number</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.landbank_number || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Mobile Number</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.mobile_number || '—'}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Column 3 */}
+                                                                <div className="space-y-4">
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Home Address</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.address || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Birth Date</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.date_of_birth || '—'}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Gender</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.gender || '—'}</p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Column 4 */}
+                                                                <div className="space-y-4">
+                                                                    <div>
+                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Emergency Contact</span>
+                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">
+                                                                            {employee.contact_person || '—'} {employee.contact_number ? `- ${employee.contact_number}` : ''}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </Fragment>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center">
+                                        <td colSpan={8} className="px-4 py-8 text-center">
                                             <p className="text-gray-500 dark:text-gray-400">
                                                 {search
                                                     ? 'No employees match your search'

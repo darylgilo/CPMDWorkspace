@@ -571,11 +571,13 @@ export default function Distribution() {
                         label="Total Distributions"
                         value={analytics?.totalDistributions || 0}
                         icon={TruckIcon}
+                        backgroundColor="#163832"
                     />
                     <SimpleStatistic
                         label="Total Distributed Pesticide Stock"
                         value={analytics?.totalDistributed || 0}
                         icon={PackageMinus}
+                        backgroundColor="#1a4d3e"
                     />
                     <SimpleStatistic
                         label="Total Pesticide Distributed This Year"
@@ -584,6 +586,7 @@ export default function Distribution() {
                         subtitle="Based on quantity of pesticide distributed this year"
                         iconBackgroundColor="bg-blue-100 dark:bg-blue-900/20"
                         iconColor="text-blue-600 dark:text-blue-400"
+                        backgroundColor="#235347"
                     />
                 </div>
 
@@ -777,7 +780,7 @@ export default function Distribution() {
                             </TableHeader>
                             <TableBody>
                                 {distributions?.data &&
-                                distributions.data.length > 0 ? (
+                                    distributions.data.length > 0 ? (
                                     sortedDistributions.map((distribution) => (
                                         <TableRow key={distribution.id}>
                                             <TableCell>
