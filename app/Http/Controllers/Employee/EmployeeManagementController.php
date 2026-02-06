@@ -46,9 +46,15 @@ class EmployeeManagementController extends Controller
             }
         }
 
-        $query->orderBy('name');
+        // Calculate statistics for CPMD employees
+        $stats = [
+            'total' => (clone $query)->where('office', 'CPMD')->count(),
+            'regular' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Regular')->count(),
+            'cos' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'COS')->count(),
+            'jobOrder' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Job Order')->count(),
+        ];
 
-        $users = $query->paginate($perPage)->withQueryString();
+        $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         return Inertia::render('Employee/EmployeeManagement', [
             'users' => $users,
@@ -56,6 +62,7 @@ class EmployeeManagementController extends Controller
             'perPage' => $perPage,
             'office' => $office,
             'cpmd' => $cpmd,
+            'stats' => $stats,
         ]);
     }
 

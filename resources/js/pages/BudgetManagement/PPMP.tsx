@@ -1,5 +1,4 @@
 import SearchBar from '@/components/SearchBar';
-import SimpleStatistic from '@/components/SimpleStatistic';
 import ExportPPMP from '@/components/export/ExportPPMP';
 import { Button } from '@/components/ui/button';
 import {
@@ -127,7 +126,7 @@ export default function PPMP() {
 
     const formatCurrency = (amount: number | undefined | null) => {
         const val = amount || 0;
-        return `₱ ${val.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+        return `₱ ${val.toLocaleString('en-PH', { minimumFractionDigits: 2 })} `;
     };
 
     const [ppmpFormData, setPpmpFormData] = useState({
@@ -148,7 +147,7 @@ export default function PPMP() {
         mode_of_procurement: '',
         pre_procurement_conference: 'No',
         estimated_budget: '',
-        supporting_documents: 'Market Scoping, Technical Specifications',
+        supporting_documents: '',
         remarks: '',
     });
 
@@ -177,7 +176,7 @@ export default function PPMP() {
             mode_of_procurement: '',
             pre_procurement_conference: 'No',
             estimated_budget: '',
-            supporting_documents: 'Market Scoping, Technical Specifications',
+            supporting_documents: '',
             remarks: '',
             timelines: [
                 {
@@ -773,73 +772,22 @@ export default function PPMP() {
         });
     }, [searchQuery, fundPPMPItems]);
 
-    // Calculate analytics for current fund
-    const analytics = useMemo(() => {
-        const totalProjects = fundPPMPItems.length;
-        let totalBudget = 0;
-        let totalItems = 0;
-        let localTravelBudget = 0;
-        let foreignTravelBudget = 0;
-
+    // Calculate total budget for current fund
+    const totalBudget = useMemo(() => {
+        let total = 0;
         fundPPMPItems.forEach((project: PPMPProject) => {
             project.funding_details?.forEach((detail: FundingDetail) => {
-                const budget = parseFloat(
-                    String(detail.estimated_budget || 0),
-                );
-                totalBudget += budget;
-                totalItems += detail.timelines?.length || 1;
-
-                // Calculate travel expense subtotals
-                if (
-                    project.general_description ===
-                    'Travelling Expenses - Local'
-                ) {
-                    localTravelBudget += budget;
-                } else if (
-                    project.general_description ===
-                    'Travelling Expenses - Foreign'
-                ) {
-                    foreignTravelBudget += budget;
-                }
+                total += parseFloat(String(detail.estimated_budget || 0));
             });
         });
-
-        return {
-            totalProjects,
-            totalItems,
-            totalBudget,
-            localTravelBudget,
-            foreignTravelBudget,
-        };
+        return total;
     }, [fundPPMPItems]);
+
+
 
     return (
         <div className="flex flex-col gap-6">
-            {/* Analytics Dashboard */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <SimpleStatistic
-                    label="Total Projects"
-                    value={analytics.totalProjects}
-                    icon={FileText}
-                />
-                <SimpleStatistic
-                    label="Total Items"
-                    value={analytics.totalItems}
-                    icon={FileText}
-                />
-                <SimpleStatistic
-                    label="Total Budget"
-                    value={formatCurrency(analytics.totalBudget)}
-                    icon={DollarSign}
-                />
-                <SimpleStatistic
-                    label="Avg. Budget"
-                    value={formatCurrency(
-                        analytics.totalBudget / analytics.totalItems,
-                    )}
-                    icon={DollarSign}
-                />
-            </div>
+
 
             {/* Controls */}
             <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
@@ -1123,7 +1071,7 @@ export default function PPMP() {
 
                                         // Group projects by description and type
                                         filteredData.forEach((project: PPMPProject) => {
-                                            const key = `${project.general_description}|${project.project_type}`;
+                                            const key = `${project.general_description}| ${project.project_type} `;
                                             if (!groupedProjects.has(key)) {
                                                 groupedProjects.set(key, []);
                                             }
@@ -1335,7 +1283,7 @@ export default function PPMP() {
                                                                             const row =
                                                                                 (
                                                                                     <TableRow
-                                                                                        key={`project-${project.id}-detail-${detailIndex}-timeline-${timelineIndex}`}
+                                                                                        key={`project - ${project.id} -detail - ${detailIndex} -timeline - ${timelineIndex} `}
                                                                                         className="hover:bg-gray-50 dark:hover:bg-neutral-800"
                                                                                     >
                                                                                         {isFirstRowForProject && (
@@ -1532,11 +1480,11 @@ export default function PPMP() {
                                                         projectsInGroup[0]; // Get first project to get project ID
                                                     rows.push(
                                                         <TableRow
-                                                            key={`group-subtotal-${key}`}
-                                                            className={`font-semibold transition-colors ${isHighlighted
+                                                            key={`group - subtotal - ${key} `}
+                                                            className={`font - semibold transition - colors ${isHighlighted
                                                                 ? 'bg-green-200 hover:bg-green-300 dark:bg-green-900 dark:hover:bg-green-800'
                                                                 : 'bg-gray-50 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700'
-                                                                }`}
+                                                                } `}
                                                         >
                                                             <TableCell
                                                                 className="border border-gray-200 p-2 text-right dark:border-neutral-700"
@@ -1561,10 +1509,10 @@ export default function PPMP() {
                                                                             firstProject.id,
                                                                         )
                                                                     }
-                                                                    className={`h-6 w-6 p-0 ${isHighlighted
+                                                                    className={`h - 6 w - 6 p - 0 ${isHighlighted
                                                                         ? 'text-green-600 hover:text-green-700'
                                                                         : 'text-gray-400 hover:text-gray-500'
-                                                                        }`}
+                                                                        } `}
                                                                     title={
                                                                         isHighlighted
                                                                             ? 'Status: FINAL '
@@ -1592,9 +1540,7 @@ export default function PPMP() {
                                             TOTAL BUDGET:
                                         </TableCell>
                                         <TableCell className="border border-gray-200 p-2 text-right dark:border-neutral-700">
-                                            {formatCurrency(
-                                                analytics.totalBudget,
-                                            )}
+                                            {formatCurrency(totalBudget)}
                                         </TableCell>
                                         <TableCell
                                             className="border border-gray-200 p-2 dark:border-neutral-700"
@@ -1620,7 +1566,7 @@ export default function PPMP() {
                         </DialogTitle>
                         <DialogDescription>
                             {selectedExistingProject
-                                ? `Add Item details to existing project: ${selectedExistingProject.general_description}`
+                                ? `Add Item details to existing project: ${selectedExistingProject.general_description} `
                                 : 'Create a new PPMP'}
                         </DialogDescription>
                     </DialogHeader>
@@ -2013,7 +1959,7 @@ export default function PPMP() {
                                                                         estimated_budget:
                                                                             '',
                                                                         supporting_documents:
-                                                                            'Market Scoping, Technical Specifications',
+                                                                            '',
                                                                         remarks:
                                                                             '',
                                                                         timelines:
@@ -2308,7 +2254,7 @@ export default function PPMP() {
                                                                 },
                                                             )
                                                         }
-                                                        placeholder="Market Scoping, Technical Specifications"
+                                                        placeholder=""
                                                         className="w-full"
                                                         required
                                                     />
@@ -2916,7 +2862,7 @@ export default function PPMP() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                placeholder="Market Scoping, Technical Specifications"
+                                                placeholder=""
                                                 className="w-full"
                                             />
                                         </td>

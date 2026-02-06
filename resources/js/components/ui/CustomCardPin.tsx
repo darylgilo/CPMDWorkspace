@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { FileText, Calendar, Clock } from 'lucide-react';
+import { renderTextWithLinks } from '@/lib/text-utils';
 
 interface FileType {
   name: string;
@@ -89,8 +90,10 @@ export function CustomCardPin({
 
       {/* Content */}
       <h3 className="mb-1 line-clamp-1 text-base font-semibold">{title}</h3>
-      <p className="mb-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">{description}</p>
-      
+      <div className="mb-2 line-clamp-2 text-sm text-gray-700 dark:text-gray-200">
+        {renderTextWithLinks(description)}
+      </div>
+
       {/* Date and Time */}
       <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
         {date && (

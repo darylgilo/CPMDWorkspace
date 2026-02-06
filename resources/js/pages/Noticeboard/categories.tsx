@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -244,11 +245,11 @@ export default function CategoriesPage() {
         return (serverNotices as Array<Record<string, unknown>>).map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                      name: f.name ?? 'file',
-                      url: f.url,
-                      type: f.mime ?? '',
-                      size: Number(f.size ?? 0),
-                  }))
+                    name: f.name ?? 'file',
+                    url: f.url,
+                    type: f.mime ?? '',
+                    size: Number(f.size ?? 0),
+                }))
                 : [];
             return {
                 id: String(n.id),
@@ -262,11 +263,11 @@ export default function CategoriesPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                          name: n.file_name ?? 'file',
-                          url: n.file_url,
-                          type: n.file_mime ?? '',
-                          size: Number(n.file_size ?? 0),
-                      }
+                        name: n.file_name ?? 'file',
+                        url: n.file_url,
+                        type: n.file_mime ?? '',
+                        size: Number(n.file_size ?? 0),
+                    }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -853,28 +854,24 @@ export default function CategoriesPage() {
                                 <label className="text-sm font-medium">
                                     Description
                                 </label>
-                                <textarea
-                                    value={editDescription}
-                                    onChange={(e) =>
-                                        setEditDescription(e.target.value)
-                                    }
-                                    placeholder="Write the notice details..."
-                                    rows={15}
-                                    readOnly={!isEditMode}
-                                    onFocus={(e) =>
-                                        !isEditMode && e.target.blur()
-                                    }
-                                    onMouseDown={(e) =>
-                                        !isEditMode && e.preventDefault()
-                                    }
-                                    style={
-                                        !isEditMode
-                                            ? { userSelect: 'none' }
-                                            : undefined
-                                    }
-                                    className={`w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950 ${!isEditMode ? 'cursor-default bg-gray-50 dark:bg-neutral-800' : ''}`}
-                                    required
-                                />
+                                {!isEditMode ? (
+                                    <div
+                                        className="w-full min-h-[300px] whitespace-pre-wrap rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
+                                    >
+                                        {renderTextWithLinks(editDescription)}
+                                    </div>
+                                ) : (
+                                    <textarea
+                                        value={editDescription}
+                                        onChange={(e) =>
+                                            setEditDescription(e.target.value)
+                                        }
+                                        placeholder="Write the notice details..."
+                                        rows={15}
+                                        className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                                        required
+                                    />
+                                )}
                             </div>
 
                             <div className="flex flex-col gap-2">
@@ -938,7 +935,7 @@ export default function CategoriesPage() {
                                         Current Attachments
                                     </label>
                                     {editingNotice.files &&
-                                    editingNotice.files.length > 0 ? (
+                                        editingNotice.files.length > 0 ? (
                                         <div className="text-xs text-gray-600 dark:text-gray-300">
                                             {editingNotice.files.map(
                                                 (f, idx) => (

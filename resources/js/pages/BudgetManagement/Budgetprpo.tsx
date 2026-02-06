@@ -1,7 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
-import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -86,11 +85,6 @@ interface PageProps {
     };
     search: string;
     perPage: number;
-    fundAnalytics: {
-        totalFunds: number;
-        totalAmount: number;
-        totalByYear: { year: number; total: number }[];
-    };
     [key: string]: unknown;
 }
 
@@ -103,7 +97,6 @@ export default function BudgetAllocation() {
         fundTransactions,
         search = '',
         perPage: perPageProp = 10,
-        fundAnalytics: analytics,
     } = props;
 
     // Get URL parameters
@@ -348,8 +341,8 @@ export default function BudgetAllocation() {
             amount_po: transaction.amount_po.toString(),
             delivery_date: transaction.delivery_date
                 ? new Date(transaction.delivery_date)
-                      .toISOString()
-                      .split('T')[0]
+                    .toISOString()
+                    .split('T')[0]
                 : '',
             dv_no: transaction.dv_no || '',
             amount_dv: transaction.amount_dv?.toString() || '',
@@ -407,13 +400,13 @@ export default function BudgetAllocation() {
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
                 ? new Date(transactionFormData.delivery_date)
-                      .toISOString()
-                      .split('T')[0]
+                    .toISOString()
+                    .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
                 ? new Date(transactionFormData.payment_date)
-                      .toISOString()
-                      .split('T')[0]
+                    .toISOString()
+                    .split('T')[0]
                 : null,
         };
 
@@ -463,13 +456,13 @@ export default function BudgetAllocation() {
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
                 ? new Date(transactionFormData.delivery_date)
-                      .toISOString()
-                      .split('T')[0]
+                    .toISOString()
+                    .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
                 ? new Date(transactionFormData.payment_date)
-                      .toISOString()
-                      .split('T')[0]
+                    .toISOString()
+                    .split('T')[0]
                 : null,
         };
 
@@ -611,15 +604,15 @@ export default function BudgetAllocation() {
                 amount_po: selectedTransaction.amount_po.toString(),
                 delivery_date: selectedTransaction.delivery_date
                     ? new Date(selectedTransaction.delivery_date)
-                          .toISOString()
-                          .split('T')[0]
+                        .toISOString()
+                        .split('T')[0]
                     : '',
                 dv_no: selectedTransaction.dv_no || '',
                 amount_dv: selectedTransaction.amount_dv?.toString() || '',
                 payment_date: selectedTransaction.payment_date
                     ? new Date(selectedTransaction.payment_date)
-                          .toISOString()
-                          .split('T')[0]
+                        .toISOString()
+                        .split('T')[0]
                     : '',
                 remarks: selectedTransaction.remarks || '',
             });
@@ -705,29 +698,6 @@ export default function BudgetAllocation() {
     return (
         <>
             <div className="flex flex-col gap-6">
-                {/* Analytics Dashboard */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <SimpleStatistic
-                        label="Total Funds"
-                        value={analytics?.totalFunds || 0}
-                        icon={Wallet}
-                    />
-                    <SimpleStatistic
-                        label="Total Amount"
-                        value={formatCurrency(analytics?.totalAmount || 0)}
-                        icon={DollarSign}
-                    />
-                    <SimpleStatistic
-                        label="Total by Year"
-                        value={
-                            Array.isArray(analytics?.totalByYear)
-                                ? analytics.totalByYear.length
-                                : 0
-                        }
-                        icon={Wallet}
-                    />
-                </div>
-
                 {/* Fund Selection and Controls */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -1096,14 +1066,14 @@ export default function BudgetAllocation() {
                                                 <TableCell className="font-semibold text-red-600 dark:text-red-400">
                                                     {formatCurrency(
                                                         transaction.amount_pr -
-                                                            transaction.amount_po,
+                                                        transaction.amount_po,
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
                                                     {transaction.delivery_date
                                                         ? formatDate(
-                                                              transaction.delivery_date,
-                                                          )
+                                                            transaction.delivery_date,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>
@@ -1112,15 +1082,15 @@ export default function BudgetAllocation() {
                                                 <TableCell>
                                                     {transaction.amount_dv
                                                         ? formatCurrency(
-                                                              transaction.amount_dv,
-                                                          )
+                                                            transaction.amount_dv,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     {transaction.payment_date
                                                         ? formatDate(
-                                                              transaction.payment_date,
-                                                          )
+                                                            transaction.payment_date,
+                                                        )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>

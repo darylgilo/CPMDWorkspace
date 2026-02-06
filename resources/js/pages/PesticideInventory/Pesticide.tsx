@@ -331,13 +331,13 @@ export default function PesticideIndex() {
                 quantity: parseFloat(formData.quantity) || 0,
                 received_date: formData.received_date
                     ? new Date(formData.received_date)
-                          .toISOString()
-                          .split('T')[0]
+                        .toISOString()
+                        .split('T')[0]
                     : '',
                 production_date: formData.production_date
                     ? new Date(formData.production_date)
-                          .toISOString()
-                          .split('T')[0]
+                        .toISOString()
+                        .split('T')[0]
                     : '',
                 expiry_date: formData.expiry_date
                     ? new Date(formData.expiry_date).toISOString().split('T')[0]
@@ -513,6 +513,7 @@ export default function PesticideIndex() {
                                     }),
                                 )}
                                 icon={Package}
+                                backgroundColor="#163832"
                             />
                         )}
 
@@ -521,6 +522,7 @@ export default function PesticideIndex() {
                         label="Total Stock"
                         value={analytics?.totalStock || 0}
                         icon={PackageCheck}
+                        backgroundColor="#1a4d3e"
                     />
 
                     {/* Total Stock Added This Year */}
@@ -529,6 +531,7 @@ export default function PesticideIndex() {
                         value={analytics?.thisYearStock || 0}
                         icon={Package}
                         subtitle="Based on received date this year"
+                        backgroundColor="#235347"
                     />
                 </div>
 
@@ -741,7 +744,7 @@ export default function PesticideIndex() {
                             </TableHeader>
                             <TableBody>
                                 {pesticides?.data &&
-                                pesticides.data.length > 0 ? (
+                                    pesticides.data.length > 0 ? (
                                     sortedPesticides.map(
                                         (pesticide: Pesticide) => (
                                             <TableRow key={pesticide.id}>
@@ -794,8 +797,8 @@ export default function PesticideIndex() {
                                                             ? 'font-semibold text-gray-500 dark:text-gray-400'
                                                             : pesticide.stock <
                                                                 10
-                                                              ? 'font-semibold text-red-600 dark:text-red-400'
-                                                              : ''
+                                                                ? 'font-semibold text-red-600 dark:text-red-400'
+                                                                : ''
                                                     }
                                                 >
                                                     {pesticide.stock}

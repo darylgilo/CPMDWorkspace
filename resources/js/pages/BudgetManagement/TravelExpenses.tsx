@@ -331,9 +331,9 @@ export default function TravelExpenses() {
                 required: false,
                 options: filteredFunds
                     ? filteredFunds.map((fund) => ({
-                          value: fund.id.toString(),
-                          label: `${fund.fund_name} (${fund.source_year})`,
-                      }))
+                        value: fund.id.toString(),
+                        label: `${fund.fund_name} (${fund.source_year})`,
+                    }))
                     : [],
                 placeholder: 'Select fund',
             },
@@ -843,7 +843,7 @@ export default function TravelExpenses() {
             .filter(
                 (expense) =>
                     expense.ppmp_project?.general_description ===
-                        'Travelling Expenses - Local' &&
+                    'Travelling Expenses - Local' &&
                     expense.status === 'approved',
             )
             .reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -852,7 +852,7 @@ export default function TravelExpenses() {
             .filter(
                 (expense) =>
                     expense.ppmp_project?.general_description ===
-                        'Travelling Expenses - Foreign' &&
+                    'Travelling Expenses - Foreign' &&
                     expense.status === 'approved',
             )
             .reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -929,23 +929,27 @@ export default function TravelExpenses() {
                         label="Total Amount"
                         value={formatCurrency(totalExpensesAmount || 0)}
                         icon={DollarSign}
+                        backgroundColor="#163832"
                     />
                     <SimpleStatistic
                         label="Local Travel Expenses"
                         value={formatCurrency(ppmpLocalSubtotal || 0)}
                         icon={DollarSign}
                         subtitle={`Balance: ${formatCurrency(travelBalances.local || 0)}`}
+                        backgroundColor="#1a4d3e"
                     />
                     <SimpleStatistic
                         label="Foreign Travel Expenses"
                         value={formatCurrency(ppmpForeignSubtotal || 0)}
                         icon={DollarSign}
                         subtitle={`Balance: ${formatCurrency(travelBalances.foreign || 0)}`}
+                        backgroundColor="#235347"
                     />
                     <SimpleStatistic
                         label="Pending"
                         value={analytics?.pendingCount || 0}
                         icon={Calendar}
+                        backgroundColor="#2a6358"
                     />
                 </div>
 
@@ -1004,11 +1008,11 @@ export default function TravelExpenses() {
                                         <SelectValue>
                                             {selectedFundId
                                                 ? filteredFunds.find(
-                                                      (f) =>
-                                                          f.id ===
-                                                          selectedFundId,
-                                                  )?.fund_name ||
-                                                  'Select a fund'
+                                                    (f) =>
+                                                        f.id ===
+                                                        selectedFundId,
+                                                )?.fund_name ||
+                                                'Select a fund'
                                                 : 'Select a fund'}
                                         </SelectValue>
                                     </SelectTrigger>

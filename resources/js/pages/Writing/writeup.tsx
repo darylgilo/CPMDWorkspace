@@ -8,6 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
@@ -760,18 +761,18 @@ export default function Writeup() {
                                             </DropdownMenuItem>
                                             {current_user?.id ===
                                                 document.author.id && (
-                                                <DropdownMenuItem
-                                                    onClick={() =>
-                                                        handleDelete(
-                                                            document.id,
-                                                        )
-                                                    }
-                                                    className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    <span>Delete</span>
-                                                </DropdownMenuItem>
-                                            )}
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                document.id,
+                                                            )
+                                                        }
+                                                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Delete</span>
+                                                    </DropdownMenuItem>
+                                                )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
@@ -787,14 +788,14 @@ export default function Writeup() {
                                                         key={index}
                                                         className="mb-4"
                                                     >
-                                                        {paragraph}
+                                                        {renderTextWithLinks(paragraph)}
                                                     </p>
                                                 ))
                                         ) : (
                                             <p>
-                                                {truncateContent(
+                                                {renderTextWithLinks(truncateContent(
                                                     document.content,
-                                                )}
+                                                ))}
                                             </p>
                                         )}
                                         {document.content.length > 300 && (
@@ -821,11 +822,10 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleApprove(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${
-                                                document.is_approved
-                                                    ? 'rounded-md bg-green-50 px-2 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                                                    : 'text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400'
-                                            }`}
+                                            className={`flex items-center gap-2 transition-colors ${document.is_approved
+                                                ? 'rounded-md bg-green-50 px-2 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                                : 'text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400'
+                                                }`}
                                         >
                                             <Check className="h-4 w-4" />
                                             <span className="text-sm">
@@ -833,11 +833,10 @@ export default function Writeup() {
                                             </span>
                                             {document.approvals_count > 0 && (
                                                 <span
-                                                    className={`rounded-full px-1.5 py-0.5 text-xs ${
-                                                        document.is_approved
-                                                            ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
-                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                    }`}
+                                                    className={`rounded-full px-1.5 py-0.5 text-xs ${document.is_approved
+                                                        ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
+                                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        }`}
                                                 >
                                                     {document.approvals_count}
                                                 </span>
@@ -847,11 +846,10 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleLike(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${
-                                                document.is_liked
-                                                    ? 'rounded-md bg-red-50 px-2 py-1 text-red-500 dark:bg-red-900/20 dark:text-red-400'
-                                                    : 'text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'
-                                            }`}
+                                            className={`flex items-center gap-2 transition-colors ${document.is_liked
+                                                ? 'rounded-md bg-red-50 px-2 py-1 text-red-500 dark:bg-red-900/20 dark:text-red-400'
+                                                : 'text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'
+                                                }`}
                                         >
                                             <Heart
                                                 className={`h-4 w-4 ${document.is_liked ? 'fill-current' : ''}`}
@@ -896,11 +894,10 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleBookmark(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${
-                                                document.is_bookmarked
-                                                    ? 'rounded-md bg-yellow-50 px-2 py-1 text-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                    : 'text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400'
-                                            }`}
+                                            className={`flex items-center gap-2 transition-colors ${document.is_bookmarked
+                                                ? 'rounded-md bg-yellow-50 px-2 py-1 text-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                : 'text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400'
+                                                }`}
                                         >
                                             <Bookmark
                                                 className={`h-4 w-4 ${document.is_bookmarked ? 'fill-current' : ''}`}
@@ -965,7 +962,7 @@ export default function Writeup() {
                                                         id={`comment-${document.id}`}
                                                         value={
                                                             newComments[
-                                                                document.id
+                                                            document.id
                                                             ] || ''
                                                         }
                                                         onChange={(e) =>
@@ -1035,9 +1032,9 @@ export default function Writeup() {
                                                             </div>
                                                             {current_user &&
                                                                 current_user.id ===
-                                                                    comment
-                                                                        .author
-                                                                        .id && (
+                                                                comment
+                                                                    .author
+                                                                    .id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger
                                                                             asChild
@@ -1088,8 +1085,8 @@ export default function Writeup() {
                                                                 <textarea
                                                                     value={
                                                                         editCommentTexts[
-                                                                            comment
-                                                                                .id
+                                                                        comment
+                                                                            .id
                                                                         ] || ''
                                                                     }
                                                                     onChange={(
@@ -1142,9 +1139,7 @@ export default function Writeup() {
                                                             </div>
                                                         ) : (
                                                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {
-                                                                    comment.content
-                                                                }
+                                                                {renderTextWithLinks(comment.content)}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1152,10 +1147,10 @@ export default function Writeup() {
                                             ))}
                                             {(!comments[document.id] ||
                                                 comments[document.id].length ===
-                                                    0) &&
+                                                0) &&
                                                 (!document.comments ||
                                                     document.comments.length ===
-                                                        0) && (
+                                                    0) && (
                                                     <p className="py-4 text-center text-gray-500 dark:text-gray-400">
                                                         No comments yet. Be the
                                                         first to comment!
