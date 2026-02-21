@@ -205,7 +205,7 @@ export function AppSidebar(componentProps: AppSidebarProps) {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="hide-scrollbar">
                 <NavMain items={data.navMain} />
                 <NavMain2 items={filteredNavMain2} />
                 {/* <NavProjects projects={data.projects} /> */}

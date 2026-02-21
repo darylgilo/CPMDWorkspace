@@ -71,6 +71,7 @@ class WritingController extends Controller
                         'id' => $document->user->id,
                         'name' => $document->user->name,
                         'email' => $document->user->email,
+                        'profile_picture' => $document->user->profile_picture,
                     ],
                 ];
             });
@@ -140,6 +141,7 @@ class WritingController extends Controller
                     'id' => $document->user->id,
                     'name' => $document->user->name,
                     'email' => $document->user->email,
+                    'profile_picture' => $document->user->profile_picture,
                 ],
                 'histories' => $document->histories->map(function ($history) {
                     return [
@@ -149,6 +151,7 @@ class WritingController extends Controller
                             'id' => $history->user->id,
                             'name' => $history->user->name,
                             'email' => $history->user->email,
+                            'profile_picture' => $history->user->profile_picture,
                         ],
                         'created_at' => $history->created_at->format('Y-m-d H:i:s'),
                     ];
@@ -161,6 +164,7 @@ class WritingController extends Controller
                             'id' => $comment->user->id,
                             'name' => $comment->user->name,
                             'email' => $comment->user->email,
+                            'profile_picture' => $comment->user->profile_picture,
                         ],
                         'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
                     ];
@@ -213,6 +217,48 @@ class WritingController extends Controller
     }
 
     /**
+     * Get writeups for widget (API endpoint)
+     */
+    public function getWriteupsForWidget(Request $request)
+    {
+        $perPage = $request->input('perPage', 10);
+        
+        // Build query for documents
+        $query = Document::with(['user'])
+            ->orderBy('updated_at', 'desc');
+
+        // Get paginated documents
+        $documents = $query->paginate($perPage, ['*'], 'page', 1);
+
+        // Transform the data
+        $transformedDocuments = $documents->getCollection()->map(function ($document) {
+            return [
+                'id' => $document->id,
+                'title' => $document->title,
+                'content' => $document->content,
+                'category' => $document->category,
+                'status' => $document->status,
+                'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
+                'likes_count' => $document->likes_count,
+                'approvals_count' => $document->approvals_count,
+                'approved_at' => $document->approved_at?->format('Y-m-d H:i:s'),
+                'author' => [
+                    'id' => $document->user->id,
+                    'name' => $document->user->name,
+                    'email' => $document->user->email,
+                    'profile_picture' => $document->user->profile_picture,
+                ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $transformedDocuments,
+            'total' => $documents->total(),
+        ]);
+    }
+
+    /**
      * Show form for editing a document.
      */
     public function edit(Request $request, $id)
@@ -248,6 +294,7 @@ class WritingController extends Controller
                             'id' => $history->user->id,
                             'name' => $history->user->name,
                             'email' => $history->user->email,
+                            'profile_picture' => $history->user->profile_picture,
                         ],
                         'created_at' => $history->created_at->format('Y-m-d H:i:s'),
                     ];
@@ -353,6 +400,7 @@ class WritingController extends Controller
                         'id' => $document->user->id,
                         'name' => $document->user->name,
                         'email' => $document->user->email,
+                        'profile_picture' => $document->user->profile_picture,
                     ],
                 ];
             });

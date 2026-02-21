@@ -43,6 +43,7 @@ interface Comment {
         id: number;
         name: string;
         email: string;
+        profile_picture?: string;
     };
     created_at: string;
 }
@@ -64,6 +65,7 @@ interface Document {
         id: number;
         name: string;
         email: string;
+        profile_picture?: string;
     };
     histories: Array<{
         id: number;
@@ -86,6 +88,14 @@ interface User {
 }
 
 interface PageProps {
+    auth?: {
+        user: {
+            id: number;
+            name: string;
+            email: string;
+            profile_picture?: string;
+        };
+    };
     documents?: {
         data: Document[];
         current_page: number;
@@ -107,6 +117,7 @@ interface PageProps {
 export default function Writeup() {
     const { props } = usePage<PageProps>();
     const {
+        auth,
         documents,
         search = '',
         perPage: perPageProp = 10,
@@ -141,6 +152,22 @@ export default function Writeup() {
     const [editCommentTexts, setEditCommentTexts] = useState<
         Record<number, string>
     >({});
+
+    // Profile picture helper functions
+    const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+
+    const getProfilePictureUrl = (profilePicture?: string) => {
+        if (!profilePicture) return null;
+        if (profilePicture?.startsWith('http://') || profilePicture?.startsWith('https://'))
+            return profilePicture;
+        if (profilePicture?.startsWith('/')) return profilePicture; // already absolute path
+        if (profilePicture?.startsWith('storage/')) return `/${profilePicture}`; // already in storage folder
+        return `/storage/${profilePicture}`;
+    };
+
+    const handleImageError = (key: string) => {
+        setBrokenImages(prev => new Set(prev).add(key));
+    };
 
     // Form field configuration for documents
     const documentFormFields: FormField[] = [
@@ -702,8 +729,17 @@ export default function Writeup() {
                                 <div className="mb-4 flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="mb-2 flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#163832] dark:bg-[#235347]">
-                                                <User className="h-5 w-5 text-white" />
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden bg-[#163832] dark:bg-[#235347]">
+                                                {getProfilePictureUrl(document.author.profile_picture) && !brokenImages.has(`author-${document.id}`) ? (
+                                                    <img
+                                                        src={getProfilePictureUrl(document.author.profile_picture)!}
+                                                        alt={`${document.author.name}'s profile`}
+                                                        className="h-full w-full object-cover"
+                                                        onError={() => handleImageError(`author-${document.id}`)}
+                                                    />
+                                                ) : (
+                                                    <User className="h-5 w-5 text-white" />
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -954,8 +990,17 @@ export default function Writeup() {
                                         {/* Add Comment */}
                                         <div>
                                             <div className="flex gap-3">
-                                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#163832] dark:bg-[#235347]">
-                                                    <User className="h-4 w-4 text-white" />
+                                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden bg-[#163832] dark:bg-[#235347]">
+                                                    {getProfilePictureUrl(auth?.user.profile_picture) && !brokenImages.has('current-user') ? (
+                                                        <img
+                                                            src={getProfilePictureUrl(auth?.user.profile_picture)!}
+                                                            alt={`${auth?.user.name}'s profile`}
+                                                            className="h-full w-full object-cover"
+                                                            onError={() => handleImageError('current-user')}
+                                                        />
+                                                    ) : (
+                                                        <User className="h-4 w-4 text-white" />
+                                                    )}
                                                 </div>
                                                 <div className="flex-1">
                                                     <textarea
@@ -1011,8 +1056,17 @@ export default function Writeup() {
                                                     key={comment.id}
                                                     className="flex gap-3"
                                                 >
-                                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-neutral-600">
-                                                        <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden bg-gray-300 dark:bg-neutral-600">
+                                                        {getProfilePictureUrl(comment.author.profile_picture) && !brokenImages.has(`comment-${comment.id}`) ? (
+                                                            <img
+                                                                src={getProfilePictureUrl(comment.author.profile_picture)!}
+                                                                alt={`${comment.author.name}'s profile`}
+                                                                className="h-full w-full object-cover"
+                                                                onError={() => handleImageError(`comment-${comment.id}`)}
+                                                            />
+                                                        ) : (
+                                                            <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                                        )}
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="mb-1 flex items-center justify-between">

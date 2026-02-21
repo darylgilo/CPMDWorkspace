@@ -77,6 +77,7 @@ class CommentController extends Controller
                         'id' => $comment->user->id,
                         'name' => $comment->user->name,
                         'email' => $comment->user->email,
+                        'profile_picture' => $comment->user->profile_picture,
                     ],
                     'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
                 ];

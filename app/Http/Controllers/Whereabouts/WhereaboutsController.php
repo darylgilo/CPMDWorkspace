@@ -146,4 +146,62 @@ class WhereaboutsController extends Controller
             return redirect()->back()->with('error', 'Failed to update order: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Get whereabouts for widget (API endpoint)
+     */
+    public function getWhereaboutsForWidget(Request $request)
+    {
+        $date = $request->input('date', Carbon::now()->format('Y-m-d'));
+        
+        // Get all active users from CPMD office
+        $users = User::where('status', 'active')
+            ->where('office', 'CPMD')
+            ->orderBy('cpmd')
+            ->orderBy('display_order')
+            ->orderBy('item_number')
+            ->get();
+
+        // Get whereabouts for the specific date
+        $whereabouts = Whereabout::where('date', $date)
+            ->with('user')
+            ->get();
+
+        // Transform data for widget consumption
+        $transformedWhereabouts = $whereabouts->map(function ($whereabout) {
+            return [
+                'id' => $whereabout->id,
+                'user_id' => $whereabout->user_id,
+                'date' => $whereabout->date->format('Y-m-d'),
+                'status' => $whereabout->status,
+                'reason' => $whereabout->reason,
+                'location' => $whereabout->location,
+                'user' => [
+                    'id' => $whereabout->user->id,
+                    'name' => $whereabout->user->name,
+                    'email' => $whereabout->user->email,
+                    'cpmd' => $whereabout->user->cpmd,
+                    'profile_picture' => $whereabout->user->profile_picture,
+                ],
+            ];
+        });
+
+        // Calculate statistics
+        $stats = [
+            'total' => $users->count(),
+            'onDuty' => $whereabouts->where('status', 'ON DUTY')->count(),
+            'onTravel' => $whereabouts->where('status', 'ON TRAVEL')->count(),
+            'onLeave' => $whereabouts->where('status', 'ON LEAVE')->count(),
+            'absent' => $whereabouts->where('status', 'ABSENT')->count(),
+            'halfDay' => $whereabouts->where('status', 'HALF DAY')->count(),
+            'wfh' => $whereabouts->where('status', 'WFH')->count(),
+        ];
+
+        return response()->json([
+            'data' => $transformedWhereabouts,
+            'stats' => $stats,
+            'date' => $date,
+            'totalUsers' => $users->count(),
+        ]);
+    }
 }
