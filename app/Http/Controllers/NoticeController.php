@@ -589,4 +589,28 @@ class NoticeController extends Controller
             'notices' => $notices,
         ]);
     }
+
+    // API endpoint for CalendarWidget
+    public function getNoticesForWidget()
+    {
+        $notices = Notice::query()
+            ->with('user')
+            ->whereNotNull('date') // Only include notices with dates
+            ->latest()
+            ->get()
+            ->map(function (Notice $notice) {
+                return [
+                    'id' => $notice->id,
+                    'title' => $notice->title,
+                    'category' => $notice->category,
+                    'description' => $notice->description,
+                    'username' => optional($notice->user)->name ?? 'Unknown',
+                    'created_at' => $notice->created_at->toIso8601String(),
+                    'date' => $notice->date,
+                    'time' => $notice->time,
+                ];
+            });
+
+        return response()->json($notices);
+    }
 }

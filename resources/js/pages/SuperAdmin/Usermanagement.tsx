@@ -67,6 +67,10 @@ export interface User {
     mobile_number?: string;
     contact_number?: string;
     contact_person?: string;
+    can_access_noticeboard?: boolean;
+    can_access_writing_suite?: boolean;
+    can_access_management?: boolean;
+    can_access_inventory?: boolean;
     [key: string]: unknown; // For any additional properties
 }
 
@@ -641,8 +645,8 @@ export default function UserManagement() {
                                                     );
                                                 }}
                                                 className={`flex-1 rounded-l-lg border border-r-0 px-3 py-2 text-sm font-medium transition-colors ${sortDirection === 'asc'
-                                                        ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
-                                                        : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
+                                                    ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
+                                                    : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-center gap-1">

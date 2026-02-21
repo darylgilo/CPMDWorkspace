@@ -110,6 +110,27 @@ class UserController extends Controller
     }
 
     /**
+     * Get user statistics for dashboard widgets.
+     */
+    public function getStats()
+    {
+        if (auth()->check()) {
+            auth()->user()->update(['last_login_at' => now()]);
+        }
+        $totalUsers = User::count();
+        $activeUsers = User::where('status', 'active')->count();
+        $onlineUsers = User::whereNotNull('last_login_at')
+            ->where('last_login_at', '>', now()->subMinutes(15))
+            ->count();
+
+        return response()->json([
+            'total' => $totalUsers,
+            'active' => $activeUsers,
+            'online' => $onlineUsers,
+        ]);
+    }
+
+    /**
      * Show the form for creating a new user.
      */
     public function create(): Response
@@ -162,6 +183,10 @@ class UserController extends Controller
             'contact_number' => 'nullable|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'can_access_noticeboard' => 'required|boolean',
+            'can_access_writing_suite' => 'required|boolean',
+            'can_access_management' => 'required|boolean',
+            'can_access_inventory' => 'required|boolean',
         ]);
         
         // Custom validation: cpmd is required only when office is CPMD
@@ -177,6 +202,14 @@ class UserController extends Controller
         $validated['office'] = $validated['office'] ?? 'Others';
         $validated['cpmd'] = $validated['cpmd'] ?? 'Others';
         $validated['gender'] = $validated['gender'] ?? 'Male';
+        
+        // Ensure admin and superadmin users always have full access
+        if (in_array($validated['role'], ['admin', 'superadmin'])) {
+            $validated['can_access_noticeboard'] = true;
+            $validated['can_access_writing_suite'] = true;
+            $validated['can_access_management'] = true;
+            $validated['can_access_inventory'] = true;
+        }
         
         // Hash the password
         $validated['password'] = Hash::make($validated['password']);
@@ -254,6 +287,10 @@ class UserController extends Controller
                 'contact_person' => 'nullable|string|max:255',
                 'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'remove_profile_picture' => 'nullable|string',
+                'can_access_noticeboard' => 'required|boolean',
+                'can_access_writing_suite' => 'required|boolean',
+                'can_access_management' => 'required|boolean',
+                'can_access_inventory' => 'required|boolean',
             ]);
             
             // Custom validation: cpmd is required only when office is CPMD
@@ -264,8 +301,16 @@ class UserController extends Controller
                 );
             }
             
-            // Debug: Log the validated data
+            // Debug: Log validated data
             \Log::info('Validation passed, validated data:', $validated);
+            
+            // Ensure admin and superadmin users always have full access
+            if (in_array($validated['role'], ['admin', 'superadmin'])) {
+                $validated['can_access_noticeboard'] = true;
+                $validated['can_access_writing_suite'] = true;
+                $validated['can_access_management'] = true;
+                $validated['can_access_inventory'] = true;
+            }
             
             // Handle password hashing
             if(isset($validated['password'])) {

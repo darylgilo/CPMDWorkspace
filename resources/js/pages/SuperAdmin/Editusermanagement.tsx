@@ -47,6 +47,10 @@ interface UserType {
     contact_number?: string;
     contact_person?: string;
     profile_picture?: string;
+    can_access_noticeboard?: boolean;
+    can_access_writing_suite?: boolean;
+    can_access_management?: boolean;
+    can_access_inventory?: boolean;
 }
 
 interface PageProps {
@@ -97,6 +101,12 @@ export default function EditUserManagement() {
     const [contact_number, setContactNumber] = useState('');
     const [contact_person, setContactPerson] = useState('');
 
+    // Page access control fields
+    const [can_access_noticeboard, setCanAccessNoticeboard] = useState(true);
+    const [can_access_writing_suite, setCanAccessWritingSuite] = useState(true);
+    const [can_access_management, setCanAccessManagement] = useState(true);
+    const [can_access_inventory, setCanAccessInventory] = useState(true);
+
     // Profile picture and superadmin password
     const [profile_picture, setProfilePicture] = useState<File | undefined>(
         undefined,
@@ -134,6 +144,12 @@ export default function EditUserManagement() {
             setMobileNumber(user.mobile_number || '');
             setContactNumber(user.contact_number || '');
             setContactPerson(user.contact_person || '');
+            
+            // Set page access fields with fallback to true for existing users
+            setCanAccessNoticeboard(user.can_access_noticeboard ?? true);
+            setCanAccessWritingSuite(user.can_access_writing_suite ?? true);
+            setCanAccessManagement(user.can_access_management ?? true);
+            setCanAccessInventory(user.can_access_inventory ?? true);
         }
     }, [user]);
 
@@ -233,6 +249,10 @@ export default function EditUserManagement() {
         formData.append('mobile_number', mobile_number);
         formData.append('contact_number', contact_number);
         formData.append('contact_person', contact_person);
+        formData.append('can_access_noticeboard', can_access_noticeboard ? '1' : '0');
+        formData.append('can_access_writing_suite', can_access_writing_suite ? '1' : '0');
+        formData.append('can_access_management', can_access_management ? '1' : '0');
+        formData.append('can_access_inventory', can_access_inventory ? '1' : '0');
 
         // Add password fields if provided
         if (password) {
@@ -1122,6 +1142,88 @@ export default function EditUserManagement() {
                                                                     'status',
                                                                 )}
                                                             />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    <TableRow>
+                                                        <TableCell className="font-medium align-top">
+                                                            Page Access Control
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Noticeboard</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCanAccessNoticeboard(!can_access_noticeboard)}
+                                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                                            can_access_noticeboard ? 'bg-green-600' : 'bg-gray-200'
+                                                                        } ${role === 'admin' || role === 'superadmin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        disabled={role === 'admin' || role === 'superadmin'}
+                                                                    >
+                                                                        <span
+                                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                                                can_access_noticeboard ? 'translate-x-6' : 'translate-x-1'
+                                                                            }`}
+                                                                        />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Writing Suite</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCanAccessWritingSuite(!can_access_writing_suite)}
+                                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                                            can_access_writing_suite ? 'bg-green-600' : 'bg-gray-200'
+                                                                        } ${role === 'admin' || role === 'superadmin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        disabled={role === 'admin' || role === 'superadmin'}
+                                                                    >
+                                                                        <span
+                                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                                                can_access_writing_suite ? 'translate-x-6' : 'translate-x-1'
+                                                                            }`}
+                                                                        />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Management</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCanAccessManagement(!can_access_management)}
+                                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                                            can_access_management ? 'bg-green-600' : 'bg-gray-200'
+                                                                        } ${role === 'admin' || role === 'superadmin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        disabled={role === 'admin' || role === 'superadmin'}
+                                                                    >
+                                                                        <span
+                                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                                                can_access_management ? 'translate-x-6' : 'translate-x-1'
+                                                                            }`}
+                                                                        />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-sm text-gray-600 dark:text-gray-400">Inventory</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCanAccessInventory(!can_access_inventory)}
+                                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                                                            can_access_inventory ? 'bg-green-600' : 'bg-gray-200'
+                                                                        } ${role === 'admin' || role === 'superadmin' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                        disabled={role === 'admin' || role === 'superadmin'}
+                                                                    >
+                                                                        <span
+                                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                                                can_access_inventory ? 'translate-x-6' : 'translate-x-1'
+                                                                            }`}
+                                                                        />
+                                                                    </button>
+                                                                </div>
+                                                                {(role === 'admin' || role === 'superadmin') && (
+                                                                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                                                                        Admin and Superadmin users have full access to all pages.
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 </TableBody>

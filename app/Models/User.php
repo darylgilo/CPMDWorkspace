@@ -43,6 +43,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'item_number',
         'profile_picture', // Profile picture file path
         'display_order', // Custom order for whereabouts display
+        'can_access_noticeboard', // Page access control
+        'can_access_writing_suite', // Page access control
+        'can_access_management', // Page access control
+        'can_access_inventory', // Page access control
     ];
 
     /**
