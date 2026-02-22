@@ -8,6 +8,7 @@ use App\Models\PpmpProject;
 use App\Models\PpmpFundingDetail;
 use App\Models\PpmpTimeline;
 use App\Models\PpmpSubtotalHighlight;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
@@ -118,6 +119,27 @@ class BudgetManagementController extends Controller
                     ],
                 ]);
             }
+
+            // Add Audit Logs for reports tab
+            if ($tab === 'reports') {
+                $auditLogs = AuditLog::with(['user'])
+                    ->where('module', 'Budget Management')
+                    ->when($search, function ($query, $search) {
+                        $query->where(function($q) use ($search) {
+                            $q->where('action', 'like', "%{$search}%")
+                              ->orWhere('details', 'like', "%{$search}%")
+                              ->orWhereHas('user', function($u) use ($search) {
+                                  $u->where('name', 'like', "%{$search}%");
+                              });
+                        });
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->paginate($perPage);
+
+                $data = array_merge($data, [
+                    'auditLogs' => $auditLogs,
+                ]);
+            }
         }
 
         if ($tab === 'travel-expenses') {
@@ -192,6 +214,8 @@ class BudgetManagementController extends Controller
 
         $fund = Fund::create($validated);
 
+        $this->logActivity('Added', "New Fund created: {$fund->fund_name} with amount PHP " . number_format($fund->total_amount, 2), $fund);
+
         return redirect()->back()->with('success', 'Fund created successfully');
     }
 
@@ -208,6 +232,8 @@ class BudgetManagementController extends Controller
 
         $fund->update($validated);
 
+        $this->logActivity('Updated', "Fund details updated for: {$fund->fund_name}", $fund);
+
         return redirect()->back()->with('success', 'Fund updated successfully');
     }
 
@@ -220,7 +246,10 @@ class BudgetManagementController extends Controller
             return redirect()->back()->with('error', 'Cannot delete fund with existing transactions');
         }
 
+        $fundName = $fund->fund_name;
         $fund->delete();
+
+        $this->logActivity('Deleted', "Fund deleted: {$fundName}");
 
         return redirect()->back()->with('success', 'Fund deleted successfully');
     }
@@ -248,6 +277,8 @@ class BudgetManagementController extends Controller
 
         $travelExpense = \App\Models\TravelExpense::create($validated);
 
+        $this->logActivity('Added', "New Travel Expense added for: {$travelExpense->name} - {$travelExpense->destination}", $travelExpense);
+
         return redirect()->back()->with('success', 'Travel expense created successfully');
     }
 
@@ -272,6 +303,8 @@ class BudgetManagementController extends Controller
 
         $expense->update($validated);
 
+        $this->logActivity('Updated', "Travel Expense updated: {$expense->doctrack_no}", $expense);
+
         return redirect()->back()->with('success', 'Travel expense updated successfully');
     }
 
@@ -280,7 +313,10 @@ class BudgetManagementController extends Controller
      */
     public function destroyTravelExpense(\App\Models\TravelExpense $expense)
     {
+        $doctrack = $expense->doctrack_no;
         $expense->delete();
+
+        $this->logActivity('Deleted', "Travel Expense deleted: {$doctrack}");
 
         return redirect()->back()->with('success', 'Travel expense deleted successfully');
     }
@@ -313,9 +349,10 @@ class BudgetManagementController extends Controller
 
         $transaction = FundTransaction::create($validated);
 
-        // Update fund allocated amount
         $fund = Fund::find($validated['fund_id']);
         $fund->updateAllocatedAmount($validated['amount_po']);
+
+        $this->logActivity('Added', "New Transaction added to {$fund->fund_name}: {$transaction->doctrack_no} - {$transaction->supplier}", $transaction);
 
         return redirect()->back()->with('success', 'Transaction created successfully');
     }
@@ -358,6 +395,8 @@ class BudgetManagementController extends Controller
             $fund->updateAllocatedAmount($difference);
         }
 
+        $this->logActivity('Updated', "Transaction updated: {$transaction->doctrack_no}", $transaction);
+
         return redirect()->back()->with('success', 'Transaction updated successfully');
     }
 
@@ -371,7 +410,10 @@ class BudgetManagementController extends Controller
             return response()->json(['message' => 'Cannot delete transaction with existing delivery records, DV numbers, or DV amounts'], 422);
         }
 
+        $doctrack = $transaction->doctrack_no;
         $transaction->delete();
+
+        $this->logActivity('Deleted', "Transaction deleted: {$doctrack}");
 
         return response()->json(['message' => 'Transaction deleted successfully']);
     }
@@ -467,6 +509,8 @@ class BudgetManagementController extends Controller
             'user_id' => auth()->id(),
         ]);
 
+        $this->logActivity('Added', "New PPMP Project created: {$project->general_description}", $project);
+
         return redirect()->back()->with('success', 'PPMP project created successfully. You can now add funding details and timelines.');
     }
 
@@ -516,6 +560,9 @@ class BudgetManagementController extends Controller
             }
         }
 
+        $project = PpmpProject::find($validated['ppmp_project_id']);
+        $this->logActivity('Added', "Added {$totalItems} funding detail(s) to project: {$project->general_description}", $project);
+
         return redirect()->back()->with('success', $totalItems . ' funding detail(s) added successfully');
     }
 
@@ -560,6 +607,8 @@ class BudgetManagementController extends Controller
             ]);
         }
 
+        $this->logActivity('Updated', "Updated funding details for projet: {$fundingDetail->ppmpProject->general_description}", $fundingDetail);
+
         return redirect()->back()->with('success', 'Funding detail updated successfully');
     }
 
@@ -568,11 +617,14 @@ class BudgetManagementController extends Controller
      */
     public function destroyFundingDetails(PpmpFundingDetail $fundingDetail)
     {
+        $projectDescription = $fundingDetail->ppmpProject->general_description;
         // Delete related timelines first
         $fundingDetail->timelines()->delete();
         
         // Delete the funding detail
         $fundingDetail->delete();
+
+        $this->logActivity('Deleted', "Deleted a funding detail from project: {$projectDescription}");
 
         return redirect()->back()->with('success', 'Funding detail deleted successfully');
     }
@@ -596,6 +648,8 @@ class BudgetManagementController extends Controller
             'user_id' => auth()->id(),
         ]);
 
+        $this->logActivity('Updated', "PPMP Project updated: {$ppmpProject->general_description}", $ppmpProject);
+
         return redirect()->back()->with('success', 'PPMP project updated successfully');
     }
 
@@ -610,8 +664,11 @@ class BudgetManagementController extends Controller
         });
         $ppmpProject->fundingDetails()->delete();
         
+        $description = $ppmpProject->general_description;
         // Delete the project
         $ppmpProject->delete();
+
+        $this->logActivity('Deleted', "PPMP Project deleted: {$description}");
 
         return redirect()->back()->with('success', 'PPMP item deleted successfully');
     }
@@ -689,5 +746,20 @@ class BudgetManagementController extends Controller
         $highlight->delete();
 
         return redirect()->back()->with('success', 'Highlight deleted successfully');
+    }
+
+    /**
+     * Log an activity to the audit_logs table.
+     */
+    private function logActivity(string $action, string $details, $model = null)
+    {
+        AuditLog::create([
+            'user_id' => auth()->id(),
+            'module' => 'Budget Management',
+            'action' => $action,
+            'model_type' => $model ? get_class($model) : null,
+            'model_id' => $model ? $model->id : null,
+            'details' => $details,
+        ]);
     }
 }

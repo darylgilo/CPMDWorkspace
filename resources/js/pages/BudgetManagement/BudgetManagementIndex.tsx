@@ -68,7 +68,7 @@ const navItems: Array<Omit<NavItem, 'href'> & { href: string }> = [
         icon: Receipt,
     },
     {
-        title: 'Reports',
+        title: 'Audit logs',
         href: '#reports',
         icon: Receipt,
     },
