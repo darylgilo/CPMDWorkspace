@@ -245,11 +245,11 @@ export default function CategoriesPage() {
         return (serverNotices as Array<Record<string, unknown>>).map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -263,11 +263,11 @@ export default function CategoriesPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -855,9 +855,7 @@ export default function CategoriesPage() {
                                     Description
                                 </label>
                                 {!isEditMode ? (
-                                    <div
-                                        className="w-full min-h-[300px] whitespace-pre-wrap rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition dark:border-neutral-700 dark:bg-neutral-800 dark:text-white"
-                                    >
+                                    <div className="min-h-[300px] w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm whitespace-pre-wrap transition dark:border-neutral-700 dark:bg-neutral-800 dark:text-white">
                                         {renderTextWithLinks(editDescription)}
                                     </div>
                                 ) : (
@@ -935,7 +933,7 @@ export default function CategoriesPage() {
                                         Current Attachments
                                     </label>
                                     {editingNotice.files &&
-                                        editingNotice.files.length > 0 ? (
+                                    editingNotice.files.length > 0 ? (
                                         <div className="text-xs text-gray-600 dark:text-gray-300">
                                             {editingNotice.files.map(
                                                 (f, idx) => (

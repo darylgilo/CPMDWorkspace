@@ -8,7 +8,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { renderTextWithLinks } from '@/lib/text-utils';
 import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
@@ -17,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { router, usePage } from '@inertiajs/react';
 import {
     Bookmark,
@@ -158,7 +158,10 @@ export default function Writeup() {
 
     const getProfilePictureUrl = (profilePicture?: string) => {
         if (!profilePicture) return null;
-        if (profilePicture?.startsWith('http://') || profilePicture?.startsWith('https://'))
+        if (
+            profilePicture?.startsWith('http://') ||
+            profilePicture?.startsWith('https://')
+        )
             return profilePicture;
         if (profilePicture?.startsWith('/')) return profilePicture; // already absolute path
         if (profilePicture?.startsWith('storage/')) return `/${profilePicture}`; // already in storage folder
@@ -166,7 +169,7 @@ export default function Writeup() {
     };
 
     const handleImageError = (key: string) => {
-        setBrokenImages(prev => new Set(prev).add(key));
+        setBrokenImages((prev) => new Set(prev).add(key));
     };
 
     // Form field configuration for documents
@@ -729,13 +732,28 @@ export default function Writeup() {
                                 <div className="mb-4 flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="mb-2 flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden bg-[#163832] dark:bg-[#235347]">
-                                                {getProfilePictureUrl(document.author.profile_picture) && !brokenImages.has(`author-${document.id}`) ? (
+                                            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#163832] dark:bg-[#235347]">
+                                                {getProfilePictureUrl(
+                                                    document.author
+                                                        .profile_picture,
+                                                ) &&
+                                                !brokenImages.has(
+                                                    `author-${document.id}`,
+                                                ) ? (
                                                     <img
-                                                        src={getProfilePictureUrl(document.author.profile_picture)!}
+                                                        src={
+                                                            getProfilePictureUrl(
+                                                                document.author
+                                                                    .profile_picture,
+                                                            )!
+                                                        }
                                                         alt={`${document.author.name}'s profile`}
                                                         className="h-full w-full object-cover"
-                                                        onError={() => handleImageError(`author-${document.id}`)}
+                                                        onError={() =>
+                                                            handleImageError(
+                                                                `author-${document.id}`,
+                                                            )
+                                                        }
                                                     />
                                                 ) : (
                                                     <User className="h-5 w-5 text-white" />
@@ -797,18 +815,18 @@ export default function Writeup() {
                                             </DropdownMenuItem>
                                             {current_user?.id ===
                                                 document.author.id && (
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                document.id,
-                                                            )
-                                                        }
-                                                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        <span>Delete</span>
-                                                    </DropdownMenuItem>
-                                                )}
+                                                <DropdownMenuItem
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            document.id,
+                                                        )
+                                                    }
+                                                    className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    <span>Delete</span>
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
@@ -824,14 +842,18 @@ export default function Writeup() {
                                                         key={index}
                                                         className="mb-4"
                                                     >
-                                                        {renderTextWithLinks(paragraph)}
+                                                        {renderTextWithLinks(
+                                                            paragraph,
+                                                        )}
                                                     </p>
                                                 ))
                                         ) : (
                                             <p>
-                                                {renderTextWithLinks(truncateContent(
-                                                    document.content,
-                                                ))}
+                                                {renderTextWithLinks(
+                                                    truncateContent(
+                                                        document.content,
+                                                    ),
+                                                )}
                                             </p>
                                         )}
                                         {document.content.length > 300 && (
@@ -858,10 +880,11 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleApprove(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${document.is_approved
-                                                ? 'rounded-md bg-green-50 px-2 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                                                : 'text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400'
-                                                }`}
+                                            className={`flex items-center gap-2 transition-colors ${
+                                                document.is_approved
+                                                    ? 'rounded-md bg-green-50 px-2 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                                                    : 'text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400'
+                                            }`}
                                         >
                                             <Check className="h-4 w-4" />
                                             <span className="text-sm">
@@ -869,10 +892,11 @@ export default function Writeup() {
                                             </span>
                                             {document.approvals_count > 0 && (
                                                 <span
-                                                    className={`rounded-full px-1.5 py-0.5 text-xs ${document.is_approved
-                                                        ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
-                                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        }`}
+                                                    className={`rounded-full px-1.5 py-0.5 text-xs ${
+                                                        document.is_approved
+                                                            ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
+                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                    }`}
                                                 >
                                                     {document.approvals_count}
                                                 </span>
@@ -882,10 +906,11 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleLike(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${document.is_liked
-                                                ? 'rounded-md bg-red-50 px-2 py-1 text-red-500 dark:bg-red-900/20 dark:text-red-400'
-                                                : 'text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'
-                                                }`}
+                                            className={`flex items-center gap-2 transition-colors ${
+                                                document.is_liked
+                                                    ? 'rounded-md bg-red-50 px-2 py-1 text-red-500 dark:bg-red-900/20 dark:text-red-400'
+                                                    : 'text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'
+                                            }`}
                                         >
                                             <Heart
                                                 className={`h-4 w-4 ${document.is_liked ? 'fill-current' : ''}`}
@@ -930,10 +955,11 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleBookmark(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${document.is_bookmarked
-                                                ? 'rounded-md bg-yellow-50 px-2 py-1 text-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                : 'text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400'
-                                                }`}
+                                            className={`flex items-center gap-2 transition-colors ${
+                                                document.is_bookmarked
+                                                    ? 'rounded-md bg-yellow-50 px-2 py-1 text-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                    : 'text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400'
+                                            }`}
                                         >
                                             <Bookmark
                                                 className={`h-4 w-4 ${document.is_bookmarked ? 'fill-current' : ''}`}
@@ -990,13 +1016,28 @@ export default function Writeup() {
                                         {/* Add Comment */}
                                         <div>
                                             <div className="flex gap-3">
-                                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden bg-[#163832] dark:bg-[#235347]">
-                                                    {getProfilePictureUrl(auth?.user.profile_picture) && !brokenImages.has('current-user') ? (
+                                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#163832] dark:bg-[#235347]">
+                                                    {getProfilePictureUrl(
+                                                        auth?.user
+                                                            .profile_picture,
+                                                    ) &&
+                                                    !brokenImages.has(
+                                                        'current-user',
+                                                    ) ? (
                                                         <img
-                                                            src={getProfilePictureUrl(auth?.user.profile_picture)!}
+                                                            src={
+                                                                getProfilePictureUrl(
+                                                                    auth?.user
+                                                                        .profile_picture,
+                                                                )!
+                                                            }
                                                             alt={`${auth?.user.name}'s profile`}
                                                             className="h-full w-full object-cover"
-                                                            onError={() => handleImageError('current-user')}
+                                                            onError={() =>
+                                                                handleImageError(
+                                                                    'current-user',
+                                                                )
+                                                            }
                                                         />
                                                     ) : (
                                                         <User className="h-4 w-4 text-white" />
@@ -1007,7 +1048,7 @@ export default function Writeup() {
                                                         id={`comment-${document.id}`}
                                                         value={
                                                             newComments[
-                                                            document.id
+                                                                document.id
                                                             ] || ''
                                                         }
                                                         onChange={(e) =>
@@ -1056,13 +1097,29 @@ export default function Writeup() {
                                                     key={comment.id}
                                                     className="flex gap-3"
                                                 >
-                                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full overflow-hidden bg-gray-300 dark:bg-neutral-600">
-                                                        {getProfilePictureUrl(comment.author.profile_picture) && !brokenImages.has(`comment-${comment.id}`) ? (
+                                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-neutral-600">
+                                                        {getProfilePictureUrl(
+                                                            comment.author
+                                                                .profile_picture,
+                                                        ) &&
+                                                        !brokenImages.has(
+                                                            `comment-${comment.id}`,
+                                                        ) ? (
                                                             <img
-                                                                src={getProfilePictureUrl(comment.author.profile_picture)!}
+                                                                src={
+                                                                    getProfilePictureUrl(
+                                                                        comment
+                                                                            .author
+                                                                            .profile_picture,
+                                                                    )!
+                                                                }
                                                                 alt={`${comment.author.name}'s profile`}
                                                                 className="h-full w-full object-cover"
-                                                                onError={() => handleImageError(`comment-${comment.id}`)}
+                                                                onError={() =>
+                                                                    handleImageError(
+                                                                        `comment-${comment.id}`,
+                                                                    )
+                                                                }
                                                             />
                                                         ) : (
                                                             <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
@@ -1086,9 +1143,9 @@ export default function Writeup() {
                                                             </div>
                                                             {current_user &&
                                                                 current_user.id ===
-                                                                comment
-                                                                    .author
-                                                                    .id && (
+                                                                    comment
+                                                                        .author
+                                                                        .id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger
                                                                             asChild
@@ -1139,8 +1196,8 @@ export default function Writeup() {
                                                                 <textarea
                                                                     value={
                                                                         editCommentTexts[
-                                                                        comment
-                                                                            .id
+                                                                            comment
+                                                                                .id
                                                                         ] || ''
                                                                     }
                                                                     onChange={(
@@ -1193,7 +1250,9 @@ export default function Writeup() {
                                                             </div>
                                                         ) : (
                                                             <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {renderTextWithLinks(comment.content)}
+                                                                {renderTextWithLinks(
+                                                                    comment.content,
+                                                                )}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1201,10 +1260,10 @@ export default function Writeup() {
                                             ))}
                                             {(!comments[document.id] ||
                                                 comments[document.id].length ===
-                                                0) &&
+                                                    0) &&
                                                 (!document.comments ||
                                                     document.comments.length ===
-                                                    0) && (
+                                                        0) && (
                                                     <p className="py-4 text-center text-gray-500 dark:text-gray-400">
                                                         No comments yet. Be the
                                                         first to comment!

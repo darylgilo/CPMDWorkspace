@@ -24,7 +24,6 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
     variant = 'outline',
     size = 'default',
 }) => {
-
     // Group projects by general_description and project_type (matching PPMP.tsx structure)
     const groupProjectsByCategory = (projects: Project[]) => {
         const grouped = new Map<string, Project[]>();
@@ -38,8 +37,6 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
         });
         return grouped;
     };
-
-
 
     // Export to Excel
     const exportToExcel = async () => {
@@ -312,105 +309,102 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
 
             projects.forEach((project) => {
                 if (project.funding_details) {
-                    project.funding_details.forEach(
-                        (fundingDetail) => {
-                            const budget = parseFloat(
-                                String(fundingDetail.estimated_budget || '0'),
-                            );
-                            categoryTotal += budget;
-                            grandTotal += budget;
+                    project.funding_details.forEach((fundingDetail) => {
+                        const budget = parseFloat(
+                            String(fundingDetail.estimated_budget || '0'),
+                        );
+                        categoryTotal += budget;
+                        grandTotal += budget;
 
-                            const timelines = fundingDetail.timelines || [
-                                {
-                                    start_procurement: '',
-                                    end_procurement: '',
-                                    delivery_period: '',
-                                },
-                            ];
-                            const timelineCount = timelines.length;
-                            const fundingDetailStartRow = startRow;
+                        const timelines = fundingDetail.timelines || [
+                            {
+                                start_procurement: '',
+                                end_procurement: '',
+                                delivery_period: '',
+                            },
+                        ];
+                        const timelineCount = timelines.length;
+                        const fundingDetailStartRow = startRow;
 
-                            timelines.forEach((timeline) => {
-                                sheet.addRow([
-                                    project.general_description,
-                                    project.project_type,
-                                    fundingDetail.quantity_size,
-                                    fundingDetail.mode_of_procurement || 'N/A',
-                                    fundingDetail.pre_procurement_conference ||
+                        timelines.forEach((timeline) => {
+                            sheet.addRow([
+                                project.general_description,
+                                project.project_type,
+                                fundingDetail.quantity_size,
+                                fundingDetail.mode_of_procurement || 'N/A',
+                                fundingDetail.pre_procurement_conference ||
                                     'No',
-                                    timeline.start_procurement || '',
-                                    timeline.end_procurement || '',
-                                    timeline.delivery_period || '',
-                                    fundingDetail.source_of_funds ||
-                                    'Corn Fund',
-                                    budget,
-                                    fundingDetail.supporting_documents ||
+                                timeline.start_procurement || '',
+                                timeline.end_procurement || '',
+                                timeline.delivery_period || '',
+                                fundingDetail.source_of_funds || 'Corn Fund',
+                                budget,
+                                fundingDetail.supporting_documents ||
                                     'Market Scoping, Technical Specifications',
-                                    fundingDetail.remarks || '',
-                                ]);
+                                fundingDetail.remarks || '',
+                            ]);
 
-                                // Format currency column
-                                sheet.getRow(startRow).getCell(10).numFmt =
-                                    '₱#,##0.00';
-                                sheet.getRow(startRow).getCell(10).alignment = {
-                                    horizontal: 'right',
+                            // Format currency column
+                            sheet.getRow(startRow).getCell(10).numFmt =
+                                '₱#,##0.00';
+                            sheet.getRow(startRow).getCell(10).alignment = {
+                                horizontal: 'right',
+                            };
+
+                            // Add borders to data row
+                            sheet.getRow(startRow).eachCell((cell) => {
+                                cell.border = {
+                                    top: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    right: { style: 'thin' },
                                 };
-
-                                // Add borders to data row
-                                sheet.getRow(startRow).eachCell((cell) => {
-                                    cell.border = {
-                                        top: { style: 'thin' },
-                                        left: { style: 'thin' },
-                                        bottom: { style: 'thin' },
-                                        right: { style: 'thin' },
-                                    };
-                                    cell.alignment = {
-                                        wrapText: true,
-                                        vertical: 'middle',
-                                        horizontal: 'left',
-                                    };
-                                });
-
-                                // Center specific columns
-                                [2, 3, 4, 5, 6, 7, 8, 9].forEach((colIndex) => {
-                                    sheet
-                                        .getRow(startRow)
-                                        .getCell(colIndex).alignment = {
-                                        horizontal: 'center',
-                                        vertical: 'middle',
-                                        wrapText: true,
-                                    };
-                                });
-
-                                startRow++;
+                                cell.alignment = {
+                                    wrapText: true,
+                                    vertical: 'middle',
+                                    horizontal: 'left',
+                                };
                             });
 
-                            // Merge cells for columns that should span all timelines of this funding detail
-                            if (timelineCount > 1) {
-                                sheet.mergeCells(
-                                    `C${fundingDetailStartRow}:C${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Quantity
-                                sheet.mergeCells(
-                                    `D${fundingDetailStartRow}:D${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Mode
-                                sheet.mergeCells(
-                                    `E${fundingDetailStartRow}:E${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Pre-Proc
-                                sheet.mergeCells(
-                                    `I${fundingDetailStartRow}:I${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Source of Funds
-                                sheet.mergeCells(
-                                    `J${fundingDetailStartRow}:J${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Budget
-                                sheet.mergeCells(
-                                    `K${fundingDetailStartRow}:K${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Supporting Docs
-                                sheet.mergeCells(
-                                    `L${fundingDetailStartRow}:L${fundingDetailStartRow + timelineCount - 1}`,
-                                ); // Remarks
-                            }
-                        },
-                    );
+                            // Center specific columns
+                            [2, 3, 4, 5, 6, 7, 8, 9].forEach((colIndex) => {
+                                sheet
+                                    .getRow(startRow)
+                                    .getCell(colIndex).alignment = {
+                                    horizontal: 'center',
+                                    vertical: 'middle',
+                                    wrapText: true,
+                                };
+                            });
+
+                            startRow++;
+                        });
+
+                        // Merge cells for columns that should span all timelines of this funding detail
+                        if (timelineCount > 1) {
+                            sheet.mergeCells(
+                                `C${fundingDetailStartRow}:C${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Quantity
+                            sheet.mergeCells(
+                                `D${fundingDetailStartRow}:D${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Mode
+                            sheet.mergeCells(
+                                `E${fundingDetailStartRow}:E${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Pre-Proc
+                            sheet.mergeCells(
+                                `I${fundingDetailStartRow}:I${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Source of Funds
+                            sheet.mergeCells(
+                                `J${fundingDetailStartRow}:J${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Budget
+                            sheet.mergeCells(
+                                `K${fundingDetailStartRow}:K${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Supporting Docs
+                            sheet.mergeCells(
+                                `L${fundingDetailStartRow}:L${fundingDetailStartRow + timelineCount - 1}`,
+                            ); // Remarks
+                        }
+                    });
                 }
             });
 
@@ -587,5 +581,3 @@ const ExportPPMP: React.FC<ExportPPMPProps> = ({
 };
 
 export default ExportPPMP;
-
-

@@ -14,6 +14,7 @@ use App\Http\Controllers\BudgetManagementController;
 use App\Http\Controllers\Writing\WritingController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\WeatherController;
+use App\Http\Controllers\Taskboard\TaskboardController;
 use App\Http\Middleware\RoleMiddleware;
 
 Route::get('/', function () {
@@ -102,16 +103,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'store'])->name('whereabouts.store');
     Route::post('/whereabouts/reorder', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'reorder'])->name('whereabouts.reorder');
     Route::delete('/whereabouts/{id}', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'destroy'])->name('whereabouts.destroy');
-    
-    
-});
 
-    // API routes for dashboard widgets (always accessible)
+    // Taskboard
+    Route::get('/taskboard', [TaskboardController::class, 'index'])->name('taskboard.index');
+    Route::post('/tasks', [TaskboardController::class, 'store'])->name('tasks.store');
+    Route::put('/tasks/{task}', [TaskboardController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{task}', [TaskboardController::class, 'destroy'])->name('tasks.destroy');
+    // API routes for dashboard widgets
     Route::get('/api/writeups', [WritingController::class, 'getWriteupsForWidget'])->name('api.writeups');
     Route::get('/api/notices', [NoticeController::class, 'getNoticesForWidget'])->name('api.notices');
     Route::get('/api/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'getWhereaboutsForWidget'])->name('api.whereabouts');
     Route::get('/api/user-stats', [UserController::class, 'getStats'])->name('api.user-stats');
     Route::get('/api/weather', [WeatherController::class, 'getWeather'])->name('weather.get');
+    Route::get('/api/my-tasks', [TaskboardController::class, 'getMyTasks'])->name('api.my-tasks');
+});
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
 Route::middleware(['auth', 'verified','role:admin,superadmin,biocon'])->group(function () {

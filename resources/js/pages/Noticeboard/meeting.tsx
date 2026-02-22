@@ -1,4 +1,5 @@
 import SearchBar from '@/components/SearchBar';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { Head, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
@@ -9,7 +10,6 @@ import {
     FileText,
     User,
 } from 'lucide-react';
-import { renderTextWithLinks } from '@/lib/text-utils';
 import { useEffect, useMemo, useState } from 'react';
 
 interface Notice {
@@ -131,11 +131,11 @@ export default function AnnouncementPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? n.files.map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -148,11 +148,11 @@ export default function AnnouncementPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
                 category: n.category,
@@ -327,13 +327,13 @@ export default function AnnouncementPage() {
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 {selectedDate
                                     ? `Showing meetings for ${selectedDate.toLocaleDateString(
-                                        'en-US',
-                                        {
-                                            month: 'long',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                        },
-                                    )}`
+                                          'en-US',
+                                          {
+                                              month: 'long',
+                                              day: 'numeric',
+                                              year: 'numeric',
+                                          },
+                                      )}`
                                     : 'View all meetings with scheduled dates'}
                             </p>
                         </div>
@@ -364,28 +364,31 @@ export default function AnnouncementPage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                         <button
                             onClick={() => setFilterType('all')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'all'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'all'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            }`}
                         >
                             All ({meetings.length})
                         </button>
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'upcoming'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'upcoming'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            }`}
                         >
                             Upcoming ({upcomingCount})
                         </button>
                         <button
                             onClick={() => setFilterType('ended')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${filterType === 'ended'
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                                filterType === 'ended'
                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
-                                }`}
+                            }`}
                         >
                             Ended ({endedCount})
                         </button>
@@ -457,25 +460,27 @@ export default function AnnouncementPage() {
                                             isPastDate(new Date(meeting.date));
                                         const daysUntil = meeting.date
                                             ? getDaysUntilDeadline(
-                                                new Date(meeting.date),
-                                            )
+                                                  new Date(meeting.date),
+                                              )
                                             : null;
 
                                         return (
                                             <div
                                                 key={meeting.id}
-                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${isEnded
+                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
+                                                    isEnded
                                                         ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
                                                         : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
-                                                    }`}
+                                                }`}
                                             >
                                                 <div className="mb-3 flex items-start justify-between">
                                                     <div className="flex flex-1 items-start gap-3">
                                                         <AlertCircle
-                                                            className={`h-6 w-6 flex-shrink-0 ${isEnded
+                                                            className={`h-6 w-6 flex-shrink-0 ${
+                                                                isEnded
                                                                     ? 'text-red-600 dark:text-red-400'
                                                                     : 'text-[#163832] dark:text-[#235347]'
-                                                                }`}
+                                                            }`}
                                                             aria-hidden
                                                         />
                                                         <div className="flex-1">
@@ -501,28 +506,30 @@ export default function AnnouncementPage() {
                                                 <div
                                                     className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                 >
-                                                    {renderTextWithLinks(meeting.description)}
+                                                    {renderTextWithLinks(
+                                                        meeting.description,
+                                                    )}
                                                 </div>
                                                 {meeting.description.length >
                                                     150 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleCardExpansion(
-                                                                    meeting.id,
-                                                                )
-                                                            }
-                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                        >
-                                                            {isExpanded
-                                                                ? 'Show less'
-                                                                : 'Read more'}
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        onClick={() =>
+                                                            toggleCardExpansion(
+                                                                meeting.id,
+                                                            )
+                                                        }
+                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                    >
+                                                        {isExpanded
+                                                            ? 'Show less'
+                                                            : 'Read more'}
+                                                    </button>
+                                                )}
 
                                                 {/* Attachments */}
                                                 {meeting.files &&
                                                     meeting.files.length >
-                                                    0 && (
+                                                        0 && (
                                                         <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                                                             <FileText className="h-4 w-4" />
                                                             <span>
@@ -589,23 +596,24 @@ export default function AnnouncementPage() {
                                                     </div>
                                                     {daysUntil !== null && (
                                                         <div
-                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${isEnded
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                isEnded
                                                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                                                     : daysUntil <=
                                                                         3
-                                                                        ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                        : 'bg-blue-500 text-white dark:bg-blue-600'
-                                                                }`}
+                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
+                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                            }`}
                                                         >
                                                             {isEnded
                                                                 ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ended`
                                                                 : daysUntil ===
                                                                     0
-                                                                    ? 'Today'
-                                                                    : daysUntil ===
-                                                                        1
-                                                                        ? 'Tomorrow'
-                                                                        : `In ${daysUntil} days`}
+                                                                  ? 'Today'
+                                                                  : daysUntil ===
+                                                                      1
+                                                                    ? 'Tomorrow'
+                                                                    : `In ${daysUntil} days`}
                                                         </div>
                                                     )}
                                                 </div>
@@ -618,10 +626,10 @@ export default function AnnouncementPage() {
                                             {selectedDate
                                                 ? 'No meetings scheduled for this date.'
                                                 : filterType === 'upcoming'
-                                                    ? 'No upcoming meetings.'
-                                                    : filterType === 'ended'
-                                                        ? 'No ended meetings.'
-                                                        : 'No meetings available.'}
+                                                  ? 'No upcoming meetings.'
+                                                  : filterType === 'ended'
+                                                    ? 'No ended meetings.'
+                                                    : 'No meetings available.'}
                                         </p>
                                     </div>
                                 )}

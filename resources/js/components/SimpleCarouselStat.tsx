@@ -170,10 +170,11 @@ export default function SimpleCarouselStat({
                             <button
                                 key={item.id}
                                 onClick={() => handleDotClick(index)}
-                                className={`h-1.5 w-1.5 rounded-full transition-all ${index === currentIndex
+                                className={`h-1.5 w-1.5 rounded-full transition-all ${
+                                    index === currentIndex
                                         ? 'w-4 bg-white'
                                         : 'bg-white/40 hover:bg-white/60'
-                                    }`}
+                                }`}
                                 aria-label={`Go to item ${index + 1}`}
                             />
                         ))}

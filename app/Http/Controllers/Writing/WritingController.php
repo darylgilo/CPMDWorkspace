@@ -246,7 +246,6 @@ class WritingController extends Controller
                 'author' => [
                     'id' => $document->user->id,
                     'name' => $document->user->name,
-                    'email' => $document->user->email,
                     'profile_picture' => $document->user->profile_picture,
                 ],
             ];
@@ -355,6 +354,10 @@ class WritingController extends Controller
      */
     public function update(Request $request, Document $document)
     {
+        // Check if user owns the document or is an admin/superadmin
+        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -418,6 +421,11 @@ class WritingController extends Controller
      */
     public function destroy(Document $document)
     {
+        // Check if user owns the document or is an admin/superadmin
+        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
         // Create history record before deletion
         $document->histories()->create([
             'user_id' => auth()->id(),

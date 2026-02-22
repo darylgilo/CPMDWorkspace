@@ -18,7 +18,6 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
     variant = 'outline',
     size = 'default',
 }) => {
-
     const exportToExcel = async () => {
         // Create a new workbook
         const workbook = new ExcelJS.Workbook();
@@ -30,7 +29,11 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
             { header: 'Name', key: 'name', width: 25 },
             { header: 'Email', key: 'email', width: 30 },
             { header: 'Position', key: 'position', width: 25 },
-            { header: 'Employment Status', key: 'employment_status', width: 20 },
+            {
+                header: 'Employment Status',
+                key: 'employment_status',
+                width: 20,
+            },
             { header: 'Office', key: 'office', width: 15 },
             { header: 'Section/Unit', key: 'cpmd', width: 25 },
             { header: 'Hiring Date', key: 'hiring_date', width: 15 },
@@ -78,25 +81,26 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: 'FF163832' }
+                fgColor: { argb: 'FF163832' },
             };
             cell.border = {
                 top: { style: 'thin' },
                 left: { style: 'thin' },
                 bottom: { style: 'thin' },
-                right: { style: 'thin' }
+                right: { style: 'thin' },
             };
         });
 
         // Add borders to all data cells
         worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber > 1) { // Skip header row
+            if (rowNumber > 1) {
+                // Skip header row
                 row.eachCell((cell) => {
                     cell.border = {
                         top: { style: 'thin' },
                         left: { style: 'thin' },
                         bottom: { style: 'thin' },
-                        right: { style: 'thin' }
+                        right: { style: 'thin' },
                     };
                 });
             }
@@ -104,51 +108,78 @@ const ExportEmployee: React.FC<ExportEmployeeProps> = ({
 
         // Generate Excel file
         const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { 
-            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        const blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         });
-        
+
         // Save file
-        saveAs(blob, `CPMD_Employees_Complete_${new Date().toISOString().split('T')[0]}.xlsx`);
+        saveAs(
+            blob,
+            `CPMD_Employees_Complete_${new Date().toISOString().split('T')[0]}.xlsx`,
+        );
     };
 
     const exportToCSV = () => {
         // Create CSV content with all fields
         const headers = [
-            'Employee ID', 'Name', 'Email', 'Position', 'Employment Status', 
-            'Office', 'Section/Unit', 'Hiring Date', 'TIN Number', 'GSIS Number', 'Landbank Number',
-            'Address', 'Date of Birth', 'Gender', 'Mobile Number', 'Contact Person', 
-            'Contact Number', 'Item Number', 'Status'
+            'Employee ID',
+            'Name',
+            'Email',
+            'Position',
+            'Employment Status',
+            'Office',
+            'Section/Unit',
+            'Hiring Date',
+            'TIN Number',
+            'GSIS Number',
+            'Landbank Number',
+            'Address',
+            'Date of Birth',
+            'Gender',
+            'Mobile Number',
+            'Contact Person',
+            'Contact Number',
+            'Item Number',
+            'Status',
         ];
-        
+
         const csvContent = [
             headers.join(','),
-            ...data.map((employee) => [
-                employee.employee_id || '',
-                employee.name || '',
-                employee.email || '',
-                employee.position || '',
-                employee.employment_status || '',
-                employee.office || '',
-                employee.cpmd || '',
-                employee.hiring_date || '',
-                employee.tin_number || '',
-                employee.gsis_number || '',
-                employee.landbank_number || '',
-                employee.address || '',
-                employee.date_of_birth || '',
-                employee.gender || '',
-                employee.mobile_number || '',
-                employee.contact_person || '',
-                employee.contact_number || '',
-                employee.item_number || '',
-                employee.status || ''
-            ].map(field => `"${field}"`).join(','))
+            ...data.map((employee) =>
+                [
+                    employee.employee_id || '',
+                    employee.name || '',
+                    employee.email || '',
+                    employee.position || '',
+                    employee.employment_status || '',
+                    employee.office || '',
+                    employee.cpmd || '',
+                    employee.hiring_date || '',
+                    employee.tin_number || '',
+                    employee.gsis_number || '',
+                    employee.landbank_number || '',
+                    employee.address || '',
+                    employee.date_of_birth || '',
+                    employee.gender || '',
+                    employee.mobile_number || '',
+                    employee.contact_person || '',
+                    employee.contact_number || '',
+                    employee.item_number || '',
+                    employee.status || '',
+                ]
+                    .map((field) => `"${field}"`)
+                    .join(','),
+            ),
         ].join('\n');
 
         // Create and download CSV file
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        saveAs(blob, `CPMD_Employees_Complete_${new Date().toISOString().split('T')[0]}.csv`);
+        const blob = new Blob([csvContent], {
+            type: 'text/csv;charset=utf-8;',
+        });
+        saveAs(
+            blob,
+            `CPMD_Employees_Complete_${new Date().toISOString().split('T')[0]}.csv`,
+        );
     };
 
     return (

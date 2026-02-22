@@ -147,10 +147,10 @@ class NoticeController extends Controller
     // Update an existing notice
     public function update(Request $request, Notice $notice)
     {
-        // Optional: Check if user owns the notice or has permission to edit
-        // if ($notice->user_id !== Auth::id()) {
-        //     abort(403);
-        // }
+        // Check if user owns the notice or is an admin/superadmin
+        if ($notice->user_id !== Auth::id() && !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -384,10 +384,10 @@ class NoticeController extends Controller
     // Delete a notice and its associated files
     public function destroy(Notice $notice)
     {
-        // Optional: Check if user owns the notice or has permission to delete
-        // if ($notice->user_id !== Auth::id()) {
-        //     abort(403);
-        // }
+        // Check if user owns the notice or is an admin/superadmin
+        if ($notice->user_id !== Auth::id() && !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
 
         // Delete all associated files from storage
         if (is_array($notice->files)) {

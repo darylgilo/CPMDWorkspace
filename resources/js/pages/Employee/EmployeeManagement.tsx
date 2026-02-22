@@ -1,6 +1,8 @@
 import CustomPagination from '@/components/CustomPagination';
 import SearchBar from '@/components/SearchBar';
 // Custom card components removed as they're no longer used
+import ExportEmployee from '@/components/export/ExportEmployee';
+import SimpleStatistic from '@/components/SimpleStatistic';
 import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
@@ -12,10 +14,17 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Edit, RotateCcw, UserPlus, ChevronDown, ChevronUp, Users, UserCheck, Briefcase, Clock } from 'lucide-react';
+import {
+    Briefcase,
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    Edit,
+    UserCheck,
+    UserPlus,
+    Users,
+} from 'lucide-react';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
-import ExportEmployee from '@/components/export/ExportEmployee';
-import SimpleStatistic from '@/components/SimpleStatistic';
 
 // Define types
 interface User {
@@ -248,14 +257,14 @@ export default function EmployeeManagement() {
                     <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         {(auth?.user?.role === 'superadmin' ||
                             auth?.user?.role === 'admin') && (
-                                <button
-                                    onClick={() => router.get('/employees/create')}
-                                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                >
-                                    <UserPlus className="h-4 w-4" />
-                                    <span>Add Employee</span>
-                                </button>
-                            )}
+                            <button
+                                onClick={() => router.get('/employees/create')}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            >
+                                <UserPlus className="h-4 w-4" />
+                                <span>Add Employee</span>
+                            </button>
+                        )}
 
                         <Select
                             value={cpmd || 'all'}
@@ -435,25 +444,25 @@ export default function EmployeeManagement() {
                             <thead className="bg-gray-50 dark:bg-neutral-800">
                                 <tr>
                                     <th className="w-10 px-4 py-3"></th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Employee
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Employee ID
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Position
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Office
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Section/Unit
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Employment Status
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Actions
                                     </th>
                                 </tr>
@@ -461,12 +470,16 @@ export default function EmployeeManagement() {
                             <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
                                 {filteredEmployees.length > 0 ? (
                                     paginatedEmployees.map((employee: User) => {
-                                        const isRowExpanded = expandedRows.has(employee.id);
+                                        const isRowExpanded = expandedRows.has(
+                                            employee.id,
+                                        );
                                         return (
                                             <Fragment key={employee.id}>
                                                 <tr
-                                                    className={`hover:bg-gray-50 dark:hover:bg-neutral-800/50 cursor-pointer ${isRowExpanded ? 'bg-gray-50/80 dark:bg-neutral-800/40' : ''}`}
-                                                    onClick={() => toggleRow(employee.id)}
+                                                    className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/50 ${isRowExpanded ? 'bg-gray-50/80 dark:bg-neutral-800/40' : ''}`}
+                                                    onClick={() =>
+                                                        toggleRow(employee.id)
+                                                    }
                                                 >
                                                     <td className="px-4 py-4 whitespace-nowrap">
                                                         {isRowExpanded ? (
@@ -482,10 +495,12 @@ export default function EmployeeManagement() {
                                                                     <img
                                                                         className="h-10 w-10 rounded-full object-cover"
                                                                         src={`/storage/${employee.profile_picture}`}
-                                                                        alt={employee.name}
+                                                                        alt={
+                                                                            employee.name
+                                                                        }
                                                                     />
                                                                 ) : (
-                                                                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-neutral-700 flex items-center justify-center">
+                                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-700">
                                                                         <svg
                                                                             className="h-6 w-6 text-gray-400 dark:text-neutral-500"
                                                                             fill="currentColor"
@@ -502,41 +517,50 @@ export default function EmployeeManagement() {
                                                             </div>
                                                             <div className="ml-4">
                                                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                    {employee.name || '—'}
+                                                                    {employee.name ||
+                                                                        '—'}
                                                                 </div>
                                                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                                    {employee.email || '—'}
+                                                                    {employee.email ||
+                                                                        '—'}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                        {employee.employee_id || '—'}
+                                                    <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
+                                                        {employee.employee_id ||
+                                                            '—'}
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                                        {employee.position || '—'}
+                                                    <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
+                                                        {employee.position ||
+                                                            '—'}
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                    <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
                                                         {employee.office || '—'}
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                                    <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
                                                         {employee.cpmd || '—'}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap">
                                                         <span
-                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${employee.status === 'active'
-                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                                : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
-                                                                }`}
+                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                                employee.status ===
+                                                                'active'
+                                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                    : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
+                                                            }`}
                                                         >
-                                                            {employee.employment_status || '—'}
+                                                            {employee.employment_status ||
+                                                                '—'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                                    <td className="px-4 py-4 text-sm whitespace-nowrap">
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                router.get(`/employees/${employee.id}`);
+                                                                router.get(
+                                                                    `/employees/${employee.id}`,
+                                                                );
                                                             }}
                                                             className="inline-flex items-center gap-1 rounded-md bg-[#163832] px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#1a4d3e]"
                                                         >
@@ -547,62 +571,125 @@ export default function EmployeeManagement() {
                                                 </tr>
                                                 {isRowExpanded && (
                                                     <tr className="bg-gray-50/50 dark:bg-neutral-800/20">
-                                                        <td colSpan={8} className="px-8 py-4">
+                                                        <td
+                                                            colSpan={8}
+                                                            className="px-8 py-4"
+                                                        >
                                                             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
                                                                 {/* Column 1 */}
                                                                 <div className="space-y-4">
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Hiring Date</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.hiring_date || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Hiring
+                                                                            Date
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.hiring_date ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Item Number</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.item_number || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Item
+                                                                            Number
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.item_number ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">TIN Number</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.tin_number || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            TIN
+                                                                            Number
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.tin_number ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Column 2 */}
                                                                 <div className="space-y-4">
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">GSIS Number</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.gsis_number || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            GSIS
+                                                                            Number
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.gsis_number ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Landbank Number</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.landbank_number || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Landbank
+                                                                            Number
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.landbank_number ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Mobile Number</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.mobile_number || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Mobile
+                                                                            Number
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.mobile_number ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Column 3 */}
                                                                 <div className="space-y-4">
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Home Address</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.address || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Home
+                                                                            Address
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.address ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Birth Date</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.date_of_birth || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Birth
+                                                                            Date
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.date_of_birth ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Gender</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">{employee.gender || '—'}</p>
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Gender
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.gender ||
+                                                                                '—'}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Column 4 */}
                                                                 <div className="space-y-4">
                                                                     <div>
-                                                                        <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider dark:text-gray-400">Emergency Contact</span>
-                                                                        <p className="mt-1 text-sm text-gray-900 dark:text-white font-medium">
-                                                                            {employee.contact_person || '—'} {employee.contact_number ? `- ${employee.contact_number}` : ''}
+                                                                        <span className="block text-xs font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                                                            Emergency
+                                                                            Contact
+                                                                        </span>
+                                                                        <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {employee.contact_person ||
+                                                                                '—'}{' '}
+                                                                            {employee.contact_number
+                                                                                ? `- ${employee.contact_number}`
+                                                                                : ''}
                                                                         </p>
                                                                     </div>
                                                                 </div>
@@ -615,7 +702,10 @@ export default function EmployeeManagement() {
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-8 text-center">
+                                        <td
+                                            colSpan={8}
+                                            className="px-4 py-8 text-center"
+                                        >
                                             <p className="text-gray-500 dark:text-gray-400">
                                                 {search
                                                     ? 'No employees match your search'

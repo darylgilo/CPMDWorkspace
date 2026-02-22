@@ -3,7 +3,6 @@ import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import { Button } from '@/components/ui/button';
-import { LoadingButton } from '@/components/ui/loading-button';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -331,9 +330,9 @@ export default function TravelExpenses() {
                 required: false,
                 options: filteredFunds
                     ? filteredFunds.map((fund) => ({
-                        value: fund.id.toString(),
-                        label: `${fund.fund_name} (${fund.source_year})`,
-                    }))
+                          value: fund.id.toString(),
+                          label: `${fund.fund_name} (${fund.source_year})`,
+                      }))
                     : [],
                 placeholder: 'Select fund',
             },
@@ -843,7 +842,7 @@ export default function TravelExpenses() {
             .filter(
                 (expense) =>
                     expense.ppmp_project?.general_description ===
-                    'Travelling Expenses - Local' &&
+                        'Travelling Expenses - Local' &&
                     expense.status === 'approved',
             )
             .reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -852,7 +851,7 @@ export default function TravelExpenses() {
             .filter(
                 (expense) =>
                     expense.ppmp_project?.general_description ===
-                    'Travelling Expenses - Foreign' &&
+                        'Travelling Expenses - Foreign' &&
                     expense.status === 'approved',
             )
             .reduce((sum, expense) => sum + Number(expense.amount), 0);
@@ -1008,11 +1007,11 @@ export default function TravelExpenses() {
                                         <SelectValue>
                                             {selectedFundId
                                                 ? filteredFunds.find(
-                                                    (f) =>
-                                                        f.id ===
-                                                        selectedFundId,
-                                                )?.fund_name ||
-                                                'Select a fund'
+                                                      (f) =>
+                                                          f.id ===
+                                                          selectedFundId,
+                                                  )?.fund_name ||
+                                                  'Select a fund'
                                                 : 'Select a fund'}
                                         </SelectValue>
                                     </SelectTrigger>
