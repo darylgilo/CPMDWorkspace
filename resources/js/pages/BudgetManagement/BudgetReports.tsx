@@ -1,362 +1,168 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { router, usePage } from '@inertiajs/react';
-import {
-    BarChart3,
-    DollarSign,
-    Download,
-    FileText,
-    TrendingUp,
-} from 'lucide-react';
-import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useCallback, useState, useEffect } from 'react';
 
-interface Report {
+interface AuditLog {
     id: number;
-    report_type: string;
-    fund_name: string;
-    period: string;
-    total_amount: number;
-    allocated_amount: number;
-    spent_amount: number;
-    remaining_amount: number;
-    generated_date: string;
-    file_path?: string;
+    user: {
+        name: string;
+        profile_picture?: string;
+    };
+    action: string;
+    details: string;
+    created_at: string;
 }
 
 interface PageProps {
-    reports: {
-        data: Report[];
+    auditLogs?: {
+        data: AuditLog[];
         current_page: number;
         last_page: number;
         per_page: number;
         total: number;
+        links: any[];
     };
-    reportAnalytics: {
-        totalReports: number;
-        totalAmount: number;
-        totalSpent: number;
-        thisMonthReports: number;
-    };
-    funds: Array<{ id: number; fund_name: string }>;
+    search?: string;
     [key: string]: unknown;
 }
 
 export default function BudgetReports() {
     const { props } = usePage<PageProps>();
-    const { reports, reportAnalytics: analytics, funds = [] } = props;
+    const { auditLogs, search: initialSearch = '' } = props;
 
-    const [selectedFund, setSelectedFund] = useState<string>('all');
-    const [selectedPeriod, setSelectedPeriod] =
-        useState<string>('current-month');
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
 
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-PH', {
-            style: 'currency',
-            currency: 'PHP',
-        }).format(amount);
-    };
+    const handleSearch = useCallback((value: string) => {
+        router.get(
+            '/budgetmanagement',
+            { tab: 'reports', search: value },
+            { preserveState: true, replace: true }
+        );
+    }, []);
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchTerm !== initialSearch) {
+                handleSearch(searchTerm);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm, handleSearch, initialSearch]);
+
+    const formatDateTime = (dateString: string) => {
+        return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
         });
     };
 
-    const handleGenerateReport = () => {
-        // Logic to generate report
-        router.post('/budget-reports/generate', {
-            fund_id: selectedFund,
-            period: selectedPeriod,
-        });
-    };
-
-    const handleDownloadReport = (reportId: number) => {
-        // Logic to download report
-        router.get(`/budget-reports/${reportId}/download`);
-    };
-
-    if (!reports) {
+    if (!auditLogs) {
         return (
             <div className="flex items-center justify-center p-8">
-                <p className="text-gray-500">Loading report data...</p>
+                <p className="text-muted-foreground text-gray-500">Loading audit logs...</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-6">
-            {/* Analytics Dashboard */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            Total Reports
-                        </CardTitle>
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {analytics?.totalReports || 0}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            Total Amount
-                        </CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {formatCurrency(analytics?.totalAmount || 0)}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            Total Spent
-                        </CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {formatCurrency(analytics?.totalSpent || 0)}
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                            This Month
-                        </CardTitle>
-                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {analytics?.thisMonthReports || 0}
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="flex items-center justify-between">
+                <div className="relative w-full max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Search logs (user, action, details)..."
+                        className="pl-8"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
             </div>
 
-            {/* Report Generation */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Generate Budget Report</CardTitle>
-                    <CardDescription>
-                        Create detailed budget reports for specific funds and
-                        periods
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                        <div className="flex-1">
-                            <label className="text-sm font-medium">Fund</label>
-                            <Select
-                                value={selectedFund}
-                                onValueChange={setSelectedFund}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select fund" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">
-                                        All Funds
-                                    </SelectItem>
-                                    {funds.map((fund) => (
-                                        <SelectItem
-                                            key={fund.id}
-                                            value={fund.id.toString()}
-                                        >
-                                            {fund.fund_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex-1">
-                            <label className="text-sm font-medium">
-                                Period
-                            </label>
-                            <Select
-                                value={selectedPeriod}
-                                onValueChange={setSelectedPeriod}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select period" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="current-month">
-                                        Current Month
-                                    </SelectItem>
-                                    <SelectItem value="last-month">
-                                        Last Month
-                                    </SelectItem>
-                                    <SelectItem value="current-quarter">
-                                        Current Quarter
-                                    </SelectItem>
-                                    <SelectItem value="current-year">
-                                        Current Year
-                                    </SelectItem>
-                                    <SelectItem value="custom">
-                                        Custom Range
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <Button onClick={handleGenerateReport}>
-                            Generate Report
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="rounded-md border border-gray-200 dark:border-neutral-700">
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-gray-50 dark:bg-neutral-800">
+                            <TableHead className="w-[180px]">User</TableHead>
+                            <TableHead className="w-[100px]">Action</TableHead>
+                            <TableHead>Details</TableHead>
+                            <TableHead className="w-[200px]">Date & Time</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {auditLogs.data.length > 0 ? (
+                            auditLogs.data.map((log) => (
+                                <TableRow key={log.id} className="hover:bg-gray-50 dark:hover:bg-neutral-800">
+                                    <TableCell className="font-medium">
+                                        <div className="flex items-center gap-2">
+                                            {log.user.name}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${log.action === 'Added' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                            log.action === 'Updated' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                            }`}>
+                                            {log.action}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="max-w-md truncate" title={log.details}>
+                                        {log.details}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {formatDateTime(log.created_at)}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    No audit logs found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
 
-            {/* Reports Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Budget Reports</CardTitle>
-                    <CardDescription>
-                        View and download generated budget reports
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse border border-gray-200 dark:border-neutral-700">
-                            <thead>
-                                <tr className="bg-gray-50 dark:bg-neutral-800">
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Report Type
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Fund Name
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Period
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Total Amount
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Allocated Amount
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Spent Amount
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Remaining Amount
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Generated Date
-                                    </th>
-                                    <th className="border border-gray-200 px-4 py-2 text-left font-semibold dark:border-neutral-700">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {reports?.data && reports.data.length > 0 ? (
-                                    reports.data.map((report: Report) => (
-                                        <tr
-                                            key={report.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-neutral-800"
-                                        >
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {report.report_type}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {report.fund_name}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {report.period}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(
-                                                    report.total_amount,
-                                                )}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(
-                                                    report.allocated_amount,
-                                                )}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatCurrency(
-                                                    report.spent_amount,
-                                                )}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                <span
-                                                    className={`font-semibold ${
-                                                        report.remaining_amount ===
-                                                        0
-                                                            ? 'text-red-600 dark:text-red-400'
-                                                            : report.remaining_amount <
-                                                                report.total_amount *
-                                                                    0.2
-                                                              ? 'text-orange-600 dark:text-orange-400'
-                                                              : 'text-green-600 dark:text-green-400'
-                                                    }`}
-                                                >
-                                                    {formatCurrency(
-                                                        report.remaining_amount,
-                                                    )}
-                                                </span>
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                {formatDate(
-                                                    report.generated_date,
-                                                )}
-                                            </td>
-                                            <td className="border border-gray-200 px-4 py-2 dark:border-neutral-700">
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            handleDownloadReport(
-                                                                report.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        <Download className="mr-1 h-3 w-3" />
-                                                        Download
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan={9}
-                                            className="border border-gray-200 px-4 py-8 text-center dark:border-neutral-700"
-                                        >
-                                            No reports found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+            {/* Pagination */}
+            {auditLogs.last_page > 1 && (
+                <div className="flex items-center justify-center space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={auditLogs.current_page === 1}
+                        onClick={() => router.get('/budgetmanagement', { tab: 'reports', page: auditLogs.current_page - 1, search: searchTerm }, { preserveState: true })}
+                    >
+                        Previous
+                    </Button>
+                    <div className="text-sm font-medium">
+                        Page {auditLogs.current_page} of {auditLogs.last_page}
                     </div>
-                </CardContent>
-            </Card>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={auditLogs.current_page === auditLogs.last_page}
+                        onClick={() => router.get('/budgetmanagement', { tab: 'reports', page: auditLogs.current_page + 1, search: searchTerm }, { preserveState: true })}
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }
