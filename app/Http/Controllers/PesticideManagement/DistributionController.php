@@ -112,7 +112,7 @@ class DistributionController extends Controller
             return redirect('/pesticidesindex?tab=distribution')->with('success', 'Distribution created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to record distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to record distribution. Please try again.');
         }
     }
 
@@ -179,7 +179,7 @@ class DistributionController extends Controller
                 ->with('success', 'Distribution updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to update distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update distribution. Please try again.');
         }
     }
 
@@ -203,7 +203,7 @@ class DistributionController extends Controller
                 ->with('success', 'Distribution deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to delete distribution: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete distribution. Please try again.');
         }
     }
 

@@ -3,6 +3,7 @@
 import {
     BotMessageSquareIcon,
     CalendarCheckIcon,
+    ClipboardList,
     FolderArchive,
     FolderArchiveIcon,
     FolderSymlink,
@@ -47,6 +48,17 @@ const data = {
             isActive: true,
         },
         {
+            title: 'Taskboard',
+            url: '/taskboard',
+            icon: ClipboardList,
+        },
+        {
+            title: 'Noticeboard',
+            url: '/noticeboard',
+            icon: MessageSquareTextIcon,
+            isActive: true,
+        },
+        {
             title: 'Whereabouts',
             url: '/whereabouts',
             icon: CalendarCheckIcon,
@@ -59,12 +71,6 @@ const data = {
             isActive: true,
         },
 
-        {
-            title: 'Noticeboard',
-            url: '/noticeboard',
-            icon: MessageSquareTextIcon,
-            isActive: true,
-        },
         {
             title: 'Writing Suite',
             url: '/writing',

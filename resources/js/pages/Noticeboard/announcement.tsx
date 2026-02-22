@@ -1,5 +1,6 @@
 import SearchBar from '@/components/SearchBar';
 import { usePopupAlert } from '@/components/ui/popup-alert';
+import { renderTextWithLinks } from '@/lib/text-utils';
 import { Head, usePage } from '@inertiajs/react';
 import {
     Calendar as CalendarIcon,
@@ -10,7 +11,6 @@ import {
     Megaphone,
     User,
 } from 'lucide-react';
-import { renderTextWithLinks } from '@/lib/text-utils';
 import { useEffect, useMemo, useState } from 'react';
 
 type Category =
@@ -103,11 +103,11 @@ export default function AnnouncementPage() {
         return serverNotices.map((n) => {
             const filesArr = Array.isArray(n.files)
                 ? (n.files as Array<Record<string, unknown>>).map((f) => ({
-                    name: f.name ?? 'file',
-                    url: f.url,
-                    type: f.mime ?? '',
-                    size: Number(f.size ?? 0),
-                }))
+                      name: f.name ?? 'file',
+                      url: f.url,
+                      type: f.mime ?? '',
+                      size: Number(f.size ?? 0),
+                  }))
                 : [];
             return {
                 id: String(n.id),
@@ -121,11 +121,11 @@ export default function AnnouncementPage() {
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
-                        name: n.file_name ?? 'file',
-                        url: n.file_url,
-                        type: n.file_mime ?? '',
-                        size: Number(n.file_size ?? 0),
-                    }
+                          name: n.file_name ?? 'file',
+                          url: n.file_url,
+                          type: n.file_mime ?? '',
+                          size: Number(n.file_size ?? 0),
+                      }
                     : null,
                 files: filesArr,
             } as Notice;
@@ -398,23 +398,25 @@ export default function AnnouncementPage() {
                                                     <div
                                                         className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
                                                     >
-                                                        {renderTextWithLinks(announcement.description)}
+                                                        {renderTextWithLinks(
+                                                            announcement.description,
+                                                        )}
                                                     </div>
                                                     {announcement.description
                                                         .length > 150 && (
-                                                            <button
-                                                                onClick={() =>
-                                                                    toggleCardExpansion(
-                                                                        announcement.id,
-                                                                    )
-                                                                }
-                                                                className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                            >
-                                                                {isExpanded
-                                                                    ? 'Show less'
-                                                                    : 'Read more'}
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() =>
+                                                                toggleCardExpansion(
+                                                                    announcement.id,
+                                                                )
+                                                            }
+                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                        >
+                                                            {isExpanded
+                                                                ? 'Show less'
+                                                                : 'Read more'}
+                                                        </button>
+                                                    )}
 
                                                     {/* Attachments */}
                                                     {announcement.files &&

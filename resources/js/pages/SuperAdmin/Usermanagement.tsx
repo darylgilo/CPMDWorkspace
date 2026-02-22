@@ -644,10 +644,11 @@ export default function UserManagement() {
                                                         },
                                                     );
                                                 }}
-                                                className={`flex-1 rounded-l-lg border border-r-0 px-3 py-2 text-sm font-medium transition-colors ${sortDirection === 'asc'
-                                                    ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
-                                                    : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
-                                                    }`}
+                                                className={`flex-1 rounded-l-lg border border-r-0 px-3 py-2 text-sm font-medium transition-colors ${
+                                                    sortDirection === 'asc'
+                                                        ? 'border-[#163832] bg-[#163832] text-white dark:border-[#235347] dark:bg-[#235347]'
+                                                        : 'border-gray-300 bg-white text-gray-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-300'
+                                                }`}
                                             >
                                                 <div className="flex items-center justify-center gap-1">
                                                     <ChevronDown size={14} />
@@ -665,8 +666,8 @@ export default function UserManagement() {
                                             {sortField === 'created_at'
                                                 ? 'Date Registered'
                                                 : sortField === 'last_login_at'
-                                                    ? 'Last Login'
-                                                    : sortField}
+                                                  ? 'Last Login'
+                                                  : sortField}
                                         </span>
                                         <span className="text-green-600 dark:text-green-400">
                                             {`(${sortDirection === 'asc' ? 'A-Z' : 'Z-A'})`}
@@ -715,7 +716,7 @@ export default function UserManagement() {
                         </div>
 
                         {Array.isArray(paginatedUsers) &&
-                            paginatedUsers.length > 0 ? (
+                        paginatedUsers.length > 0 ? (
                             paginatedUsers.map((user: User) => (
                                 <div
                                     key={user.id}
@@ -775,16 +776,16 @@ export default function UserManagement() {
                                             Registered:{' '}
                                             {user.created_at
                                                 ? new Date(
-                                                    user.created_at,
-                                                ).toLocaleString()
+                                                      user.created_at,
+                                                  ).toLocaleString()
                                                 : 'N/A'}
                                         </div>
                                         <div>
                                             Last Login:{' '}
                                             {user.last_login_at
                                                 ? new Date(
-                                                    user.last_login_at,
-                                                ).toLocaleString()
+                                                      user.last_login_at,
+                                                  ).toLocaleString()
                                                 : 'N/A'}
                                         </div>
                                     </div>
@@ -943,15 +944,15 @@ export default function UserManagement() {
                                             <TableCell className="border-b px-4 py-2 text-left">
                                                 {user.created_at
                                                     ? new Date(
-                                                        user.created_at,
-                                                    ).toLocaleString()
+                                                          user.created_at,
+                                                      ).toLocaleString()
                                                     : ''}
                                             </TableCell>
                                             <TableCell className="border-b px-4 py-2 text-left">
                                                 {user.last_login_at
                                                     ? new Date(
-                                                        user.last_login_at,
-                                                    ).toLocaleString()
+                                                          user.last_login_at,
+                                                      ).toLocaleString()
                                                     : ''}
                                             </TableCell>
                                             <TableCell className="border-b px-4 py-2 text-center">
@@ -960,7 +961,7 @@ export default function UserManagement() {
                                                     className={`flex items-center justify-center rounded-full px-0 py-1 text-white ${user.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}`}
                                                 >
                                                     {user.status ===
-                                                        'active' ? (
+                                                    'active' ? (
                                                         <UserCheck size={16} />
                                                     ) : (
                                                         <UserX size={16} />
@@ -994,13 +995,13 @@ export default function UserManagement() {
                                                         }
                                                         title={
                                                             user.status ===
-                                                                'active'
+                                                            'active'
                                                                 ? 'Deactivate User'
                                                                 : 'Activate User'
                                                         }
                                                     >
                                                         {user.status ===
-                                                            'active' ? (
+                                                        'active' ? (
                                                             <PowerOff
                                                                 size={16}
                                                             />

@@ -365,7 +365,7 @@ class UserController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return back()->withErrors(['general' => 'An error occurred while updating the user: ' . $e->getMessage()]);
+            return back()->withErrors(['general' => 'An error occurred while updating the user. Please try again or contact support.']);
         }
     }
 

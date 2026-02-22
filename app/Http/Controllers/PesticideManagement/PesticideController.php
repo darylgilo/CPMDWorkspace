@@ -108,7 +108,7 @@ class PesticideController extends Controller
             return redirect('/pesticidesindex?tab=inventory')->with('success', 'Pesticide added successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to add pesticide: ' . $e->getMessage());
+            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to add pesticide. Please try again.');
         }
     }
 
@@ -143,7 +143,7 @@ class PesticideController extends Controller
             return redirect('/pesticidesindex?tab=inventory')->with('success', 'Pesticide updated successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to update pesticide: ' . $e->getMessage());
+            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to update pesticide. Please try again.');
         }
     }
 
@@ -156,7 +156,7 @@ class PesticideController extends Controller
             $pesticide->delete();
             return redirect('/pesticidesindex?tab=inventory')->with('success', 'Pesticide deleted successfully!');
         } catch (\Exception $e) {
-            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to delete pesticide: ' . $e->getMessage());
+            return redirect('/pesticidesindex?tab=inventory')->with('error', 'Failed to delete pesticide. Please try again.');
         }
     }
 }

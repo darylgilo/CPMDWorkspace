@@ -28,12 +28,10 @@ import { router, usePage } from '@inertiajs/react';
 import {
     ChevronDown,
     ChevronUp,
-    DollarSign,
     Edit3,
     MoreVertical,
     Plus,
     Trash2,
-    Wallet,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
@@ -341,8 +339,8 @@ export default function BudgetAllocation() {
             amount_po: transaction.amount_po.toString(),
             delivery_date: transaction.delivery_date
                 ? new Date(transaction.delivery_date)
-                    .toISOString()
-                    .split('T')[0]
+                      .toISOString()
+                      .split('T')[0]
                 : '',
             dv_no: transaction.dv_no || '',
             amount_dv: transaction.amount_dv?.toString() || '',
@@ -400,13 +398,13 @@ export default function BudgetAllocation() {
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
                 ? new Date(transactionFormData.delivery_date)
-                    .toISOString()
-                    .split('T')[0]
+                      .toISOString()
+                      .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
                 ? new Date(transactionFormData.payment_date)
-                    .toISOString()
-                    .split('T')[0]
+                      .toISOString()
+                      .split('T')[0]
                 : null,
         };
 
@@ -456,13 +454,13 @@ export default function BudgetAllocation() {
             amount_dv: parseFloat(transactionFormData.amount_dv) || 0,
             delivery_date: transactionFormData.delivery_date
                 ? new Date(transactionFormData.delivery_date)
-                    .toISOString()
-                    .split('T')[0]
+                      .toISOString()
+                      .split('T')[0]
                 : null,
             payment_date: transactionFormData.payment_date
                 ? new Date(transactionFormData.payment_date)
-                    .toISOString()
-                    .split('T')[0]
+                      .toISOString()
+                      .split('T')[0]
                 : null,
         };
 
@@ -604,15 +602,15 @@ export default function BudgetAllocation() {
                 amount_po: selectedTransaction.amount_po.toString(),
                 delivery_date: selectedTransaction.delivery_date
                     ? new Date(selectedTransaction.delivery_date)
-                        .toISOString()
-                        .split('T')[0]
+                          .toISOString()
+                          .split('T')[0]
                     : '',
                 dv_no: selectedTransaction.dv_no || '',
                 amount_dv: selectedTransaction.amount_dv?.toString() || '',
                 payment_date: selectedTransaction.payment_date
                     ? new Date(selectedTransaction.payment_date)
-                        .toISOString()
-                        .split('T')[0]
+                          .toISOString()
+                          .split('T')[0]
                     : '',
                 remarks: selectedTransaction.remarks || '',
             });
@@ -1066,14 +1064,14 @@ export default function BudgetAllocation() {
                                                 <TableCell className="font-semibold text-red-600 dark:text-red-400">
                                                     {formatCurrency(
                                                         transaction.amount_pr -
-                                                        transaction.amount_po,
+                                                            transaction.amount_po,
                                                     )}
                                                 </TableCell>
                                                 <TableCell>
                                                     {transaction.delivery_date
                                                         ? formatDate(
-                                                            transaction.delivery_date,
-                                                        )
+                                                              transaction.delivery_date,
+                                                          )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>
@@ -1082,15 +1080,15 @@ export default function BudgetAllocation() {
                                                 <TableCell>
                                                     {transaction.amount_dv
                                                         ? formatCurrency(
-                                                            transaction.amount_dv,
-                                                        )
+                                                              transaction.amount_dv,
+                                                          )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>
                                                     {transaction.payment_date
                                                         ? formatDate(
-                                                            transaction.payment_date,
-                                                        )
+                                                              transaction.payment_date,
+                                                          )
                                                         : '-'}
                                                 </TableCell>
                                                 <TableCell>

@@ -50,6 +50,13 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['profile_picture_url'];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

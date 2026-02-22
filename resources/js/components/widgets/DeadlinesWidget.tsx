@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertCircle, CalendarDays, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Deadline {
     id: number;
@@ -18,7 +18,9 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
     const [deadlines, setDeadlines] = useState<Deadline[]>([]);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [slideInterval, setSlideInterval] = useState<NodeJS.Timeout | null>(null);
+    const [slideInterval, setSlideInterval] = useState<NodeJS.Timeout | null>(
+        null,
+    );
 
     useEffect(() => {
         fetchDeadlines();
@@ -50,17 +52,21 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
             today.setHours(0, 0, 0, 0);
 
             const filteredDeadlines = data
-                .filter((notice: any) => notice.category === 'Reminder/Deadline')
-                .map((notice: any): Deadline => ({
-                    id: notice.id,
-                    title: notice.title,
-                    description: notice.description || '',
-                    date: notice.date,
-                    time: notice.time || '00:00',
-                    priority: notice.priority || 'medium',
-                    posted_by: notice.posted_by || 'System',
-                    posted_date: notice.created_at
-                }))
+                .filter(
+                    (notice: any) => notice.category === 'Reminder/Deadline',
+                )
+                .map(
+                    (notice: any): Deadline => ({
+                        id: notice.id,
+                        title: notice.title,
+                        description: notice.description || '',
+                        date: notice.date,
+                        time: notice.time || '00:00',
+                        priority: notice.priority || 'medium',
+                        posted_by: notice.posted_by || 'System',
+                        posted_date: notice.created_at,
+                    }),
+                )
                 .sort((a: Deadline, b: Deadline) => {
                     const dateA = new Date(`${a.date} ${a.time}`);
                     const dateB = new Date(`${b.date} ${b.time}`);
@@ -84,22 +90,49 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
         const deadlineDate = new Date(deadline.date);
 
         if (deadlineDateTime < now) {
-            return { status: 'overdue', color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-100 dark:bg-red-900/40', label: 'Overdue' };
+            return {
+                status: 'overdue',
+                color: 'text-red-600 dark:text-red-400',
+                bgColor: 'bg-red-100 dark:bg-red-900/40',
+                label: 'Overdue',
+            };
         } else if (deadlineDate.getTime() === today.getTime()) {
-            return { status: 'today', color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/40', label: 'Due Today' };
-        } else if (deadlineDate.getTime() <= today.getTime() + 7 * 24 * 60 * 60 * 1000) {
-            return { status: 'upcoming', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/40', label: 'Upcoming' };
+            return {
+                status: 'today',
+                color: 'text-orange-600 dark:text-orange-400',
+                bgColor: 'bg-orange-100 dark:bg-orange-900/40',
+                label: 'Due Today',
+            };
+        } else if (
+            deadlineDate.getTime() <=
+            today.getTime() + 7 * 24 * 60 * 60 * 1000
+        ) {
+            return {
+                status: 'upcoming',
+                color: 'text-blue-600 dark:text-blue-400',
+                bgColor: 'bg-blue-100 dark:bg-blue-900/40',
+                label: 'Upcoming',
+            };
         } else {
-            return { status: 'future', color: 'text-gray-600 dark:text-gray-400', bgColor: 'bg-gray-100 dark:bg-neutral-800', label: 'Future' };
+            return {
+                status: 'future',
+                color: 'text-gray-600 dark:text-gray-400',
+                bgColor: 'bg-gray-100 dark:bg-neutral-800',
+                label: 'Future',
+            };
         }
     };
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
-            case 'high': return 'text-red-500';
-            case 'medium': return 'text-yellow-500';
-            case 'low': return 'text-green-500';
-            default: return 'text-gray-500';
+            case 'high':
+                return 'text-red-500';
+            case 'medium':
+                return 'text-yellow-500';
+            case 'low':
+                return 'text-green-500';
+            default:
+                return 'text-gray-500';
         }
     };
 
@@ -108,7 +141,7 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
         return dateObj.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
-            year: 'numeric'
+            year: 'numeric',
         });
     };
 
@@ -130,22 +163,24 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
     };
 
     const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + deadlines.length) % deadlines.length);
+        setCurrentSlide(
+            (prev) => (prev - 1 + deadlines.length) % deadlines.length,
+        );
         goToSlide((currentSlide - 1 + deadlines.length) % deadlines.length);
     };
 
     if (loading) {
         return (
-            <Card className="bg-white border-gray-200 shadow-md">
+            <Card className="border-gray-200 bg-white shadow-md">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                         <CalendarDays className="h-4 w-4 text-[#163832]" />
                         Reminders/Deadlines
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                    <div className="flex items-center justify-center h-12">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#163832]"></div>
+                    <div className="flex h-12 items-center justify-center">
+                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-[#163832]"></div>
                     </div>
                 </CardContent>
             </Card>
@@ -154,16 +189,16 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
 
     if (deadlines.length === 0) {
         return (
-            <Card className="bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 shadow-md">
+            <Card className="border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                         <CalendarDays className="h-4 w-4 text-[#163832]" />
                         Reminders/Deadlines
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                    <div className="text-center py-2">
-                        <AlertCircle className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                    <div className="py-2 text-center">
+                        <AlertCircle className="mx-auto mb-1 h-6 w-6 text-gray-400" />
                         <p className="text-xs text-gray-500">No deadlines</p>
                     </div>
                 </CardContent>
@@ -175,9 +210,11 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
     const deadlineStatus = getDeadlineStatus(currentDeadline);
 
     return (
-        <Card className={`bg-white dark:bg-neutral-900 border-gray-200 dark:border-neutral-800 shadow-md ${className || ''}`}>
+        <Card
+            className={`border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900 ${className || ''}`}
+        >
             <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                     <CalendarDays className="h-4 w-4 text-[#163832]" />
                     Reminders/Deadlines
                 </CardTitle>
@@ -185,14 +222,18 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
             <CardContent className="pt-0 pb-3">
                 <div className="space-y-2">
                     {/* Current Deadline Display */}
-                    <div className={`p-2 rounded-lg border ${deadlineStatus.bgColor} border-opacity-30`}>
-                        <div className="flex items-start justify-between mb-1">
+                    <div
+                        className={`rounded-lg border p-2 ${deadlineStatus.bgColor} border-opacity-30`}
+                    >
+                        <div className="mb-1 flex items-start justify-between">
                             <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-xs mb-1">
+                                <h3 className="mb-1 text-xs font-semibold text-gray-900 dark:text-gray-100">
                                     {currentDeadline.title}
                                 </h3>
                             </div>
-                            <div className={`ml-2 ${getPriorityColor(currentDeadline.priority)}`}>
+                            <div
+                                className={`ml-2 ${getPriorityColor(currentDeadline.priority)}`}
+                            >
                                 <AlertCircle className="h-3 w-3" />
                             </div>
                         </div>
@@ -201,17 +242,24 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
                             <div className="flex items-center gap-1">
                                 <CalendarDays className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                                 <span className="text-gray-700 dark:text-gray-300">
-                                    {formatDeadlineDate(currentDeadline.date, currentDeadline.time)}
+                                    {formatDeadlineDate(
+                                        currentDeadline.date,
+                                        currentDeadline.time,
+                                    )}
                                 </span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-                                <span className="text-gray-700 dark:text-gray-300">{currentDeadline.time}</span>
+                                <span className="text-gray-700 dark:text-gray-300">
+                                    {currentDeadline.time}
+                                </span>
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-1">
-                            <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${deadlineStatus.bgColor} ${deadlineStatus.color}`}>
+                        <div className="mt-1 flex items-center justify-between">
+                            <span
+                                className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${deadlineStatus.bgColor} ${deadlineStatus.color}`}
+                            >
                                 {deadlineStatus.label}
                             </span>
                         </div>
@@ -234,10 +282,11 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
                                     <button
                                         key={index}
                                         onClick={() => goToSlide(index)}
-                                        className={`h-1 w-1 rounded-full transition-colors ${index === currentSlide
-                                            ? 'bg-[#163832]'
-                                            : 'bg-gray-300 dark:bg-neutral-600 hover:bg-gray-400 dark:hover:bg-neutral-500'
-                                            }`}
+                                        className={`h-1 w-1 rounded-full transition-colors ${
+                                            index === currentSlide
+                                                ? 'bg-[#163832]'
+                                                : 'bg-gray-300 hover:bg-gray-400 dark:bg-neutral-600 dark:hover:bg-neutral-500'
+                                        }`}
                                     />
                                 ))}
                             </div>
@@ -254,7 +303,7 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
                     )}
 
                     {/* Summary Info */}
-                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-1">
+                    <div className="pt-1 text-center text-xs text-gray-500 dark:text-gray-400">
                         {currentSlide + 1} of {deadlines.length}
                     </div>
                 </div>

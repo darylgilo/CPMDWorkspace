@@ -40,18 +40,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { router, usePage } from '@inertiajs/react';
-import {
-    DollarSign,
-    Edit3,
-    FileText,
-    MinusCircle,
-    MoreVertical,
-    PenTool,
-    Plus,
-    Trash2,
-    X,
-} from 'lucide-react';
 import {
     Fund,
     FundingDetail,
@@ -59,6 +47,16 @@ import {
     PPMPProject,
     Timeline,
 } from '@/types/ppmp';
+import { router, usePage } from '@inertiajs/react';
+import {
+    Edit3,
+    MinusCircle,
+    MoreVertical,
+    PenTool,
+    Plus,
+    Trash2,
+    X,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 export default function PPMP() {
@@ -110,9 +108,8 @@ export default function PPMP() {
     const [isFundingDetailsDialogOpen, setIsFundingDetailsDialogOpen] =
         useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedPPMPItem, setSelectedPPMPItem] = useState<PPMPProject | null>(
-        null,
-    );
+    const [selectedPPMPItem, setSelectedPPMPItem] =
+        useState<PPMPProject | null>(null);
     const [selectedExistingProject, setSelectedExistingProject] =
         useState<PPMPProject | null>(null);
     const [selectedExistingQuantity, setSelectedExistingQuantity] =
@@ -783,12 +780,8 @@ export default function PPMP() {
         return total;
     }, [fundPPMPItems]);
 
-
-
     return (
         <div className="flex flex-col gap-6">
-
-
             {/* Controls */}
             <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -1070,15 +1063,20 @@ export default function PPMP() {
                                         let grandTotal = 0;
 
                                         // Group projects by description and type
-                                        filteredData.forEach((project: PPMPProject) => {
-                                            const key = `${project.general_description}| ${project.project_type} `;
-                                            if (!groupedProjects.has(key)) {
-                                                groupedProjects.set(key, []);
-                                            }
-                                            groupedProjects
-                                                .get(key)
-                                                .push(project);
-                                        });
+                                        filteredData.forEach(
+                                            (project: PPMPProject) => {
+                                                const key = `${project.general_description}| ${project.project_type} `;
+                                                if (!groupedProjects.has(key)) {
+                                                    groupedProjects.set(
+                                                        key,
+                                                        [],
+                                                    );
+                                                }
+                                                groupedProjects
+                                                    .get(key)
+                                                    .push(project);
+                                            },
+                                        );
 
                                         const rows: React.ReactElement[] = [];
 
@@ -1092,7 +1090,12 @@ export default function PPMP() {
                                                 // Calculate group subtotal
                                                 projectsInGroup.forEach(
                                                     (project: PPMPProject) => {
-                                                        if (project.funding_details && project.funding_details.length > 0) {
+                                                        if (
+                                                            project.funding_details &&
+                                                            project
+                                                                .funding_details
+                                                                .length > 0
+                                                        ) {
                                                             const projectSubtotal =
                                                                 project.funding_details?.reduce(
                                                                     (
@@ -1103,7 +1106,7 @@ export default function PPMP() {
                                                                         parseFloat(
                                                                             String(
                                                                                 detail.estimated_budget ||
-                                                                                0,
+                                                                                    0,
                                                                             ),
                                                                         ),
                                                                     0,
@@ -1255,15 +1258,15 @@ export default function PPMP() {
                                                                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                                                     const previousTimelineCount =
                                                                         detailIndex >
-                                                                            0
+                                                                        0
                                                                             ? project
-                                                                                .funding_details?.[
-                                                                                detailIndex -
-                                                                                1
-                                                                            ]
-                                                                                .timelines
-                                                                                ?.length ||
-                                                                            1
+                                                                                  .funding_details?.[
+                                                                                  detailIndex -
+                                                                                      1
+                                                                              ]
+                                                                                  .timelines
+                                                                                  ?.length ||
+                                                                              1
                                                                             : 0;
 
                                                                     fundingDetail.timelines.forEach(
@@ -1273,9 +1276,9 @@ export default function PPMP() {
                                                                         ) => {
                                                                             const isFirstRowForProject =
                                                                                 detailIndex ===
-                                                                                0 &&
+                                                                                    0 &&
                                                                                 timelineIndex ===
-                                                                                0;
+                                                                                    0;
                                                                             const isFirstRowForFundingDetail =
                                                                                 timelineIndex ===
                                                                                 0;
@@ -1381,7 +1384,12 @@ export default function PPMP() {
                                                                                                 }
                                                                                             >
                                                                                                 {formatCurrency(
-                                                                                                    parseFloat(String(fundingDetail.estimated_budget || 0)),
+                                                                                                    parseFloat(
+                                                                                                        String(
+                                                                                                            fundingDetail.estimated_budget ||
+                                                                                                                0,
+                                                                                                        ),
+                                                                                                    ),
                                                                                                 )}
                                                                                             </TableCell>
                                                                                         )}
@@ -1481,10 +1489,11 @@ export default function PPMP() {
                                                     rows.push(
                                                         <TableRow
                                                             key={`group - subtotal - ${key} `}
-                                                            className={`font - semibold transition - colors ${isHighlighted
-                                                                ? 'bg-green-200 hover:bg-green-300 dark:bg-green-900 dark:hover:bg-green-800'
-                                                                : 'bg-gray-50 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700'
-                                                                } `}
+                                                            className={`font - semibold - colors transition ${
+                                                                isHighlighted
+                                                                    ? 'bg-green-200 hover:bg-green-300 dark:bg-green-900 dark:hover:bg-green-800'
+                                                                    : 'bg-gray-50 hover:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700'
+                                                            } `}
                                                         >
                                                             <TableCell
                                                                 className="border border-gray-200 p-2 text-right dark:border-neutral-700"
@@ -1509,10 +1518,11 @@ export default function PPMP() {
                                                                             firstProject.id,
                                                                         )
                                                                     }
-                                                                    className={`h - 6 w - 6 p - 0 ${isHighlighted
-                                                                        ? 'text-green-600 hover:text-green-700'
-                                                                        : 'text-gray-400 hover:text-gray-500'
-                                                                        } `}
+                                                                    className={`h - 6 w - 6 p - 0 ${
+                                                                        isHighlighted
+                                                                            ? 'text-green-600 hover:text-green-700'
+                                                                            : 'text-gray-400 hover:text-gray-500'
+                                                                    } `}
                                                                     title={
                                                                         isHighlighted
                                                                             ? 'Status: FINAL '
@@ -1628,7 +1638,9 @@ export default function PPMP() {
                                                             // Select existing project
                                                             const existingProject =
                                                                 filteredData.find(
-                                                                    (p: PPMPProject) =>
+                                                                    (
+                                                                        p: PPMPProject,
+                                                                    ) =>
                                                                         p.general_description ===
                                                                         value,
                                                                 );
@@ -1659,7 +1671,9 @@ export default function PPMP() {
                                                             + Create New Item
                                                         </SelectItem>
                                                         {filteredData.map(
-                                                            (project: PPMPProject) => (
+                                                            (
+                                                                project: PPMPProject,
+                                                            ) => (
                                                                 <SelectItem
                                                                     key={
                                                                         project.id
@@ -1923,8 +1937,8 @@ export default function PPMP() {
                                     <div className="bg-white dark:bg-neutral-900">
                                         <div className="p-3">
                                             {selectedExistingProject?.funding_details &&
-                                                selectedExistingProject
-                                                    .funding_details.length > 0 ? (
+                                            selectedExistingProject
+                                                .funding_details.length > 0 ? (
                                                 <div className="space-y-3">
                                                     <Select
                                                         value={
@@ -2020,18 +2034,18 @@ export default function PPMP() {
                                                                                 existingQuantity
                                                                                     .timelines
                                                                                     ?.length >
-                                                                                    0
+                                                                                0
                                                                                     ? existingQuantity.timelines
                                                                                     : [
-                                                                                        {
-                                                                                            start_procurement:
-                                                                                                '',
-                                                                                            end_procurement:
-                                                                                                '',
-                                                                                            delivery_period:
-                                                                                                '',
-                                                                                        },
-                                                                                    ],
+                                                                                          {
+                                                                                              start_procurement:
+                                                                                                  '',
+                                                                                              end_procurement:
+                                                                                                  '',
+                                                                                              delivery_period:
+                                                                                                  '',
+                                                                                          },
+                                                                                      ],
                                                                         },
                                                                     );
                                                                 }
@@ -2321,20 +2335,20 @@ export default function PPMP() {
                                                             {fundingDetailsFormData
                                                                 .timelines
                                                                 .length > 1 && (
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() =>
-                                                                            removeTimeline(
-                                                                                index,
-                                                                            )
-                                                                        }
-                                                                        className="border-red-200 text-red-600 hover:border-red-300 hover:text-red-700"
-                                                                    >
-                                                                        <MinusCircle className="h-4 w-4" />
-                                                                    </Button>
-                                                                )}
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        removeTimeline(
+                                                                            index,
+                                                                        )
+                                                                    }
+                                                                    className="border-red-200 text-red-600 hover:border-red-300 hover:text-red-700"
+                                                                >
+                                                                    <MinusCircle className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                                                             <div>
@@ -2575,7 +2589,7 @@ export default function PPMP() {
                     <DialogHeader>
                         <DialogTitle>
                             {(selectedPPMPItem?.funding_details?.length ?? 0) >
-                                0
+                            0
                                 ? 'Edit'
                                 : 'Add'}{' '}
                             Item Details -{' '}
@@ -2583,7 +2597,7 @@ export default function PPMP() {
                         </DialogTitle>
                         <DialogDescription>
                             {(selectedPPMPItem?.funding_details?.length ?? 0) >
-                                0
+                            0
                                 ? 'Edit'
                                 : 'Add'}{' '}
                             quantities, timelines, and funding information for
@@ -2619,15 +2633,17 @@ export default function PPMP() {
                                                 }
                                                 onValueChange={(value) =>
                                                     setSelectedPPMPItem(
-                                                        (prev: PPMPProject | null) =>
+                                                        (
+                                                            prev: PPMPProject | null,
+                                                        ) =>
                                                             prev
                                                                 ? {
-                                                                    ...prev,
-                                                                    fund_id:
-                                                                        parseInt(
-                                                                            value,
-                                                                        ),
-                                                                }
+                                                                      ...prev,
+                                                                      fund_id:
+                                                                          parseInt(
+                                                                              value,
+                                                                          ),
+                                                                  }
                                                                 : null,
                                                     )
                                                 }
@@ -2663,15 +2679,17 @@ export default function PPMP() {
                                                 }
                                                 onChange={(e) =>
                                                     setSelectedPPMPItem(
-                                                        (prev: PPMPProject | null) =>
+                                                        (
+                                                            prev: PPMPProject | null,
+                                                        ) =>
                                                             prev
                                                                 ? {
-                                                                    ...prev,
-                                                                    general_description:
-                                                                        e
-                                                                            .target
-                                                                            .value,
-                                                                }
+                                                                      ...prev,
+                                                                      general_description:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
                                                                 : null,
                                                     )
                                                 }
@@ -2693,13 +2711,15 @@ export default function PPMP() {
                                                 }
                                                 onValueChange={(value) =>
                                                     setSelectedPPMPItem(
-                                                        (prev: PPMPProject | null) =>
+                                                        (
+                                                            prev: PPMPProject | null,
+                                                        ) =>
                                                             prev
                                                                 ? {
-                                                                    ...prev,
-                                                                    project_type:
-                                                                        value,
-                                                                }
+                                                                      ...prev,
+                                                                      project_type:
+                                                                          value,
+                                                                  }
                                                                 : null,
                                                     )
                                                 }
@@ -2926,20 +2946,20 @@ export default function PPMP() {
                                                     {fundingDetailsFormData
                                                         .timelines.length >
                                                         1 && (
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    removeTimeline(
-                                                                        index,
-                                                                    )
-                                                                }
-                                                                className="border-red-200 text-red-600 hover:border-red-300 hover:text-red-700"
-                                                            >
-                                                                <MinusCircle className="h-4 w-4" />
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                removeTimeline(
+                                                                    index,
+                                                                )
+                                                            }
+                                                            className="border-red-200 text-red-600 hover:border-red-300 hover:text-red-700"
+                                                        >
+                                                            <MinusCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                                                     <div>
@@ -3051,6 +3071,3 @@ export default function PPMP() {
         </div>
     );
 }
-
-
-
