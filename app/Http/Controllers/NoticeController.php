@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notice;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NoticeNotification;
+use App\Jobs\SendNoticeEmailJob;
 use Inertia\Inertia;
 use ZipArchive;
 use PharData;
@@ -140,6 +144,9 @@ class NoticeController extends Controller
             'date' => $validated['date'] ?? null,
             'time' => $validated['time'] ?? null,
         ]);
+
+        // Send email asynchronously to all employees that are CPMD, verified, and active
+        SendNoticeEmailJob::dispatch($notice);
 
         return redirect()->route('noticeboard.index');
     }

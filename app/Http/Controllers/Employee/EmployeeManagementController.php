@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 class EmployeeManagementController extends Controller
 {
@@ -125,6 +127,7 @@ class EmployeeManagementController extends Controller
         $validated['role'] = 'user';
 
         // Hash password
+        $plainPassword = $validated['password']; // Store plain password for email
         $validated['password'] = Hash::make($validated['password']);
 
         // Handle profile picture upload
@@ -135,9 +138,20 @@ class EmployeeManagementController extends Controller
             $validated['profile_picture'] = $path;
         }
 
-        User::create($validated);
+        $user = User::create($validated);
+        
+        // Send welcome email with credentials
+        try {
+            Mail::to($user->email)->send(new WelcomeEmail($user, $plainPassword));
+            
+            // Trigger email verification
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            // Continue with employee creation even if email fails
+        }
 
-        return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
+        return redirect()->route('employees.index')->with('success', 'Employee created successfully. Welcome and verification emails sent.');
     }
 
     /**

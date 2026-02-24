@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Mail\SelfRegistrationWelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 class RegisteredUserController extends Controller
 {
@@ -61,10 +63,18 @@ class RegisteredUserController extends Controller
             'status' => 'inactive', // User is inactive by default
         ]);
 
+        // Send welcome email for self-registered users
+        try {
+            Mail::to($user->email)->send(new SelfRegistrationWelcomeEmail($user));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send self-registration welcome email: ' . $e->getMessage());
+            // Continue with registration even if email fails
+        }
+
         // Fire Registered event (for notifications, etc.)
         event(new Registered($user));
 
-        // Redirect to login with a message about activation requirement
-        return redirect()->route('login')->with('success', 'Registration successful! Please wait for activation.');
+        // Redirect to login with a message about verification and activation requirement
+        return redirect()->route('login')->with('success', 'Registration successful! Please check your email for verification and wait for admin activation.');
     }
 }

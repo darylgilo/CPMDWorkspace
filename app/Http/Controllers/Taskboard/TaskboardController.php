@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TaskNotification;
+use App\Jobs\SendTaskEmailJob;
 
 class TaskboardController extends Controller
 {
@@ -115,7 +118,8 @@ class TaskboardController extends Controller
 
         $validated['created_by'] = Auth::id();
 
-        Task::create($validated);
+        $task = Task::create($validated);
+        SendTaskEmailJob::dispatch($task, 'created');
 
         return redirect()->back()->with('success', 'Task created successfully.');
     }
@@ -143,7 +147,21 @@ class TaskboardController extends Controller
             'assignees.*' => 'integer|exists:users,id',
         ]);
 
+        $oldProgress = $task->progress;
+        $oldAssignees = $task->assignees ?? [];
+
         $task->update($validated);
+
+        $newAssignees = $task->assignees ?? [];
+        $addedAssignees = array_diff($newAssignees, $oldAssignees);
+
+        // Get assignee names for email notification
+        $users = User::whereIn('id', $newAssignees)->get();
+        $assigneeNames = $users->pluck('name')->toArray();
+
+        if ($task->progress != $oldProgress || !empty($addedAssignees)) {
+            SendTaskEmailJob::dispatch($task, 'updated', $assigneeNames);
+        }
 
         return redirect()->back()->with('success', 'Task updated successfully.');
     }
@@ -180,4 +198,5 @@ class TaskboardController extends Controller
             ->limit(10)
             ->get();
     }
+
 }
