@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Writing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WritingNotification;
+use App\Jobs\SendWritingEmailJob;
 
 class WritingController extends Controller
 {
@@ -346,6 +350,10 @@ class WritingController extends Controller
             'status' => $validated['status'],
         ]);
 
+        if ($document->status === 'for review') {
+            SendWritingEmailJob::dispatch($document);
+        }
+
         return redirect('/writing')->with('success', 'Document created successfully!');
     }
 
@@ -371,6 +379,10 @@ class WritingController extends Controller
             'category' => $validated['category'],
             'status' => $validated['status'],
         ]);
+
+        if ($document->wasChanged('status') && $document->status === 'for review') {
+            SendWritingEmailJob::dispatch($document);
+        }
 
         // Get the tab parameter from the request
         $tab = $request->input('tab', 'writeup');
@@ -514,6 +526,10 @@ class WritingController extends Controller
             'status' => $validated['status'],
         ]);
 
+        if ($document->wasChanged('status') && $document->status === 'for review') {
+            SendWritingEmailJob::dispatch($document);
+        }
+
         // Create history record for status change
         $document->histories()->create([
             'user_id' => auth()->id(),
@@ -563,4 +579,5 @@ class WritingController extends Controller
             'is_bookmarked' => $document->fresh()->isBookmarkedBy(auth()->id()),
         ]);
     }
+
 }

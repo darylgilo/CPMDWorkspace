@@ -41,8 +41,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
     Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
 
-    // Pesticide Stock (Parent page with tabs)
-    Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
+    // Pesticide Inventory Management
+    Route::middleware(['page_access:inventory'])->group(function () {
+        // Pesticide Stock (Parent page with tabs)
+        Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
+        
+        Route::get('/pesticides', [PesticideController::class, 'index'])->name('pesticides.index');
+        Route::post('/pesticides', [PesticideController::class, 'store'])->name('pesticides.store');
+        Route::put('/pesticides/{pesticide}', [PesticideController::class, 'update'])->name('pesticides.update');
+        Route::delete('/pesticides/{pesticide}', [PesticideController::class, 'destroy'])->name('pesticides.destroy');
+
+        // Pesticide Distribution Management
+        Route::get('/distributions', [DistributionController::class, 'index'])->name('distributions.index');
+        Route::post('/distributions', [DistributionController::class, 'store'])->name('distributions.store');
+        Route::put('/distributions/{distribution}', [DistributionController::class, 'update'])->name('distributions.update');
+        Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
+    });
 
     // Writing Management (Parent page with tabs)
     Route::middleware(['page_access:writing_suite'])->group(function () {
@@ -69,20 +83,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
         Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
         Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
-    });
-
-    // Pesticide Inventory Management
-    Route::middleware(['page_access:inventory'])->group(function () {
-        Route::get('/pesticides', [PesticideController::class, 'index'])->name('pesticides.index');
-        Route::post('/pesticides', [PesticideController::class, 'store'])->name('pesticides.store');
-        Route::put('/pesticides/{pesticide}', [PesticideController::class, 'update'])->name('pesticides.update');
-        Route::delete('/pesticides/{pesticide}', [PesticideController::class, 'destroy'])->name('pesticides.destroy');
-
-        // Pesticide Distribution Management
-        Route::get('/distributions', [DistributionController::class, 'index'])->name('distributions.index');
-        Route::post('/distributions', [DistributionController::class, 'store'])->name('distributions.store');
-        Route::put('/distributions/{distribution}', [DistributionController::class, 'update'])->name('distributions.update');
-        Route::delete('/distributions/{distribution}', [DistributionController::class, 'destroy'])->name('distributions.destroy');
     });
 
         // Noticeboard - specific routes before parameterized routes

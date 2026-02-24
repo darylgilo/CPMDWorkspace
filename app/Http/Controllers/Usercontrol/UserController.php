@@ -9,6 +9,8 @@ use Inertia\Response;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Mail\WelcomeEmail;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
@@ -212,6 +214,7 @@ class UserController extends Controller
         }
         
         // Hash the password
+        $plainPassword = $validated['password']; // Store plain password for email
         $validated['password'] = Hash::make($validated['password']);
         
         // Handle profile picture upload if provided
@@ -223,7 +226,19 @@ class UserController extends Controller
         }
         
         $user = User::create($validated);
-        return redirect()->route('usermanagement')->with('success', 'User created successfully.');
+        
+        // Send welcome email with credentials
+        try {
+            Mail::to($user->email)->send(new WelcomeEmail($user, $plainPassword));
+            
+            // Trigger email verification
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            // Continue with user creation even if email fails
+        }
+        
+        return redirect()->route('usermanagement')->with('success', 'User created successfully. Welcome and verification emails sent.');
     }
 
     /**

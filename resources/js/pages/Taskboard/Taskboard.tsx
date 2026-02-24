@@ -23,6 +23,7 @@ import {
     ChevronDown,
     ChevronUp,
     ClipboardList,
+    Clock,
     Edit3,
     Flag,
     MoreVertical,
@@ -584,7 +585,7 @@ export default function Taskboard() {
                 <SimpleStatistic
                     label="In Progress"
                     value={analytics?.inProgress || 0}
-                    icon={Play}
+                    icon={Clock}
                     backgroundColor="#1a4d3e"
                 />
                 <SimpleStatistic
