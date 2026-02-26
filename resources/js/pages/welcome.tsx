@@ -34,13 +34,13 @@ export default function Welcome() {
             <Head title="Welcome">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&display=swap"
                     rel="stylesheet"
                 />
             </Head>
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900">
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-black dark:to-gray-900 font-sans" style={{ fontFamily: 'Lato, sans-serif' }}>
                 {/* Header */}
-                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-black/80">
+                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm shadow-sm dark:border-gray-700 dark:bg-black/80 dark:shadow-gray-900/50">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex h-14 items-center justify-between sm:h-16">
                             {/* Logo */}
@@ -116,7 +116,7 @@ export default function Welcome() {
                                             href={register()}
                                             className="rounded-lg bg-[#163832] px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                         >
-                                            Register
+                                            Sign Up
                                         </Link>
                                     </>
                                 )}
@@ -145,16 +145,10 @@ export default function Welcome() {
                             </div>
 
                             <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                                <Link
-                                    href={auth.user ? dashboard() : login()}
-                                    className="rounded-lg bg-[#163832] px-4 py-2 text-center text-sm font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                >
-                                    {auth.user ? 'Dashboard' : 'Login'}
-                                </Link>
                                 <a
                                     href="https://www.cpmd.buplant.da.gov.ph"
                                     target="_blank"
-                                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 sm:px-6 sm:py-2.5 sm:text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                                    className="flex items-center justify-center gap-2 rounded-lg bg-[#163832] px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#163832]/90 hover:text-white hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 >
                                     <svg
                                         className="h-4 w-4"

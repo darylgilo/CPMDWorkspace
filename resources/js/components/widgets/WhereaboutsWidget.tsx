@@ -194,7 +194,7 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
             <Card className="w-full border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900">
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                        <Users className="h-5 w-5 text-[#163832]" />
+                        <Users className="h-5 w-5 text-[#163832] dark:text-green-400" />
                         Employee Whereabouts
                     </CardTitle>
                 </CardHeader>
@@ -214,7 +214,7 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                        <Users className="h-5 w-5 text-[#163832]" />
+                        <Users className="h-5 w-5 text-[#163832] dark:text-green-400" />
                         Employee Whereabouts
                     </CardTitle>
                     <div className="flex items-center gap-2">
@@ -335,8 +335,8 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="overflow-hidden">
-                                        <div className="max-w-[120px] truncate text-xs font-semibold dark:text-gray-200">
+                                    <div>
+                                        <div className="text-xs font-semibold dark:text-gray-200">
                                             {whereabout.user.name}
                                         </div>
                                         {whereabout.location && (

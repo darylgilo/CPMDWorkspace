@@ -11,6 +11,12 @@ import {
     User,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Notice {
     id: string;
@@ -190,6 +196,26 @@ export default function AnnouncementPage() {
         });
     }, [meetings, filterType]);
 
+    // Edit dialog state
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editFiles, setEditFiles] = useState<Array<{name: string; url: string; type: string; size: number}>>([]);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+
+    // Open edit dialog and populate with notice data
+    function openEditDialog(notice: Notice) {
+        setEditingNotice(notice);
+        setEditTitle(notice.title);
+        setEditDescription(notice.description);
+        setEditFiles(notice.files || []);
+        setEditDate(notice.date || '');
+        setEditTime(notice.time || '');
+        setEditOpen(true);
+    }
+
     // Group meetings by date
     const meetingsByDate = useMemo(() => {
         const grouped = new Map<string, Notice[]>();
@@ -361,10 +387,10 @@ export default function AnnouncementPage() {
                     </div>
 
                     {/* Filter Buttons */}
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-nowrap gap-1 overflow-x-auto sm:flex-wrap sm:overflow-x-visible">
                         <button
                             onClick={() => setFilterType('all')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'all'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -374,7 +400,7 @@ export default function AnnouncementPage() {
                         </button>
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'upcoming'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -384,7 +410,7 @@ export default function AnnouncementPage() {
                         </button>
                         <button
                             onClick={() => setFilterType('ended')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'ended'
                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -408,17 +434,7 @@ export default function AnnouncementPage() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing{' '}
-                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
-                                        to{' '}
-                                        {Math.min(
-                                            currentPage * itemsPerPage,
-                                            displayedMeetings.length,
-                                        )}{' '}
-                                        of {displayedMeetings.length} meetings
-                                    </div>
+                                <div className="mb-4 flex justify-center">
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() =>
@@ -467,155 +483,105 @@ export default function AnnouncementPage() {
                                         return (
                                             <div
                                                 key={meeting.id}
-                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
+                                                className={`group flex flex-col rounded-lg bg-white p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-neutral-900 ${
                                                     isEnded
-                                                        ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
-                                                        : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                        ? 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20'
+                                                        : 'border-l-4 border-l-gray-200 bg-white dark:border-l-neutral-700'
                                                 }`}
                                             >
-                                                <div className="mb-3 flex items-start justify-between">
-                                                    <div className="flex flex-1 items-start gap-3">
-                                                        <AlertCircle
-                                                            className={`h-6 w-6 flex-shrink-0 ${
-                                                                isEnded
-                                                                    ? 'text-red-600 dark:text-red-400'
-                                                                    : 'text-[#163832] dark:text-[#235347]'
-                                                            }`}
-                                                            aria-hidden
-                                                        />
-                                                        <div className="flex-1">
-                                                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                {meeting.title}
-                                                            </h3>
-                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                <span className="flex items-center gap-1">
-                                                                    <User className="h-3 w-3" />
-                                                                    {
-                                                                        meeting.username
-                                                                    }
-                                                                </span>
-                                                                Posted on{' '}
-                                                                {new Date(
-                                                                    meeting.createdAt,
-                                                                ).toLocaleString()}
-                                                            </div>
+                                                {/* Header with title and status badge */}
+                                                <div className="mb-2 flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
+                                                            {meeting.title}
+                                                        </h3>
+                                                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                                            Posted on {new Date(meeting.createdAt).toLocaleDateString()} {new Date(meeting.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <div
-                                                    className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
-                                                >
-                                                    {renderTextWithLinks(
-                                                        meeting.description,
-                                                    )}
-                                                </div>
-                                                {meeting.description.length >
-                                                    150 && (
-                                                    <button
-                                                        onClick={() =>
-                                                            toggleCardExpansion(
-                                                                meeting.id,
-                                                            )
-                                                        }
-                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
-                                                    >
-                                                        {isExpanded
-                                                            ? 'Show less'
-                                                            : 'Read more'}
-                                                    </button>
-                                                )}
-
-                                                {/* Attachments */}
-                                                {meeting.files &&
-                                                    meeting.files.length >
-                                                        0 && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
-                                                            <span>
-                                                                {
-                                                                    meeting
-                                                                        .files
-                                                                        .length
-                                                                }{' '}
-                                                                attachment(s)
-                                                            </span>
-                                                            {meeting.files_download_url && (
-                                                                <a
-                                                                    href={
-                                                                        meeting.files_download_url
-                                                                    }
-                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download
-                                                                >
-                                                                    Download All
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                {meeting.file &&
-                                                    !meeting.files?.length && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
-                                                            <a
-                                                                href={
-                                                                    meeting.file
-                                                                        .url
-                                                                }
-                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                download={
-                                                                    meeting.file
-                                                                        .name
-                                                                }
-                                                            >
-                                                                {
-                                                                    meeting.file
-                                                                        .name
-                                                                }
-                                                            </a>
-                                                        </div>
-                                                    )}
-
-                                                <div className="mt-3 flex items-center justify-between gap-3">
-                                                    <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                        {meeting.date && (
-                                                            <span className="flex items-center gap-1">
-                                                                <CalendarIcon className="h-3 w-3" />
-                                                                {new Date(
-                                                                    meeting.date,
-                                                                ).toLocaleDateString()}
-                                                            </span>
-                                                        )}
-                                                        {meeting.time && (
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" />
-                                                                {meeting.time}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    {/* Status Badge */}
                                                     {daysUntil !== null && (
                                                         <div
-                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${
                                                                 isEnded
-                                                                    ? 'bg-red-600 text-white dark:bg-red-700'
-                                                                    : daysUntil <=
-                                                                        3
-                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                                    ? 'bg-red-500 text-white'
+                                                                    : daysUntil <= 3
+                                                                      ? 'bg-orange-500 text-white'
+                                                                      : 'bg-blue-500 text-white'
                                                             }`}
                                                         >
                                                             {isEnded
-                                                                ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} ended`
-                                                                : daysUntil ===
-                                                                    0
+                                                                ? 'Ended'
+                                                                : daysUntil === 0
                                                                   ? 'Today'
-                                                                  : daysUntil ===
-                                                                      1
-                                                                    ? 'Tomorrow'
-                                                                    : `In ${daysUntil} days`}
+                                                                  : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
                                                         </div>
                                                     )}
+                                                </div>
+
+                                                {/* Description */}
+                                                <div
+                                                    className={`mb-2 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                >
+                                                    {renderTextWithLinks(meeting.description)}
+                                                </div>
+
+                                                {/* Date and Time */}
+                                                {meeting.date && (
+                                                    <div className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                        <CalendarIcon className="h-3 w-3" />
+                                                        {new Date(meeting.date).toLocaleDateString()}
+                                                        {meeting.time && (
+                                                            <>
+                                                                <Clock className="h-3 w-3" />
+                                                                {meeting.time}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Files */}
+                                                {(meeting.file || (meeting.files && meeting.files.length > 0)) && (
+                                                    <div className="mb-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                                                        <FileText className="h-3 w-3" />
+                                                        <span>
+                                                            {meeting.file ? '1 file' : `${meeting.files?.length} files`}
+                                                        </span>
+                                                        {meeting.files_download_url && (
+                                                            <a
+                                                                href={meeting.files_download_url}
+                                                                className="ml-auto font-medium hover:underline"
+                                                                download
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                Download
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Expand button */}
+                                                {meeting.description.length > 150 && (
+                                                    <button
+                                                        onClick={() => toggleCardExpansion(meeting.id)}
+                                                        className="text-xs text-blue-500 hover:underline dark:text-blue-400"
+                                                    >
+                                                        {isExpanded ? 'Show less' : 'Show more'}
+                                                    </button>
+                                                )}
+
+                                                {/* Footer */}
+                                                <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+                                                    <span className="text-gray-500 dark:text-gray-400">
+                                                        {meeting.username}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => openEditDialog(meeting)}
+                                                        className="px-2 py-1 bg-[#163832] text-white rounded hover:bg-[#163832]/90 transition-colors text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                                    >
+                                                        View
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -756,6 +722,91 @@ export default function AnnouncementPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* View Meeting Dialog */}
+                <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>View Meeting</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Title</label>
+                                <textarea
+                                    value={editTitle}
+                                    readOnly
+                                    rows={Math.ceil(editTitle.length / 80) || 1}
+                                    onFocus={(e) => e.target.blur()}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    style={{
+                                        userSelect: 'none',
+                                        resize: 'none',
+                                    }}
+                                    className="w-full cursor-default rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium">Status</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editingNotice?.date && isPastDate(new Date(editingNotice.date)) ? 'Ended' : 'Upcoming'}
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Description</label>
+                                <div
+                                    className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950 whitespace-pre-wrap"
+                                    style={{ minHeight: '120px' }}
+                                >
+                                    {renderTextWithLinks(editDescription)}
+                                </div>
+                            </div>
+
+                            {(editDate || editTime) && (
+                                <>
+                                    {editDate && (
+                                        <div>
+                                            <label className="text-sm font-medium">Date</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editDate}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {editTime && (
+                                        <div>
+                                            <label className="text-sm font-medium">Time</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editTime}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Posted by</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editingNotice?.username}
+                                </div>
+                            </div>
+
+                            {editFiles.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Attachments</label>
+                                    <div className="mt-1 space-y-2">
+                                        {editFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 p-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                <FileText className="h-4 w-4" />
+                                                <span>{file.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );

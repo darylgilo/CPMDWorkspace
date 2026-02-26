@@ -147,9 +147,18 @@ export default function TravelExpenses() {
         useState<TravelExpense | null>(null);
     const [sortField, setSortField] = useState<string>('date_of_travel');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-    const [selectedYear, setSelectedYear] = useState<number>(
+    const [selectedYear, setSelectedYear] = useState<number | null>(
         urlYear ? parseInt(urlYear) : 2026,
     );
+
+    // Get available years from funds
+    const availableYears = useMemo(() => {
+        if (!funds?.data) return [];
+        const years = [
+            ...new Set(funds.data.map((fund: { id: number; fund_name: string; source_year: number }) => fund.source_year)),
+        ].sort((a, b) => b - a);
+        return years;
+    }, [funds?.data]);
     const [selectedFundId, setSelectedFundId] = useState<number | null>(
         urlFundId ? parseInt(urlFundId) : null,
     );
@@ -955,33 +964,90 @@ export default function TravelExpenses() {
                 {/* Controls Section */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center gap-4 w-full md:w-auto">
                             {/* Add Expense Button */}
                             {currentFund && (
                                 <Button
-                                    onClick={handleAdd}
-                                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                    onClick={() => {
+                                        setSelectedExpense(null);
+                                        resetForm();
+                                        setIsAddDialogOpen(true);
+                                    }}
+                                    className="w-full sm:w-auto bg-[#163832] hover:bg-[#163832]/90 text-white"
                                 >
-                                    <Plus className="h-4 w-4" />
-                                    Add Status
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Expense
                                 </Button>
                             )}
 
-                            {/* Year Selection */}
-                            <div className="flex items-center gap-2">
-                                <label className="font-medium">Year:</label>
+                            {/* Fund and Year Filters */}
+                            <div className="flex flex-col sm:flex-row gap-2">
                                 <Select
-                                    value={selectedYear.toString()}
+                                    value={selectedFundId?.toString() || 'all'}
                                     onValueChange={(value) => {
-                                        const newYear = parseInt(value);
-                                        setSelectedYear(newYear);
+                                        const fundId = value === 'all' ? null : parseInt(value);
+                                        setSelectedFundId(fundId);
+                                        setCurrentPage(1);
+                                        router.get(
+                                            '/budgetmanagement',
+                                            {
+                                                tab: 'travel-expenses',
+                                                fundId,
+                                                year: selectedYear,
+                                                search: searchValue,
+                                                perPage,
+                                                page: 1,
+                                                sort: sortField,
+                                                direction: sortDirection,
+                                            },
+                                            { preserveState: true },
+                                        );
                                     }}
                                 >
-                                    <SelectTrigger className="w-[120px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectTrigger className="w-full sm:w-[180px]">
+                                        <SelectValue placeholder="Select Fund" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Funds</SelectItem>
+                                        {funds.data.map((fund: { id: number; fund_name: string; source_year: number }) => (
+                                            <SelectItem
+                                                key={fund.id}
+                                                value={fund.id.toString()}
+                                            >
+                                                {fund.fund_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Select
+                                    value={selectedYear?.toString() || 'all'}
+                                    onValueChange={(value) => {
+                                        const year = value === 'all' ? null : parseInt(value);
+                                        setSelectedYear(year);
+                                        setCurrentPage(1);
+                                        router.get(
+                                            '/budgetmanagement',
+                                            {
+                                                tab: 'travel-expenses',
+                                                fundId: selectedFundId,
+                                                year,
+                                                search: searchValue,
+                                                perPage,
+                                                page: 1,
+                                                sort: sortField,
+                                                direction: sortDirection,
+                                            },
+                                            { preserveState: true },
+                                        );
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full sm:w-[120px]">
                                         <SelectValue placeholder="Year" />
                                     </SelectTrigger>
-                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                        {fundYears.map((year: number) => (
+                                    <SelectContent>
+                                        <SelectItem value="all">All Years</SelectItem>
+                                        {availableYears.map((year: number) => (
                                             <SelectItem
                                                 key={year}
                                                 value={year.toString()}
@@ -992,90 +1058,61 @@ export default function TravelExpenses() {
                                     </SelectContent>
                                 </Select>
                             </div>
-
-                            {/* Fund Selection */}
-                            <div className="flex items-center gap-2">
-                                <label className="font-medium">Fund:</label>
-                                <Select
-                                    value={selectedFundId?.toString() || ''}
-                                    onValueChange={(value) => {
-                                        const newFundId = parseInt(value);
-                                        setSelectedFundId(newFundId);
-                                    }}
-                                >
-                                    <SelectTrigger className="w-[250px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                                        <SelectValue>
-                                            {selectedFundId
-                                                ? filteredFunds.find(
-                                                      (f) =>
-                                                          f.id ===
-                                                          selectedFundId,
-                                                  )?.fund_name ||
-                                                  'Select a fund'
-                                                : 'Select a fund'}
-                                        </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                        {filteredFunds.map((fund) => (
-                                            <SelectItem
-                                                key={fund.id}
-                                                value={fund.id.toString()}
-                                            >
-                                                {fund.fund_name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
 
                         {/* Search and Per Page */}
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                             <div className="flex items-center gap-2">
-                                <label className="font-medium">Show:</label>
+                                <label className="font-medium text-sm">Show:</label>
                                 <Select
                                     value={perPage.toString()}
                                     onValueChange={(value) => {
                                         const newPerPage = parseInt(value);
                                         setPerPage(newPerPage);
+                                        setCurrentPage(1);
                                         router.get(
                                             '/budgetmanagement',
                                             {
                                                 tab: 'travel-expenses',
                                                 search: searchValue,
                                                 perPage: newPerPage,
+                                                page: 1,
+                                                sort: sortField,
+                                                direction: sortDirection,
                                                 year: selectedYear,
                                                 fundId: selectedFundId,
                                             },
-                                            {
-                                                preserveState: true,
-                                                replace: true,
-                                            },
+                                            { preserveState: true },
                                         );
                                     }}
                                 >
-                                    <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                                        <SelectValue placeholder="10" />
+                                    <SelectTrigger className="w-16">
+                                        <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="25">25</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
+                                    <SelectContent>
+                                        {[10, 25, 50, 100].map((n) => (
+                                            <SelectItem key={n} value={n.toString()}>
+                                                {n}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
-                                <span>entries</span>
+                                <span className="text-sm">entries</span>
                             </div>
-                            <div className="flex w-full items-center gap-2 md:w-auto">
+                            <div className="flex w-full items-center gap-2 sm:w-auto">
                                 <SearchBar
                                     search={searchValue}
                                     onSearchChange={setSearchValue}
                                     placeholder="Search TEV..."
-                                    className="w-full md:max-w-md"
+                                    className="w-full sm:max-w-md"
                                     searchRoute="/budgetmanagement"
                                     additionalParams={{
                                         tab: 'travel-expenses',
-                                        perPage: perPage,
+                                        perPage,
+                                        sort: sortField,
+                                        direction: sortDirection,
+                                        year: selectedYear,
+                                        fundId: selectedFundId,
                                     }}
                                 />
                             </div>
@@ -1104,7 +1141,8 @@ export default function TravelExpenses() {
 
                 {/* Travel Expenses Table */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <Table className="w-full border-collapse">
                             <TableHeader>
                                 <TableRow className="border-b border-gray-200 dark:border-neutral-700">
@@ -1354,6 +1392,155 @@ export default function TravelExpenses() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-4">
+                        {sortedExpenses.length > 0 ? (
+                            sortedExpenses.map((expense) => (
+                                <div
+                                    key={expense.id}
+                                    className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
+                                >
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                {expense.name}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                Doc Track No: {expense.doctrack_no}
+                                            </p>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className="h-8 w-8 p-0 flex-shrink-0"
+                                                >
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleEdit(expense)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <Edit3 className="mr-2 h-4 w-4" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleDelete(expense.id)}
+                                                    className="cursor-pointer text-red-600 focus:text-red-600"
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
+                                    {/* Details Grid */}
+                                    <div className="grid grid-cols-1 gap-3 mb-3">
+                                        {/* Date of Travel */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date of Travel</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                {new Date(expense.date_of_travel).toLocaleDateString()}
+                                            </p>
+                                        </div>
+
+                                        {/* Destination */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Destination</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                {expense.destination}
+                                            </p>
+                                        </div>
+
+                                        {/* Purpose */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Purpose</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                {expense.purpose}
+                                            </p>
+                                        </div>
+
+                                        {/* Source of Fund */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Source of Fund</p>
+                                            <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                {expense.fund?.fund_name || 'No fund assigned'}
+                                            </p>
+                                        </div>
+
+                                        {/* Amount */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Amount</p>
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                {formatCurrency(expense.amount)}
+                                            </p>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                                            <Select
+                                                value={expense.status}
+                                                onValueChange={(value) => {
+                                                    const updatedData = {
+                                                        status: value,
+                                                    };
+                                                    router.put(
+                                                        `/travel-expenses/${expense.id}`,
+                                                        updatedData,
+                                                        {
+                                                            onSuccess: () => {
+                                                                router.get(
+                                                                    '/budgetmanagement',
+                                                                    {
+                                                                        tab: 'travel-expenses',
+                                                                        search: searchValue,
+                                                                        perPage,
+                                                                        page: currentPage,
+                                                                        sort: sortField,
+                                                                        direction: sortDirection,
+                                                                        year: selectedYear,
+                                                                        fundId: selectedFundId,
+                                                                    },
+                                                                    {
+                                                                        preserveState: true,
+                                                                    },
+                                                                );
+                                                            },
+                                                            onError: (errors) => {
+                                                                console.error('Error updating status:', errors);
+                                                            },
+                                                        },
+                                                    );
+                                                }}
+                                            >
+                                                <SelectTrigger
+                                                    className={`h-8 w-full border-0 ${getStatusBadge(expense.status)} cursor-pointer hover:opacity-80`}
+                                                >
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="pending">Pending</SelectItem>
+                                                    <SelectItem value="approved">Approved</SelectItem>
+                                                    <SelectItem value="rejected">Rejected</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                No travel expenses found
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}

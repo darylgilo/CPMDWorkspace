@@ -99,7 +99,7 @@ const data = {
             ],
         },
         {
-            title: 'AI Chatbot',
+            title: 'AI Research Assistant',
             url: '/chatbot',
             icon: BotMessageSquareIcon,
         },

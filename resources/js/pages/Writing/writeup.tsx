@@ -472,9 +472,54 @@ export default function Writeup() {
         );
     };
 
-    const handleShare = (documentId: number) => {
-        // In a real app, this would open share dialog
-        console.log('Share post:', documentId);
+    const handleShare = async (documentId: number) => {
+        const document = documents?.data.find((doc: Document) => doc.id === documentId);
+        if (!document) return;
+
+        const shareData = {
+            title: document.title,
+            text: document.content.substring(0, 200) + (document.content.length > 200 ? '...' : ''),
+            url: `${window.location.origin}/PostedView/${document.id}`,
+        };
+
+        // Check if Web Share API is available
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch (error) {
+                console.log('Error sharing:', error);
+                // Fallback to copying link
+                fallbackShare(shareData);
+            }
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            fallbackShare(shareData);
+        }
+    };
+
+    const fallbackShare = async (shareData: { title: string; text: string; url: string }) => {
+        try {
+            // Copy link to clipboard
+            await navigator.clipboard.writeText(shareData.url);
+            showSuccess(
+                'Link Copied',
+                'Post link has been copied to clipboard!'
+            );
+        } catch (error) {
+            console.log('Error copying link:', error);
+            // Final fallback: show the link in an alert
+            const link = shareData.url;
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = link;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showSuccess(
+                'Link Copied',
+                'Post link has been copied to clipboard!'
+            );
+        }
     };
 
     const handleApprove = (documentId: number) => {
@@ -657,20 +702,21 @@ export default function Writeup() {
             )}
 
             {/* Header Controls */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex flex-wrap items-center gap-3">
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                         <Button
                             onClick={handleAdd}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90 sm:px-4"
                         >
                             <Plus className="h-4 w-4" />
-                            <span>Add Writeup</span>
+                            <span className="hidden sm:inline">Add Writeup</span>
+                            <span className="sm:hidden">Add</span>
                         </Button>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 sm:gap-2">
                             <label
                                 htmlFor="entries"
-                                className="text-sm font-medium"
+                                className="text-xs font-medium sm:text-sm"
                             >
                                 Show
                             </label>
@@ -693,7 +739,7 @@ export default function Writeup() {
                                     );
                                 }}
                             >
-                                <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectTrigger className="w-[60px] h-8 border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950 sm:w-[80px] sm:h-auto sm:text-sm">
                                     <SelectValue placeholder="10" />
                                 </SelectTrigger>
                                 <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -703,15 +749,15 @@ export default function Writeup() {
                                     <SelectItem value="100">100</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <span>entries</span>
+                            <span className="text-xs text-gray-600 sm:text-sm">entries</span>
                         </div>
                     </div>
-                    <div className="flex w-full items-center gap-2 md:w-auto">
+                    <div className="flex w-full items-center gap-2 sm:w-auto sm:max-w-md">
                         <SearchBar
                             search={searchValue}
                             onSearchChange={setSearchValue}
-                            placeholder="Search write-ups..."
-                            className="w-full md:max-w-md"
+                            placeholder="Search..."
+                            className="w-full text-xs sm:text-sm sm:max-w-full"
                             searchRoute="/writing"
                             additionalParams={{ tab: 'writeup', perPage }}
                         />
@@ -720,84 +766,87 @@ export default function Writeup() {
             </div>
 
             {/* Blog Posts Container */}
-            <div className="space-y-8">
+            <div className="space-y-3 sm:space-y-4">
                 {documents?.data && documents.data.length > 0 ? (
                     sortedDocuments.map((document: Document) => (
                         <div
                             key={document.id}
-                            className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+                            className="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-neutral-900"
                         >
-                            {/* Post Header */}
-                            <div className="p-6">
-                                <div className="mb-4 flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="mb-2 flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#163832] dark:bg-[#235347]">
-                                                {getProfilePictureUrl(
-                                                    document.author
-                                                        .profile_picture,
-                                                ) &&
-                                                !brokenImages.has(
-                                                    `author-${document.id}`,
-                                                ) ? (
-                                                    <img
-                                                        src={
-                                                            getProfilePictureUrl(
-                                                                document.author
-                                                                    .profile_picture,
-                                                            )!
-                                                        }
-                                                        alt={`${document.author.name}'s profile`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={() =>
-                                                            handleImageError(
-                                                                `author-${document.id}`,
-                                                            )
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <User className="h-5 w-5 text-white" />
+                            {/* Facebook-style Card */}
+                            <div className="p-3 sm:p-4">
+                                {/* Author Header - Facebook Style */}
+                                <div className="mb-3 flex items-start justify-between">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#163832] dark:bg-[#235347]">
+                                            {getProfilePictureUrl(
+                                                document.author
+                                                    .profile_picture,
+                                            ) &&
+                                            !brokenImages.has(
+                                                `author-${document.id}`,
+                                            ) ? (
+                                                <img
+                                                    src={
+                                                        getProfilePictureUrl(
+                                                            document.author
+                                                                .profile_picture,
+                                                        )!
+                                                    }
+                                                    alt={`${document.author.name}'s profile`}
+                                                    className="h-full w-full object-cover"
+                                                    onError={() =>
+                                                        handleImageError(
+                                                            `author-${document.id}`,
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <User className="h-5 w-5 text-white" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                                {document.author.name}
+                                            </h3>
+                                            {/* Date below name on mobile only */}
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                                                {formatDateForBlog(
+                                                    document.created_at,
                                                 )}
                                             </div>
-                                            <div>
-                                                <h3 className="font-semibold text-gray-900 dark:text-white">
-                                                    {document.author.name}
-                                                </h3>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(document.status)}`}
+                                                >
+                                                    {document.status
+                                                        .charAt(0)
+                                                        .toUpperCase() +
+                                                        document.status.slice(1)}
+                                                </span>
+                                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-gray-300">
+                                                    {document.category === 'posting'
+                                                        ? 'Posting'
+                                                        : 'Travel Report'}
+                                                </span>
+                                                {/* Date on same line on desktop */}
+                                                <span className="hidden sm:flex items-center text-xs text-gray-500 dark:text-gray-400">
+                                                    <span className="mx-1">•</span>
                                                     {formatDateForBlog(
                                                         document.created_at,
                                                     )}
-                                                </p>
+                                                </span>
                                             </div>
                                         </div>
-                                        <div className="mb-3 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                            <span
-                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(document.status)}`}
-                                            >
-                                                {document.status
-                                                    .charAt(0)
-                                                    .toUpperCase() +
-                                                    document.status.slice(1)}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <FileText className="h-4 w-4" />
-                                                {document.category === 'posting'
-                                                    ? 'Posting'
-                                                    : 'Travel Report'}
-                                            </span>
-                                        </div>
-                                        <h1 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
-                                            {document.title}
-                                        </h1>
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 p-0"
+                                                className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800"
                                             >
-                                                <MoreVertical className="h-4 w-4" />
+                                                <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent
@@ -831,16 +880,23 @@ export default function Writeup() {
                                     </DropdownMenu>
                                 </div>
 
-                                {/* Post Content */}
-                                <div className="prose prose-sm dark:prose-invert mb-6 max-w-none">
-                                    <div className="space-y-4 leading-relaxed text-gray-700 dark:text-gray-300">
+                                {/* Title - Facebook Style */}
+                                <div className="mb-3">
+                                    <h1 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
+                                        {document.title}
+                                    </h1>
+                                </div>
+
+                                {/* Content - Facebook Style */}
+                                <div className="mb-4">
+                                    <div className="text-sm leading-relaxed text-gray-800 dark:text-gray-200 sm:text-base">
                                         {expandedPosts[document.id] ? (
                                             document.content
                                                 .split('\n\n')
                                                 .map((paragraph, index) => (
                                                     <p
                                                         key={index}
-                                                        className="mb-4"
+                                                        className="mb-3"
                                                     >
                                                         {renderTextWithLinks(
                                                             paragraph,
@@ -863,74 +919,52 @@ export default function Writeup() {
                                                         document.id,
                                                     )
                                                 }
-                                                className="ml-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:underline dark:text-gray-400 dark:hover:text-white"
+                                                className="ml-1 text-sm font-medium text-[#163832] hover:text-[#163832]/80 hover:underline dark:text-[#235347] dark:hover:text-[#235347]/80"
                                             >
                                                 {expandedPosts[document.id]
-                                                    ? 'Show less'
-                                                    : 'Read more'}
+                                                    ? 'See less'
+                                                    : 'See more'}
                                             </button>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Post Actions */}
-                                <div className="flex items-center justify-between border-t border-gray-200 pt-4 dark:border-neutral-700">
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={() =>
-                                                handleApprove(document.id)
-                                            }
-                                            className={`flex items-center gap-2 transition-colors ${
-                                                document.is_approved
-                                                    ? 'rounded-md bg-green-50 px-2 py-1 text-green-600 dark:bg-green-900/20 dark:text-green-400'
-                                                    : 'text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400'
-                                            }`}
-                                        >
-                                            <Check className="h-4 w-4" />
-                                            <span className="text-sm">
-                                                Approve
-                                            </span>
-                                            {document.approvals_count > 0 && (
-                                                <span
-                                                    className={`rounded-full px-1.5 py-0.5 text-xs ${
-                                                        document.is_approved
-                                                            ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
-                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                    }`}
-                                                >
-                                                    {document.approvals_count}
-                                                </span>
-                                            )}
-                                        </button>
+                                {/* Facebook-style Actions */}
+                                <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-neutral-700">
+                                    <div className="flex items-center gap-1 sm:gap-2">
                                         <button
                                             onClick={() =>
                                                 handleLike(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${
+                                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                                                 document.is_liked
-                                                    ? 'rounded-md bg-red-50 px-2 py-1 text-red-500 dark:bg-red-900/20 dark:text-red-400'
-                                                    : 'text-gray-600 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400'
+                                                    ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20'
+                                                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-neutral-800'
                                             }`}
                                         >
                                             <Heart
-                                                className={`h-4 w-4 ${document.is_liked ? 'fill-current' : ''}`}
+                                                className={`h-4 w-4 sm:h-5 sm:w-5 ${document.is_liked ? 'fill-current' : ''}`}
                                             />
-                                            <span className="text-sm">
-                                                {document.likes_count}
-                                            </span>
+                                            <span>{document.likes_count}</span>
                                         </button>
                                         <button
                                             onClick={() => {
-                                                const commentInput =
-                                                    globalThis.document.getElementById(
-                                                        `comment-${document.id}`,
-                                                    ) as HTMLTextAreaElement;
-                                                commentInput?.focus();
+                                                toggleComments(document.id);
+                                                // Also focus on comment input after expanding
+                                                setTimeout(() => {
+                                                    const commentInput =
+                                                        globalThis.document.getElementById(
+                                                            `comment-${document.id}`,
+                                                        ) as HTMLTextAreaElement;
+                                                    if (commentInput && !collapsedComments[document.id]) {
+                                                        commentInput.focus();
+                                                    }
+                                                }, 100);
                                             }}
-                                            className="flex items-center gap-2 text-gray-600 transition-colors hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400"
+                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-neutral-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                                         >
-                                            <MessageCircle className="h-4 w-4" />
-                                            <span className="text-sm">
+                                            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                                            <span>
                                                 {
                                                     (
                                                         comments[document.id] ||
@@ -944,34 +978,52 @@ export default function Writeup() {
                                             onClick={() =>
                                                 handleShare(document.id)
                                             }
-                                            className="flex items-center gap-2 text-gray-600 transition-colors hover:text-green-500 dark:text-gray-400 dark:hover:text-green-400"
+                                            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-neutral-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                                         >
-                                            <Share2 className="h-4 w-4" />
-                                            <span className="text-sm">
-                                                Share
-                                            </span>
+                                            <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                                            <span className="hidden sm:inline">Share</span>
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() =>
+                                                handleApprove(document.id)
+                                            }
+                                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
+                                                document.is_approved
+                                                    ? 'text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20'
+                                                    : 'text-gray-600 hover:bg-green-50 hover:text-green-600 dark:text-gray-400 dark:hover:bg-green-900/20 dark:hover:text-green-400'
+                                            }`}
+                                        >
+                                            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
+                                            <span className="hidden sm:inline">Approve</span>
+                                            {document.approvals_count > 0 && (
+                                                <span
+                                                    className={`rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                                                        document.is_approved
+                                                            ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200'
+                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                    }`}
+                                                >
+                                                    {document.approvals_count}
+                                                </span>
+                                            )}
                                         </button>
                                         <button
                                             onClick={() =>
                                                 handleBookmark(document.id)
                                             }
-                                            className={`flex items-center gap-2 transition-colors ${
+                                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                                                 document.is_bookmarked
-                                                    ? 'rounded-md bg-yellow-50 px-2 py-1 text-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-400'
-                                                    : 'text-gray-600 hover:text-yellow-500 dark:text-gray-400 dark:hover:text-yellow-400'
+                                                    ? 'text-yellow-600 hover:bg-yellow-50 dark:text-yellow-400 dark:hover:bg-yellow-900/20'
+                                                    : 'text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 dark:text-gray-400 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400'
                                             }`}
                                         >
                                             <Bookmark
-                                                className={`h-4 w-4 ${document.is_bookmarked ? 'fill-current' : ''}`}
+                                                className={`h-4 w-4 sm:h-5 sm:w-5 ${document.is_bookmarked ? 'fill-current' : ''}`}
                                             />
-                                            <span className="text-sm">
-                                                Save
-                                            </span>
+                                            <span className="hidden sm:inline">Bookmark</span>
                                         </button>
-                                    </div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                                        Last updated:{' '}
-                                        {formatDate(document.updated_at)}
                                     </div>
                                 </div>
                             </div>
@@ -1088,64 +1140,65 @@ export default function Writeup() {
 
                                         {/* Comments List */}
                                         <div className="space-y-4">
-                                            {(
-                                                comments[document.id] ||
-                                                document.comments ||
-                                                []
-                                            ).map((comment: Comment) => (
-                                                <div
-                                                    key={comment.id}
-                                                    className="flex gap-3"
-                                                >
-                                                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-neutral-600">
-                                                        {getProfilePictureUrl(
-                                                            comment.author
-                                                                .profile_picture,
-                                                        ) &&
-                                                        !brokenImages.has(
-                                                            `comment-${comment.id}`,
-                                                        ) ? (
-                                                            <img
-                                                                src={
-                                                                    getProfilePictureUrl(
-                                                                        comment
-                                                                            .author
-                                                                            .profile_picture,
-                                                                    )!
-                                                                }
-                                                                alt={`${comment.author.name}'s profile`}
-                                                                className="h-full w-full object-cover"
-                                                                onError={() =>
-                                                                    handleImageError(
-                                                                        `comment-${comment.id}`,
-                                                                    )
-                                                                }
-                                                            />
-                                                        ) : (
-                                                            <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <div className="mb-1 flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                    {
-                                                                        comment
-                                                                            .author
-                                                                            .name
+                                            <div className="max-h-64 sm:max-h-64 overflow-y-auto hide-scrollbar">
+                                                {(
+                                                    comments[document.id] ||
+                                                    document.comments ||
+                                                    []
+                                                ).map((comment: Comment) => (
+                                                    <div
+                                                        key={comment.id}
+                                                        className="flex gap-3"
+                                                    >
+                                                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-neutral-600">
+                                                            {getProfilePictureUrl(
+                                                                comment.author
+                                                                    .profile_picture,
+                                                            ) &&
+                                                            !brokenImages.has(
+                                                                `comment-${comment.id}`,
+                                                            ) ? (
+                                                                <img
+                                                                    src={
+                                                                        getProfilePictureUrl(
+                                                                            comment
+                                                                                .author
+                                                                                .profile_picture,
+                                                                        )!
                                                                     }
-                                                                </span>
-                                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    {formatDate(
-                                                                        comment.created_at,
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            {current_user &&
-                                                                current_user.id ===
-                                                                    comment
-                                                                        .author
-                                                                        .id && (
+                                                                    alt={`${comment.author.name}'s profile`}
+                                                                    className="h-full w-full object-cover"
+                                                                    onError={() =>
+                                                                        handleImageError(
+                                                                            `comment-${comment.id}`,
+                                                                        )
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="mb-1 flex items-center justify-between">
+                                                                <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+                                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                        {
+                                                                            comment
+                                                                                .author
+                                                                                .name
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {formatDate(
+                                                                            comment.created_at,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                                {current_user &&
+                                                                    current_user.id ===
+                                                                        comment
+                                                                            .author
+                                                                            .id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger
                                                                             asChild
@@ -1158,7 +1211,7 @@ export default function Writeup() {
                                                                                     Open
                                                                                     menu
                                                                                 </span>
-                                                                                <MoreHorizontal className="h-4 w-4" />
+                                                                                <MoreVertical className="h-4 w-4" />
                                                                             </Button>
                                                                         </DropdownMenuTrigger>
                                                                         <DropdownMenuContent align="end">
@@ -1188,87 +1241,88 @@ export default function Writeup() {
                                                                         </DropdownMenuContent>
                                                                     </DropdownMenu>
                                                                 )}
-                                                        </div>
-                                                        {editingComments[
-                                                            comment.id
-                                                        ] ? (
-                                                            <div className="space-y-2">
-                                                                <textarea
-                                                                    value={
-                                                                        editCommentTexts[
-                                                                            comment
-                                                                                .id
-                                                                        ] || ''
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        setEditCommentTexts(
-                                                                            (
-                                                                                prev,
-                                                                            ) => ({
-                                                                                ...prev,
-                                                                                [comment.id]:
-                                                                                    e
-                                                                                        .target
-                                                                                        .value,
-                                                                            }),
-                                                                        )
-                                                                    }
-                                                                    className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#163832] focus:outline-none dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
-                                                                    rows={3}
-                                                                />
-                                                                <div className="flex gap-2">
-                                                                    <Button
-                                                                        onClick={() =>
-                                                                            handleUpdateComment(
-                                                                                comment.id,
-                                                                            )
-                                                                        }
-                                                                        disabled={
-                                                                            !editCommentTexts[
+                                                            </div>
+                                                            {editingComments[
+                                                                comment.id
+                                                            ] ? (
+                                                                <div className="space-y-2">
+                                                                    <textarea
+                                                                        value={
+                                                                            editCommentTexts[
                                                                                 comment
                                                                                     .id
-                                                                            ]?.trim()
+                                                                            ] || ''
                                                                         }
-                                                                        className="bg-[#163832] px-3 py-1 text-xs text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                                                    >
-                                                                        Save
-                                                                    </Button>
-                                                                    <Button
-                                                                        onClick={() =>
-                                                                            handleCancelEdit(
-                                                                                comment.id,
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            setEditCommentTexts(
+                                                                                (
+                                                                                    prev,
+                                                                                ) => ({
+                                                                                    ...prev,
+                                                                                    [comment.id]:
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                }),
                                                                             )
                                                                         }
-                                                                        variant="outline"
-                                                                        className="border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100 dark:border-neutral-600 dark:text-gray-300 dark:hover:bg-neutral-700"
-                                                                    >
-                                                                        Cancel
-                                                                    </Button>
+                                                                        className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#163832] focus:outline-none dark:border-neutral-600 dark:bg-neutral-700 dark:text-white"
+                                                                        rows={3}
+                                                                    />
+                                                                    <div className="flex gap-2">
+                                                                        <Button
+                                                                            onClick={() =>
+                                                                                handleUpdateComment(
+                                                                                    comment.id,
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                !editCommentTexts[
+                                                                                    comment
+                                                                                        .id
+                                                                                ]?.trim()
+                                                                            }
+                                                                            className="bg-[#163832] px-3 py-1 text-xs text-white hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                                                        >
+                                                                            Save
+                                                                        </Button>
+                                                                        <Button
+                                                                            onClick={() =>
+                                                                                handleCancelEdit(
+                                                                                    comment.id,
+                                                                                )
+                                                                            }
+                                                                            variant="outline"
+                                                                            className="border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100 dark:border-neutral-600 dark:text-gray-300 dark:hover:bg-neutral-700"
+                                                                        >
+                                                                            Cancel
+                                                                        </Button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ) : (
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">
-                                                                {renderTextWithLinks(
-                                                                    comment.content,
-                                                                )}
-                                                            </p>
-                                                        )}
+                                                            ) : (
+                                                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                                                    {renderTextWithLinks(
+                                                                        comment.content,
+                                                                    )}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
-                                            {(!comments[document.id] ||
-                                                comments[document.id].length ===
-                                                    0) &&
-                                                (!document.comments ||
-                                                    document.comments.length ===
-                                                        0) && (
-                                                    <p className="py-4 text-center text-gray-500 dark:text-gray-400">
-                                                        No comments yet. Be the
-                                                        first to comment!
-                                                    </p>
-                                                )}
+                                                ))}
+                                                {(!comments[document.id] ||
+                                                    comments[document.id].length ===
+                                                        0) &&
+                                                    (!document.comments ||
+                                                        document.comments.length ===
+                                                            0) && (
+                                                        <p className="py-4 text-center text-gray-500 dark:text-gray-400">
+                                                            No comments yet. Be the
+                                                            first to comment!
+                                                        </p>
+                                                    )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -1290,7 +1344,7 @@ export default function Writeup() {
 
             {/* Pagination */}
             {documents?.data && documents.data.length > 0 && (
-                <div className="mt-8">
+                <div className="mt-4 sm:mt-8">
                     <CustomPagination
                         currentPage={currentPage}
                         totalItems={documents?.total || 0}

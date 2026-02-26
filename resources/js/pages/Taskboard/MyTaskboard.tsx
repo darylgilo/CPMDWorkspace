@@ -1,7 +1,7 @@
 import CustomPagination from '@/components/CustomPagination';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
-import SimpleStatistic from '@/components/SimpleStatistic';
+import TaskCalendar from '@/components/TaskCalendar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -543,32 +543,16 @@ export default function MyTaskboard() {
         );
 
     return (
-        <div className="flex flex-col gap-4">
-            {/* Analytics */}
-            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                <SimpleStatistic
-                    label="My Total Tasks"
-                    value={myAnalytics?.total || 0}
-                    icon={ListChecks}
-                    backgroundColor="#163832"
-                />
-                <SimpleStatistic
-                    label="Not Started"
-                    value={myAnalytics?.notStarted || 0}
-                    icon={Clock}
-                    backgroundColor="#1a4d3e"
-                />
-                <SimpleStatistic
-                    label="In Progress"
-                    value={myAnalytics?.inProgress || 0}
-                    icon={Loader2}
-                    backgroundColor="#235347"
-                />
-                <SimpleStatistic
-                    label="Completed"
-                    value={myAnalytics?.completed || 0}
-                    icon={CheckCircle2}
-                    backgroundColor="#2a6358"
+        <div className="flex flex-col gap-2">
+            {/* Task Calendar */}
+            <div className="mb-3">
+                <TaskCalendar 
+                    tasks={myTasks.data} 
+                    users={users}
+                    onTaskClick={(task) => {
+                        // Handle task click - you can open edit dialog or navigate to task details
+                        console.log('Task clicked:', task);
+                    }}
                 />
             </div>
 
@@ -617,9 +601,10 @@ export default function MyTaskboard() {
                     />
                 </div>
 
-                {/* Table */}
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] border-collapse">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block">
+                        <table className="w-full min-w-[900px] border-collapse">
                         <thead>
                             <tr className="border-b border-gray-200 dark:border-neutral-700">
                                 <th className="w-1 py-4" />
@@ -857,6 +842,137 @@ export default function MyTaskboard() {
                             )}
                         </tbody>
                     </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3 p-4">
+                        {sortedTasks.length > 0 ? (
+                            sortedTasks.map((task) => {
+                                const accent =
+                                    priorityAccent[task.priority] ??
+                                    'transparent';
+                                const sc = statusConfig[task.status];
+                                const date = formatDate(task.end_date);
+                                const playColor =
+                                    priorityPlayColor[task.priority] ??
+                                    '#9ca3af';
+
+                                return (
+                                    <div
+                                        key={task.id}
+                                        className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
+                                    >
+                                        {/* Priority accent bar */}
+                                        <div
+                                            className="h-1 w-full rounded-t-lg mb-3"
+                                            style={{ background: accent }}
+                                        />
+
+                                        {/* Task Header */}
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                    {task.title}
+                                                </h3>
+                                                {task.description && (
+                                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                                                        {task.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <button className="ml-2 p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900"
+                                                >
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleEdit(task)}
+                                                        className="cursor-pointer gap-2"
+                                                    >
+                                                        <Edit3 className="h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleDelete(task.id)}
+                                                        className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+
+                                        {/* Task Details Grid */}
+                                        <div className="grid grid-cols-2 gap-3 mb-3">
+                                            {/* Status */}
+                                            <div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                                                <span
+                                                    className="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide"
+                                                    style={{
+                                                        background: sc?.bg,
+                                                        color: sc?.text,
+                                                    }}
+                                                >
+                                                    {sc?.label ?? task.status}
+                                                </span>
+                                            </div>
+
+                                            {/* Priority */}
+                                            <div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Priority</p>
+                                                <div
+                                                    className="flex h-6 w-6 items-center justify-center rounded-full border border-current"
+                                                    style={{ color: playColor }}
+                                                    title={task.priority}
+                                                >
+                                                    <Flag
+                                                        className="h-3 w-3"
+                                                        fill="currentColor"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* End Date */}
+                                            <div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">End Date</p>
+                                                <p className="text-xs text-gray-700 dark:text-gray-300">
+                                                    {date || 'No date'}
+                                                </p>
+                                            </div>
+
+                                            {/* Progress */}
+                                            <div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Progress</p>
+                                                <ProgressRing progress={task.progress} size={24} />
+                                            </div>
+                                        </div>
+
+                                        {/* Assignees */}
+                                        <div className="pt-3 border-t border-gray-100 dark:border-neutral-800">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Assignees</p>
+                                            <AvatarStack
+                                                assignees={task.assignees}
+                                                users={users}
+                                                onAdd={() => handleEdit(task)}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center py-8 text-gray-400">
+                                You have no tasks assigned to you yet.
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Pagination */}

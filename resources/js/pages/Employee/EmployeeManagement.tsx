@@ -20,11 +20,13 @@ import {
     ChevronUp,
     Clock,
     Edit,
+    MoreVertical,
     UserCheck,
     UserPlus,
     Users,
 } from 'lucide-react';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { format, isToday, parseISO } from 'date-fns';
 
 // Define types
 interface User {
@@ -49,6 +51,8 @@ interface User {
     date_of_birth?: string | null;
     gender?: string | null;
     contact_person?: string | null;
+    whereabouts_updated_at?: string | null;
+    whereabouts_status?: string | null;
     [key: string]: unknown;
 }
 
@@ -83,6 +87,32 @@ interface PageProps extends InertiaPageProps {
     };
 }
 
+// Status colors matching Whereabouts page
+const STATUS_COLORS: Record<string, string> = {
+    'ON DUTY': 'ring-emerald-500 dark:ring-emerald-400',
+    'ON TRAVEL': 'ring-blue-500 dark:ring-blue-400',
+    'ON LEAVE': 'ring-red-500 dark:ring-red-400',
+    ABSENT: 'ring-amber-500 dark:ring-amber-400',
+    'HALF DAY': 'ring-yellow-400 dark:ring-yellow-300',
+    WFH: 'ring-purple-500 dark:ring-purple-400',
+};
+
+// Helper function to get border color based on whereabouts status
+const getWhereaboutsBorderColor = (status: string | null | undefined): string => {
+    if (!status) return '';
+    return STATUS_COLORS[status] || '';
+};
+
+// Helper function to check if whereabouts was updated today
+const isWhereaboutsUpdatedToday = (updatedAt: string | null | undefined): boolean => {
+    if (!updatedAt) return false;
+    try {
+        return isToday(parseISO(updatedAt));
+    } catch {
+        return false;
+    }
+};
+
 // Employee Management list page component
 export default function EmployeeManagement() {
     const { showSuccess, showError, showInfo } = usePopupAlert();
@@ -112,6 +142,7 @@ export default function EmployeeManagement() {
     const [status, setStatus] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+    const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
     const toggleRow = (id: number) => {
         const newExpandedRows = new Set(expandedRows);
@@ -122,6 +153,21 @@ export default function EmployeeManagement() {
         }
         setExpandedRows(newExpandedRows);
     };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest('.relative')) {
+                setActiveDropdown(null);
+            }
+        };
+
+        if (activeDropdown !== null) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [activeDropdown]);
 
     // Load all employees once on component mount
     const [allEmployees, setAllEmployees] = useState(users.data || []);
@@ -417,7 +463,7 @@ export default function EmployeeManagement() {
                     </div>
 
                     {/* Search and Export on the right */}
-                    <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+                    <div className="flex w-full flex-row items-center gap-2 md:w-auto md:flex-row md:items-center">
                         <ExportEmployee
                             data={filteredEmployees}
                             variant="outline"
@@ -439,7 +485,8 @@ export default function EmployeeManagement() {
 
                 {/* Table view */}
                 <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-neutral-800">
                                 <tr>
@@ -493,14 +540,22 @@ export default function EmployeeManagement() {
                                                             <div className="h-10 w-10 flex-shrink-0">
                                                                 {employee.profile_picture ? (
                                                                     <img
-                                                                        className="h-10 w-10 rounded-full object-cover"
+                                                                        className={`h-10 w-10 rounded-full object-cover ${
+                                                                            isWhereaboutsUpdatedToday(employee.whereabouts_updated_at)
+                                                                                ? `ring-2 ring-offset-2 dark:ring-offset-neutral-900 ${getWhereaboutsBorderColor(employee.whereabouts_status)}`
+                                                                                : ''
+                                                                        }`}
                                                                         src={`/storage/${employee.profile_picture}`}
                                                                         alt={
                                                                             employee.name
                                                                         }
                                                                     />
                                                                 ) : (
-                                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-700">
+                                                                    <div className={`flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-700 ${
+                                                                        isWhereaboutsUpdatedToday(employee.whereabouts_updated_at)
+                                                                            ? `ring-2 ring-offset-2 dark:ring-offset-neutral-900 ${getWhereaboutsBorderColor(employee.whereabouts_status)}`
+                                                                            : ''
+                                                                    }`}>
                                                                         <svg
                                                                             className="h-6 w-6 text-gray-400 dark:text-neutral-500"
                                                                             fill="currentColor"
@@ -716,6 +771,196 @@ export default function EmployeeManagement() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden">
+                        {filteredEmployees.length > 0 ? (
+                            <div className="divide-y divide-gray-200 dark:divide-neutral-700">
+                                {paginatedEmployees.map((employee: User) => {
+                                    const isRowExpanded = expandedRows.has(employee.id);
+                                    return (
+                                        <div
+                                            key={employee.id}
+                                            className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/50 ${isRowExpanded ? 'bg-gray-50/80 dark:bg-neutral-800/40' : ''}`}
+                                            onClick={(e) => {
+                                                if (activeDropdown === null) {
+                                                    toggleRow(employee.id);
+                                                }
+                                            }}
+                                        >
+                                            <div className="flex flex-col space-y-3">
+                                                <div className="flex items-center space-x-3">
+                                                    <div className="h-12 w-12 flex-shrink-0">
+                                                        {employee.profile_picture ? (
+                                                            <img
+                                                                className={`h-12 w-12 rounded-full object-cover ${
+                                                                    isWhereaboutsUpdatedToday(employee.whereabouts_updated_at)
+                                                                        ? `ring-2 ring-offset-2 dark:ring-offset-neutral-900 ${getWhereaboutsBorderColor(employee.whereabouts_status)}`
+                                                                        : ''
+                                                                }`}
+                                                                src={`/storage/${employee.profile_picture}`}
+                                                                alt={employee.name}
+                                                            />
+                                                        ) : (
+                                                            <div className={`flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-700 ${
+                                                                isWhereaboutsUpdatedToday(employee.whereabouts_updated_at)
+                                                                    ? `ring-2 ring-offset-2 dark:ring-offset-neutral-900 ${getWhereaboutsBorderColor(employee.whereabouts_status)}`
+                                                                    : ''
+                                                            }`}>
+                                                                <svg
+                                                                    className="h-8 w-8 text-gray-400 dark:text-neutral-500"
+                                                                    fill="currentColor"
+                                                                    viewBox="0 0 20 20"
+                                                                >
+                                                                    <path
+                                                                        fillRule="evenodd"
+                                                                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                                                        clipRule="evenodd"
+                                                                    />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                            {employee.name || '—'}
+                                                        </p>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                                            {employee.email || '—'}
+                                                        </p>
+                                                        <p className="text-sm text-gray-900 dark:text-white truncate">
+                                                            {employee.position || '—'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2 text-xs">
+                                                    <div className="flex flex-wrap gap-3">
+                                                        <div className="flex items-center">
+                                                            <span className="font-medium text-gray-500 dark:text-gray-400">ID:</span>
+                                                            <span className="ml-1 text-gray-900 dark:text-white truncate">{employee.employee_id || '—'}</span>
+                                                        </div>
+                                                        <div className="flex items-center">
+                                                            <span className="font-medium text-gray-500 dark:text-gray-400">Office:</span>
+                                                            <span className="ml-1 text-gray-900 dark:text-white truncate">{employee.office || '—'}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        <div className="flex items-center flex-1 min-w-0">
+                                                            <span className="font-medium text-gray-500 dark:text-gray-400">Section:</span>
+                                                            <span className="ml-1 text-gray-900 dark:text-white truncate">{employee.cpmd || '—'}</span>
+                                                        </div>
+                                                        <div className="flex items-center flex-shrink-0">
+                                                            <span className="font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                                                            <span
+                                                                className={`ml-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                                    employee.status === 'active'
+                                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                                        : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-gray-300'
+                                                                }`}
+                                                            >
+                                                                {employee.employment_status || '—'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-700">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            router.get(`/employees/${employee.id}`);
+                                                        }}
+                                                        className="inline-flex items-center gap-1 rounded-md bg-[#163832] px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#1a4d3e]"
+                                                    >
+                                                        <Edit className="h-3.5 w-3.5" />
+                                                        <span>Edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleRow(employee.id);
+                                                        }}
+                                                        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                    >
+                                                        {isRowExpanded ? (
+                                                            <ChevronUp className="h-4 w-4" />
+                                                        ) : (
+                                                            <ChevronDown className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            
+                                            {isRowExpanded && (
+                                                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-neutral-700">
+                                                    <div className="grid grid-cols-1 gap-3 text-xs">
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Hiring Date</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.hiring_date || '—'}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Item Number</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.item_number || '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">TIN Number</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.tin_number || '—'}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">GSIS Number</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.gsis_number || '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Landbank Number</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.landbank_number || '—'}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Mobile Number</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.mobile_number || '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="block font-medium text-gray-500 dark:text-gray-400">Home Address</span>
+                                                            <span className="block text-gray-900 dark:text-white">{employee.address || '—'}</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Birth Date</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.date_of_birth || '—'}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="block font-medium text-gray-500 dark:text-gray-400">Gender</span>
+                                                                <span className="block text-gray-900 dark:text-white">{employee.gender || '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="block font-medium text-gray-500 dark:text-gray-400">Emergency Contact</span>
+                                                            <span className="block text-gray-900 dark:text-white">
+                                                                {employee.contact_person || '—'} {employee.contact_number ? `- ${employee.contact_number}` : ''}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="px-4 py-8 text-center">
+                                <p className="text-gray-500 dark:text-gray-400">
+                                    {search
+                                        ? 'No employees match your search'
+                                        : 'No employees found'}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

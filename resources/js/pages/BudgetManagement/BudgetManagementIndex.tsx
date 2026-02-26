@@ -114,8 +114,9 @@ export default function BudgetManagementIndex() {
             <div className="space-y-6 px-4 py-6">
                 {/* Header Navigation */}
                 <div className="border-b border-gray-200 dark:border-neutral-700">
-                    <nav className="flex space-x-2">
-                        {navItems.map((item, index) => {
+                    <nav className="overflow-x-auto hide-scrollbar">
+                        <div className="flex space-x-1 min-w-max sm:space-x-2">
+                            {navItems.map((item, index) => {
                             const isActive =
                                 activeTab === item.href.substring(1);
                             return (
@@ -123,10 +124,11 @@ export default function BudgetManagementIndex() {
                                     key={`${item.href}-${index}`}
                                     variant="ghost"
                                     className={cn(
-                                        'rounded-none px-4 py-3 font-medium transition-colors',
+                                        'rounded-none px-2 py-3 font-medium transition-colors flex-shrink-0',
                                         'border-b-2 border-transparent',
                                         'hover:bg-transparent hover:text-foreground',
                                         'focus-visible:ring-0 focus-visible:ring-offset-0',
+                                        'text-sm sm:text-base sm:px-4',
                                         {
                                             'border-primary text-foreground':
                                                 isActive,
@@ -138,15 +140,18 @@ export default function BudgetManagementIndex() {
                                         handleTabChange(item.href.substring(1))
                                     }
                                 >
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
                                         {item.icon && (
-                                            <item.icon className="h-4 w-4" />
+                                            <item.icon className="h-4 w-4 sm:h-4 sm:w-4 flex-shrink-0" />
                                         )}
-                                        {item.title}
+                                        <span className="hidden sm:inline truncate whitespace-nowrap">
+                                            {item.title}
+                                        </span>
                                     </div>
                                 </Button>
                             );
                         })}
+                        </div>
                     </nav>
                 </div>
 

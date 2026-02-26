@@ -1,5 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import FormDialog, { type FormField } from '@/components/FormDialog';
+import KanbanBoard from '@/components/KanbanBoard';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import {
@@ -26,6 +27,8 @@ import {
     Clock,
     Edit3,
     Flag,
+    LayoutGrid,
+    List,
     MoreVertical,
     Play,
     Plus,
@@ -78,6 +81,7 @@ interface PageProps {
         per_page: number;
         total: number;
     };
+    allTasks: Task[];
     analytics: Analytics;
     users: TaskUser[];
     search: string;
@@ -289,6 +293,7 @@ export default function Taskboard() {
     const { props } = usePage<PageProps>();
     const {
         tasks,
+        allTasks,
         analytics,
         users = [],
         search = '',
@@ -305,8 +310,14 @@ export default function Taskboard() {
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [sortField, setSortField] = useState('created_at');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+    const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+    const [currentAllTasks, setCurrentAllTasks] = useState<Task[]>(allTasks || []);
     const [formData, setFormData] =
         useState<Record<string, string>>(defaultForm);
+
+    const handleTasksUpdate = (updatedTasks: Task[]) => {
+        setCurrentAllTasks(updatedTasks);
+    };
 
     const userOptions = useMemo(
         () => users.map((u) => ({ value: u.id.toString(), label: u.name })),
@@ -605,214 +616,263 @@ export default function Taskboard() {
             {/* ─── Table card ─── */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 {/* Controls bar */}
-                <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-3 md:flex-row md:items-center md:justify-between dark:border-neutral-700">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span>Show</span>
-                            <Select
-                                value={perPage.toString()}
-                                onValueChange={(v) => {
-                                    const n = parseInt(v);
-                                    setPerPage(n);
-                                    router.get(
-                                        '/taskboard',
-                                        {
-                                            tab: 'taskboard',
-                                            search: searchValue,
-                                            perPage: n,
-                                        },
-                                        { preserveState: true, replace: true },
-                                    );
-                                }}
+                <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-3 md:py-3 dark:border-neutral-700">
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:flex-nowrap md:gap-3">
+                        {/* View Toggle */}
+                        <div className="inline-flex items-center gap-1 p-1 bg-gray-100 dark:bg-neutral-800 rounded-lg shadow-sm">
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                    viewMode === 'table'
+                                        ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-neutral-600'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-neutral-700'
+                                }`}
                             >
-                                <SelectTrigger className="h-8 w-[72px] border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                    {[10, 25, 50, 100].map((n) => (
-                                        <SelectItem
-                                            key={n}
-                                            value={n.toString()}
-                                        >
-                                            {n}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <span>entries</span>
+                                <List className="h-4 w-4" />
+                                <span className="hidden sm:inline">Table</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode('kanban')}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                    viewMode === 'kanban'
+                                        ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-neutral-600'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-neutral-700'
+                                }`}
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                                <span className="hidden sm:inline">Kanban</span>
+                            </button>
                         </div>
+                        
+                        {viewMode === 'table' && (
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-neutral-800 rounded-lg px-3 py-2 shadow-sm">
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">Show:</span>
+                                <Select
+                                    value={perPage.toString()}
+                                    onValueChange={(v) => {
+                                        const n = parseInt(v);
+                                        setPerPage(n);
+                                        router.get(
+                                            '/taskboard',
+                                            {
+                                                tab: 'taskboard',
+                                                search: searchValue,
+                                                perPage: n,
+                                            },
+                                            { preserveState: true, replace: true },
+                                        );
+                                    }}
+                                >
+                                    <SelectTrigger className="h-7 w-[60px] border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                        {[10, 25, 50, 100].map((n) => (
+                                            <SelectItem
+                                                key={n}
+                                                value={n.toString()}
+                                            >
+                                                {n}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">entries</span>
+                            </div>
+                        )}
                     </div>
-                    <SearchBar
-                        search={searchValue}
-                        onSearchChange={setSearchValue}
-                        placeholder="Search tasks…"
-                        className="w-full md:max-w-xs"
-                        searchRoute="/taskboard"
-                        additionalParams={{ tab: 'taskboard', perPage }}
-                    />
+                    <div className="w-full md:w-auto md:max-w-xs">
+                        <SearchBar
+                            search={searchValue}
+                            onSearchChange={setSearchValue}
+                            placeholder="Search tasks…"
+                            className="w-full"
+                            searchRoute="/taskboard"
+                            additionalParams={{ tab: 'taskboard', perPage }}
+                        />
+                    </div>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-[900px] border-collapse">
-                        {/* thead */}
-                        <thead>
-                            <tr className="border-b border-gray-200 dark:border-neutral-700">
-                                <th className="w-1 py-4" />
-                                <ColHeader
-                                    label="Task"
-                                    field="title"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={handleSort}
-                                />
-                                <ColHeader
-                                    label="End Date"
-                                    field="end_date"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={handleSort}
-                                />
-                                <ColHeader
-                                    label="Status"
-                                    field="status"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={handleSort}
-                                />
-                                <ColHeader
-                                    label="Priority"
-                                    field="priority"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={handleSort}
-                                />
-                                <ColHeader
-                                    label="Progress"
-                                    field="progress"
-                                    sortField={sortField}
-                                    sortDir={sortDir}
-                                    onSort={handleSort}
-                                />
-                                <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                                    Assignees
-                                </th>
-                                <th className="w-12 py-4" />
-                            </tr>
-                        </thead>
+                {/* Content */}
+                {viewMode === 'table' ? (
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="w-full min-w-[900px] border-collapse">
+                            {/* thead */}
+                            <thead>
+                                <tr className="border-b border-gray-200 dark:border-neutral-700">
+                                    <th className="w-1 py-4" />
+                                    <ColHeader
+                                        label="Task"
+                                        field="title"
+                                        sortField={sortField}
+                                        sortDir={sortDir}
+                                        onSort={handleSort}
+                                    />
+                                    <ColHeader
+                                        label="End Date"
+                                        field="end_date"
+                                        sortField={sortField}
+                                        sortDir={sortDir}
+                                        onSort={handleSort}
+                                    />
+                                    <ColHeader
+                                        label="Status"
+                                        field="status"
+                                        sortField={sortField}
+                                        sortDir={sortDir}
+                                        onSort={handleSort}
+                                    />
+                                    <ColHeader
+                                        label="Priority"
+                                        field="priority"
+                                        sortField={sortField}
+                                        sortDir={sortDir}
+                                        onSort={handleSort}
+                                    />
+                                    <ColHeader
+                                        label="Progress"
+                                        field="progress"
+                                        sortField={sortField}
+                                        sortDir={sortDir}
+                                        onSort={handleSort}
+                                    />
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                        Assignees
+                                    </th>
+                                    <th className="w-12 py-4" />
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            {/* ── Add New Task inline row ── */}
-                            <tr className="group border-b border-dashed border-gray-300 dark:border-neutral-700">
-                                <td className="w-1" />
-                                <td colSpan={6} className="px-6 py-4">
-                                    <button
-                                        onClick={handleAdd}
-                                        className="flex items-center gap-2 text-sm font-medium text-[#163832] transition-opacity hover:opacity-70 dark:text-[#4ade80]"
-                                    >
-                                        <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#163832] dark:border-[#4ade80]">
-                                            <Plus className="h-3 w-3" />
-                                        </span>
-                                        Add New Task
-                                    </button>
-                                </td>
-                                <td className="px-4 py-4 text-right">
-                                    <span className="text-xs whitespace-nowrap text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
-                                        Press Alt + T
-                                    </span>
-                                </td>
-                            </tr>
-
-                            {/* ── Data rows ── */}
-                            {sortedTasks.length > 0 ? (
-                                sortedTasks.map((task) => {
-                                    const accent =
-                                        priorityAccent[task.priority] ??
-                                        'transparent';
-                                    const sc = statusConfig[task.status];
-                                    const date = formatDate(task.end_date);
-                                    const playColor =
-                                        priorityPlayColor[task.priority] ??
-                                        '#9ca3af';
-
-                                    return (
-                                        <tr
-                                            key={task.id}
-                                            className="group relative border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50"
+                            <tbody>
+                                {/* ── Add New Task inline row ── */}
+                                <tr className="group border-b border-dashed border-gray-300 dark:border-neutral-700">
+                                    <td className="w-1" />
+                                    <td colSpan={6} className="px-6 py-4">
+                                        <button
+                                            onClick={handleAdd}
+                                            className="flex items-center gap-2 text-sm font-medium text-[#163832] transition-opacity hover:opacity-70 dark:text-[#4ade80]"
                                         >
-                                            {/* priority accent bar */}
-                                            <td className="w-1 p-0">
-                                                <div
-                                                    className="h-full min-h-[56px] w-1 rounded-r"
-                                                    style={{
-                                                        background: accent,
-                                                    }}
-                                                />
-                                            </td>
+                                            <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#163832] dark:border-[#4ade80]">
+                                                <Plus className="h-3 w-3" />
+                                            </span>
+                                            Add New Task
+                                        </button>
+                                    </td>
+                                    <td className="px-4 py-4 text-right">
+                                        <span className="text-xs whitespace-nowrap text-gray-400 opacity-0 transition-opacity group-hover:opacity-100">
+                                            Press Alt + T
+                                        </span>
+                                    </td>
+                                </tr>
 
-                                            {/* Task name */}
-                                            <td className="px-6 py-4">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {task.title}
-                                                </p>
-                                                {task.description && (
-                                                    <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">
-                                                        {task.description}
-                                                    </p>
-                                                )}
-                                            </td>
+                                {/* ── Data rows ── */}
+                                {sortedTasks.length > 0 ? (
+                                    sortedTasks.map((task) => {
+                                        const accent =
+                                            priorityAccent[task.priority] ??
+                                            'transparent';
+                                        const sc = statusConfig[task.status];
+                                        const date = formatDate(task.end_date);
+                                        const playColor =
+                                            priorityPlayColor[task.priority] ??
+                                            '#9ca3af';
 
-                                            {/* End date */}
-                                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                                {date ?? (
-                                                    <span className="text-gray-400 italic">
-                                                        Set end date
-                                                    </span>
-                                                )}
-                                            </td>
-
-                                            {/* Status badge */}
-                                            <td className="px-6 py-4">
-                                                <span
-                                                    className="inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold tracking-wide"
-                                                    style={{
-                                                        background: sc?.bg,
-                                                        color: sc?.text,
-                                                    }}
-                                                >
-                                                    {sc?.label ?? task.status}
-                                                </span>
-                                            </td>
-
-                                            {/* Priority — flag icon */}
-                                            <td className="px-6 py-4">
-                                                <div
-                                                    className="flex h-7 w-7 items-center justify-center rounded-full border border-current"
-                                                    style={{ color: playColor }}
-                                                    title={task.priority}
-                                                >
-                                                    <Flag
-                                                        className="h-3 w-3"
-                                                        fill="currentColor"
+                                        return (
+                                            <tr
+                                                key={task.id}
+                                                className="group relative border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50"
+                                            >
+                                                {/* priority accent bar */}
+                                                <td className="w-1 p-0">
+                                                    <div
+                                                        className="h-full min-h-[56px] w-1 rounded-r"
+                                                        style={{
+                                                            background: accent,
+                                                        }}
                                                     />
-                                                </div>
-                                            </td>
+                                                </td>
 
-                                            {/* Progress ring */}
-                                            <td className="px-6 py-4">
-                                                <ProgressRing
-                                                    progress={task.progress}
-                                                />
-                                            </td>
+                                                {/* Task */}
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                        {task.title}
+                                                    </p>
+                                                    {task.description && (
+                                                        <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">
+                                                            {task.description}
+                                                        </p>
+                                                    )}
+                                                </td>
 
-                                            {/* Assignees */}
-                                            <td className="px-6 py-4">
-                                                <AvatarStack
-                                                    assignees={task.assignees}
-                                                    users={users}
-                                                    onAdd={
-                                                        auth.user.role ===
-                                                            'admin' ||
+                                                {/* End date */}
+                                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                                    {formatDate(task.end_date)}
+                                                </td>
+
+                                                {/* Status */}
+                                                <td className="px-6 py-4">
+                                                    <span
+                                                        className="inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold tracking-wide"
+                                                        style={{
+                                                            background: sc?.bg,
+                                                            color: sc?.text,
+                                                        }}
+                                                    >
+                                                        {sc?.label ?? task.status}
+                                                    </span>
+                                                </td>
+
+                                                {/* Priority */}
+                                                <td className="px-6 py-4">
+                                                    <div
+                                                        className="flex h-7 w-7 items-center justify-center rounded-full border border-current"
+                                                        style={{ color: playColor }}
+                                                        title={task.priority}
+                                                    >
+                                                        <Flag
+                                                            className="h-3 w-3"
+                                                            fill="currentColor"
+                                                        />
+                                                    </div>
+                                                </td>
+
+                                                {/* Progress */}
+                                                <td className="px-6 py-4">
+                                                    <ProgressRing
+                                                        progress={task.progress}
+                                                    />
+                                                </td>
+
+                                                {/* Assignees */}
+                                                <td className="px-6 py-4">
+                                                    <AvatarStack
+                                                        assignees={task.assignees}
+                                                        users={users}
+                                                        onAdd={
+                                                            auth.user.role ===
+                                                                'admin' ||
+                                                            auth.user.role ===
+                                                                'superadmin' ||
+                                                            task.created_by ===
+                                                                auth.user.id ||
+                                                            (task.assignees &&
+                                                                task.assignees.includes(
+                                                                    auth.user.id,
+                                                                ))
+                                                                ? () =>
+                                                                      handleEdit(
+                                                                          task,
+                                                                      )
+                                                                : undefined
+                                                        }
+                                                    />
+                                                </td>
+
+                                                {/* Three-dot menu */}
+                                                <td className="px-4 py-4 text-right whitespace-nowrap">
+                                                    {(auth.user.role === 'admin' ||
                                                         auth.user.role ===
                                                             'superadmin' ||
                                                         task.created_by ===
@@ -820,32 +880,113 @@ export default function Taskboard() {
                                                         (task.assignees &&
                                                             task.assignees.includes(
                                                                 auth.user.id,
-                                                            ))
-                                                            ? () =>
-                                                                  handleEdit(
-                                                                      task,
-                                                                  )
-                                                            : undefined
-                                                    }
-                                                />
-                                            </td>
+                                                            ))) && (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger
+                                                                asChild
+                                                            >
+                                                                <button className="rounded p-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-gray-700 dark:hover:text-gray-200">
+                                                                    <MoreVertical className="h-4 w-4" />
+                                                                </button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent
+                                                                align="end"
+                                                                className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900"
+                                                            >
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleEdit(
+                                                                            task,
+                                                                        )
+                                                                    }
+                                                                    className="cursor-pointer gap-2"
+                                                                >
+                                                                    <Edit3 className="h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() =>
+                                                                        handleDelete(
+                                                                            task.id,
+                                                                        )
+                                                                    }
+                                                                    className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan={8} className="px-6 py-12 text-center">
+                                            <div className="text-gray-400">
+                                                No tasks found. Click
+                                                <strong>+ Add New Task</strong> above to
+                                                get started.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                        </div>
 
-                                            {/* Three-dot menu */}
-                                            <td className="px-4 py-4 text-right whitespace-nowrap">
+                        {/* Mobile Card View */}
+                        <div className="lg:hidden space-y-3 p-4">
+                            {/* Add New Task Mobile Button */}
+                            <button
+                                onClick={handleAdd}
+                                className="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 rounded-lg text-sm font-medium text-[#163832] transition-opacity hover:opacity-70 dark:border-neutral-600 dark:text-[#4ade80]"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add New Task
+                            </button>
+
+                            {/* Task Cards */}
+                            {sortedTasks.length > 0 ? (
+                                sortedTasks.map((task) => {
+                                    const accent = priorityAccent[task.priority] ?? 'transparent';
+                                    const sc = statusConfig[task.status];
+                                    const date = formatDate(task.end_date);
+                                    const playColor = priorityPlayColor[task.priority] ?? '#9ca3af';
+
+                                    return (
+                                        <div
+                                            key={task.id}
+                                            className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
+                                        >
+                                            {/* Priority accent bar */}
+                                            <div
+                                                className="h-1 w-full rounded-t-lg mb-3"
+                                                style={{ background: accent }}
+                                            />
+
+                                            {/* Task Header */}
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                        {task.title}
+                                                    </h3>
+                                                    {task.description && (
+                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                                                            {task.description}
+                                                        </p>
+                                                    )}
+                                                </div>
                                                 {(auth.user.role === 'admin' ||
-                                                    auth.user.role ===
-                                                        'superadmin' ||
-                                                    task.created_by ===
-                                                        auth.user.id ||
-                                                    (task.assignees &&
-                                                        task.assignees.includes(
-                                                            auth.user.id,
-                                                        ))) && (
+                                                    auth.user.role === 'superadmin' ||
+                                                    task.created_by === auth.user.id ||
+                                                    (task.assignees && task.assignees.includes(auth.user.id))) && (
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger
-                                                            asChild
-                                                        >
-                                                            <button className="rounded p-1 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-gray-700 dark:hover:text-gray-200">
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button className="ml-2 p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
                                                                 <MoreVertical className="h-4 w-4" />
                                                             </button>
                                                         </DropdownMenuTrigger>
@@ -854,70 +995,108 @@ export default function Taskboard() {
                                                             className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900"
                                                         >
                                                             <DropdownMenuItem
-                                                                onClick={() =>
-                                                                    handleEdit(
-                                                                        task,
-                                                                    )
-                                                                }
+                                                                onClick={() => handleEdit(task)}
                                                                 className="cursor-pointer gap-2"
                                                             >
-                                                                <Edit3 className="h-4 w-4" />{' '}
+                                                                <Edit3 className="h-4 w-4" />
                                                                 Edit
                                                             </DropdownMenuItem>
-                                                            {(task.created_by ===
-                                                                auth.user.id ||
-                                                                auth.user
-                                                                    .role ===
-                                                                    'superadmin' ||
-                                                                (auth.user
-                                                                    .role ===
-                                                                    'admin' &&
-                                                                    task.assignees &&
-                                                                    task.assignees.includes(
-                                                                        auth
-                                                                            .user
-                                                                            .id,
-                                                                    ))) && (
-                                                                <>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        onClick={() =>
-                                                                            handleDelete(
-                                                                                task.id,
-                                                                            )
-                                                                        }
-                                                                        className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />{' '}
-                                                                        Delete
-                                                                    </DropdownMenuItem>
-                                                                </>
-                                                            )}
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                onClick={() => handleDelete(task.id)}
+                                                                className="cursor-pointer gap-2 text-red-600 dark:text-red-400"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                                Delete
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 )}
-                                            </td>
-                                        </tr>
+                                            </div>
+
+                                            {/* Task Details Grid */}
+                                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                                {/* Status */}
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                                                    <span
+                                                        className="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide"
+                                                        style={{
+                                                            background: sc?.bg,
+                                                            color: sc?.text,
+                                                        }}
+                                                    >
+                                                        {sc?.label ?? task.status}
+                                                    </span>
+                                                </div>
+
+                                                {/* Priority */}
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Priority</p>
+                                                    <div
+                                                        className="flex h-6 w-6 items-center justify-center rounded-full border border-current"
+                                                        style={{ color: playColor }}
+                                                        title={task.priority}
+                                                    >
+                                                        <Flag className="h-3 w-3" fill="currentColor" />
+                                                    </div>
+                                                </div>
+
+                                                {/* End Date */}
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">End Date</p>
+                                                    <p className="text-xs text-gray-700 dark:text-gray-300">
+                                                        {date || 'No date'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Progress */}
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Progress</p>
+                                                    <ProgressRing progress={task.progress} size={24} />
+                                                </div>
+                                            </div>
+
+                                            {/* Assignees */}
+                                            <div className="pt-3 border-t border-gray-100 dark:border-neutral-800">
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Assignees</p>
+                                                <AvatarStack
+                                                    assignees={task.assignees}
+                                                    users={users}
+                                                    onAdd={
+                                                        auth.user.role === 'admin' ||
+                                                        auth.user.role === 'superadmin' ||
+                                                        task.created_by === auth.user.id ||
+                                                        (task.assignees && task.assignees.includes(auth.user.id))
+                                                            ? () => handleEdit(task)
+                                                            : undefined
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
                                     );
                                 })
                             ) : (
-                                <tr>
-                                    <td
-                                        colSpan={8}
-                                        className="py-16 text-center text-sm text-gray-400"
-                                    >
-                                        No tasks yet. Click{' '}
-                                        <strong>+ Add New Task</strong> above to
-                                        get started.
-                                    </td>
-                                </tr>
+                                <div className="text-center py-8 text-gray-400">
+                                    No tasks found. Click <strong>+ Add New Task</strong> above to get started.
+                                </div>
                             )}
-                        </tbody>
-                    </table>
-                </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="p-4">
+                        <KanbanBoard
+                            tasks={viewMode === 'kanban' ? currentAllTasks : sortedTasks}
+                            users={users}
+                            onTaskEdit={handleEdit}
+                            onTaskDelete={handleDelete}
+                            onTasksUpdate={handleTasksUpdate}
+                        />
+                    </div>
+                )}
 
                 {/* Pagination */}
-                {tasks?.total > 0 && (
+                {viewMode === 'table' && tasks?.total > 0 && (
                     <div className="border-t border-gray-200 px-4 py-3 dark:border-neutral-700">
                         <CustomPagination
                             currentPage={currentPage}
