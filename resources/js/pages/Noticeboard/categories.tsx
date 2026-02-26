@@ -513,9 +513,10 @@ export default function CategoriesPage() {
 
             <div className="flex h-full flex-1 flex-col gap-6 overflow-x-hidden p-4">
                 {/* Header actions */}
-                <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm md:flex-row md:items-center md:justify-between md:p-4 dark:border-neutral-800 dark:bg-neutral-900">
-                    {/* Filters and Create button on the left */}
-                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 md:hidden">
+                    {/* Mobile Layout - Stacked vertically */}
+                    <div className="flex flex-col gap-3">
+                        {/* Create Button */}
                         <Dialog open={open} onOpenChange={setOpen}>
                             <DialogTrigger asChild>
                                 <LoadingButton
@@ -523,7 +524,7 @@ export default function CategoriesPage() {
                                     loadingText="Creating..."
                                     className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 >
-                                    Create Notice
+                                    Create
                                 </LoadingButton>
                             </DialogTrigger>
                             <DialogContent>
@@ -535,7 +536,7 @@ export default function CategoriesPage() {
                                     className="grid grid-cols-1 gap-4 md:grid-cols-2"
                                 >
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Title
                                         </label>
                                         <input
@@ -551,7 +552,7 @@ export default function CategoriesPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Category
                                         </label>
                                         <Select
@@ -578,7 +579,7 @@ export default function CategoriesPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-2 md:col-span-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Description
                                         </label>
                                         <textarea
@@ -594,7 +595,7 @@ export default function CategoriesPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Date
                                         </label>
                                         <input
@@ -608,7 +609,7 @@ export default function CategoriesPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Time
                                         </label>
                                         <Select
@@ -647,7 +648,236 @@ export default function CategoriesPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-2 md:col-span-2">
-                                        <label className="text-sm font-medium">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Attach Files
+                                        </label>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            onChange={handleFileChange}
+                                            multiple
+                                            className="w-full text-sm file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-50 dark:file:border-neutral-700 dark:file:bg-neutral-950 dark:hover:file:bg-neutral-900"
+                                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                                        />
+                                        {files.length > 0 && (
+                                            <div className="text-xs text-gray-600 dark:text-gray-300">
+                                                Selected ({files.length}):{' '}
+                                                {files
+                                                    .map((f) => f.name)
+                                                    .join(', ')}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-3 md:col-span-2">
+                                        <button
+                                            type="button"
+                                            onClick={resetForm}
+                                            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+                                        >
+                                            Reset
+                                        </button>
+                                        <LoadingButton
+                                            type="submit"
+                                            loading={form.processing}
+                                            loadingText="Submitting..."
+                                            className="inline-flex h-[38px] min-w-[120px] items-center justify-center rounded-md bg-[#163832] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#163832]/90 active:scale-[0.98] dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                        >
+                                            Submit Notice
+                                        </LoadingButton>
+                                    </div>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+
+                        {/* Categories Dropdown */}
+                        <Select
+                            value={filterCategory}
+                            onValueChange={(value) =>
+                                setFilterCategory(value as 'All' | Category)
+                            }
+                        >
+                            <SelectTrigger className="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                <SelectItem
+                                    value="All"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    All Categories
+                                </SelectItem>
+                                {categoryOptions.map((opt) => (
+                                    <SelectItem
+                                        key={opt}
+                                        value={opt}
+                                        className="cursor-pointer hover:bg-[#1a4d3e]"
+                                    >
+                                        {opt}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Refresh Button */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setFilterCategory('All');
+                                setSearch('');
+                            }}
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] p-2 text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                            title="Reset filters"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                        </button>
+
+                        {/* Search Bar */}
+                        <SearchBar
+                            search={search}
+                            onSearchChange={setSearch}
+                            placeholder="Search by title or description..."
+                            className="w-full"
+                        />
+                    </div>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden rounded-md border border-gray-200 bg-white p-4 shadow-sm md:flex md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-900">
+                    {/* Filters and Create button on the left */}
+                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <LoadingButton
+                                    loading={form.processing}
+                                    loadingText="Creating..."
+                                    className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                >
+                                    Create Notice
+                                </LoadingButton>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Create a Notice</DialogTitle>
+                                </DialogHeader>
+                                <form
+                                    onSubmit={onSubmit}
+                                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                                >
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Title
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={title}
+                                            onChange={(e) =>
+                                                setTitle(e.target.value)
+                                            }
+                                            placeholder="Enter title"
+                                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Category
+                                        </label>
+                                        <Select
+                                            value={category}
+                                            onValueChange={(value) =>
+                                                setCategory(value as Category)
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                                {categoryOptions.map((opt) => (
+                                                    <SelectItem
+                                                        key={opt}
+                                                        value={opt}
+                                                        className="cursor-pointer hover:bg-[#1a4d3e]"
+                                                    >
+                                                        {opt}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 md:col-span-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) =>
+                                                setDescription(e.target.value)
+                                            }
+                                            placeholder="Write the notice details..."
+                                            rows={4}
+                                            className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={date}
+                                            onChange={(e) =>
+                                                setDate(e.target.value)
+                                            }
+                                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-950"
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                                            Time
+                                        </label>
+                                        <Select
+                                            value={time || 'none'}
+                                            onValueChange={(value) =>
+                                                setTime(
+                                                    value === 'none'
+                                                        ? ''
+                                                        : value,
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                                <SelectValue placeholder="Select time" />
+                                            </SelectTrigger>
+                                            <SelectContent className="max-h-[300px] border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                                <SelectItem
+                                                    value="none"
+                                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                                >
+                                                    Select time
+                                                </SelectItem>
+                                                {timeOptions.map(
+                                                    (timeOption) => (
+                                                        <SelectItem
+                                                            key={timeOption}
+                                                            value={timeOption}
+                                                            className="cursor-pointer hover:bg-[#1a4d3e]"
+                                                        >
+                                                            {timeOption}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2 md:col-span-2">
+                                        <label className="text-sm font-medium text-gray-900 dark:text-white">
                                             Attach Files
                                         </label>
                                         <input
@@ -1062,7 +1292,7 @@ export default function CategoriesPage() {
                     </DialogContent>
                 </Dialog>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {paginatedNotices.map((n) => {
                         const category = {
                             id: n.category.toLowerCase(),
@@ -1091,8 +1321,18 @@ export default function CategoriesPage() {
                     })}
 
                     {filteredNotices.length === 0 && (
-                        <div className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-gray-500 dark:border-neutral-700">
-                            No notices yet. Create one above.
+                        <div className="col-span-full flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800">
+                            <div className="mb-3 text-gray-400 dark:text-gray-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14,2 14,8 20,8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10,9 9,9 8,9" />
+                                </svg>
+                            </div>
+                            <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-white">No notices yet</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Create your first notice to get started.</p>
                         </div>
                     )}
                 </div>

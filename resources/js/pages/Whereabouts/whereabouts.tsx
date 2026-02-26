@@ -45,8 +45,8 @@ import {
     parseISO,
     startOfMonth,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, GripVertical, MapPin, Briefcase, Home, Plane, Calendar, Coffee, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface User {
     id: number;
@@ -87,12 +87,21 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-    'ON DUTY': 'bg-green-500 text-white',
-    'ON TRAVEL': 'bg-blue-500 text-white',
-    'ON LEAVE': 'bg-red-500 text-white',
-    ABSENT: 'bg-orange-500 text-white',
-    'HALF DAY': 'bg-yellow-500 text-black',
-    WFH: 'bg-purple-500 text-white',
+    'ON DUTY': 'bg-emerald-500 text-white border-emerald-600',
+    'ON TRAVEL': 'bg-blue-500 text-white border-blue-600',
+    'ON LEAVE': 'bg-red-500 text-white border-red-600',
+    ABSENT: 'bg-amber-500 text-white border-amber-600',
+    'HALF DAY': 'bg-yellow-400 text-gray-900 border-yellow-500',
+    WFH: 'bg-purple-500 text-white border-purple-600',
+};
+
+const STATUS_ICONS: Record<string, any> = {
+    'ON DUTY': Briefcase,
+    'ON TRAVEL': Plane,
+    'ON LEAVE': Calendar,
+    ABSENT: AlertCircle,
+    'HALF DAY': Coffee,
+    WFH: Home,
 };
 
 const STATUS_OPTIONS = [
@@ -121,6 +130,7 @@ function SortableRow({
     handleCellClick,
     canReorder,
     authUser,
+    loadingCells,
 }: {
     user: User;
     days: Date[];
@@ -128,6 +138,7 @@ function SortableRow({
     handleCellClick: (user: User, day: Date) => void;
     canReorder: boolean;
     authUser: AuthUser;
+    loadingCells: Set<string>;
 }) {
     const {
         attributes,
@@ -155,17 +166,17 @@ function SortableRow({
                     : '',
             )}
         >
-            <td className="sticky left-0 z-10 flex items-center gap-1 border border-gray-300 bg-white p-1.5 text-xs font-medium sm:gap-2 sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-900">
+            <td className="sticky left-0 z-10 flex items-center gap-2 border-r border-gray-300 bg-gradient-to-r from-white to-gray-50 p-2 text-xs font-medium shadow-sm sm:gap-3 sm:p-3 sm:text-sm dark:border-neutral-600 dark:from-neutral-900 dark:to-neutral-800 dark:text-white">
                 {canReorder && (
                     <button
                         {...attributes}
                         {...listeners}
-                        className="cursor-grab text-gray-400 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:text-gray-400"
+                        className="cursor-grab rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:bg-neutral-700 dark:hover:text-gray-400"
                     >
                         <GripVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                 )}
-                {user.name}
+                <span className="truncate font-medium">{user.name}</span>
             </td>
             {days.map((day: Date) => {
                 const dateStr = format(day, 'yyyy-MM-dd');
@@ -180,25 +191,60 @@ function SortableRow({
                     <td
                         key={day.toString()}
                         className={cn(
-                            'group relative h-10 border border-gray-300 p-0 transition-opacity dark:border-neutral-700',
+                            'group relative h-12 border-r border-b border-gray-200 p-0 transition-all duration-200 dark:border-neutral-600',
                             !isWknd && isEditable
-                                ? 'cursor-pointer hover:opacity-80'
+                                ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:z-10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50'
                                 : '',
                             entry
                                 ? STATUS_COLORS[entry.status]
                                 : isWknd
-                                  ? 'bg-gray-50 dark:bg-gray-800/50'
-                                  : '',
+                                  ? 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/30 dark:to-gray-800/50'
+                                  : 'bg-gradient-to-br from-white to-gray-50 hover:bg-gray-100 dark:from-neutral-900 dark:to-neutral-800 dark:hover:bg-neutral-700',
+                            format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                                ? 'ring-1 ring-blue-300 ring-opacity-50 dark:ring-blue-600'
+                                : '',
+                            loadingCells.has(`${user.id}-${dateStr}`)
+                                ? 'animate-pulse opacity-70'
+                                : '',
                         )}
                         onClick={() =>
                             !isWknd && isEditable && handleCellClick(user, day)
                         }
+                        onKeyDown={(e) => {
+                            if (!isWknd && isEditable && (e.key === 'Enter' || e.key === ' ')) {
+                                e.preventDefault();
+                                handleCellClick(user, day);
+                            }
+                        }}
+                        tabIndex={!isWknd && isEditable ? 0 : -1}
+                        role="button"
+                        aria-label={`
+                            ${format(day, 'MMMM d, yyyy')}: 
+                            ${entry ? entry.status : 'Not set'}
+                            ${entry?.reason ? ` - ${entry.reason}` : ''}
+                            ${entry?.location ? ` - Location: ${entry.location}` : ''}
+                            ${!isEditable ? ' - No edit permission' : ' - Click to edit'}
+                        `}
                         title={
                             entry
-                                ? `${entry.status}${entry.reason ? `: ${entry.reason}` : ''}`
-                                : ''
+                                ? `${format(day, 'MMM d')}: ${entry.status}${entry.reason ? ` - ${entry.reason}` : ''}${entry.location ? ` 📍 ${entry.location}` : ''}`
+                                : `${format(day, 'MMM d')}: Click to set status${!isEditable ? ' (no permission)' : ''}`
                         }
-                    ></td>
+                    >
+                        <div className="flex h-full items-center justify-center">
+                            {entry && STATUS_ICONS[entry.status] && (
+                                <div className="flex items-center gap-1">
+                                    {React.createElement(STATUS_ICONS[entry.status], { className: 'h-3 w-3 sm:h-4 sm:w-4' })}
+                                    {isWknd && (
+                                        <span className="text-[10px] opacity-70">{format(day, 'd')}</span>
+                                    )}
+                                </div>
+                            )}
+                            {!entry && !isWknd && (
+                                <span className="text-[10px] text-gray-400 dark:text-gray-500">{format(day, 'd')}</span>
+                            )}
+                        </div>
+                    </td>
                 );
             })}
         </tr>
@@ -218,6 +264,7 @@ export default function Whereabouts({
         date: Date;
     } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [loadingCells, setLoadingCells] = useState<Set<string>>(new Set());
     const [formData, setFormData] = useState({
         status: 'ON DUTY',
         reason: '',
@@ -383,6 +430,20 @@ export default function Whereabouts({
         if (!canEdit) return;
 
         const dateStr = format(day, 'yyyy-MM-dd');
+        const cellKey = `${user.id}-${dateStr}`;
+        
+        // Add loading state for visual feedback
+        setLoadingCells(prev => new Set(prev).add(cellKey));
+        
+        // Remove loading state after a short delay
+        setTimeout(() => {
+            setLoadingCells(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(cellKey);
+                return newSet;
+            });
+        }, 300);
+
         const existing = whereabouts[user.id]?.[dateStr];
 
         setFormData({
@@ -477,142 +538,128 @@ export default function Whereabouts({
             <Head title="Whereabouts" />
 
             <div className="flex h-full flex-col gap-4 p-2 sm:p-4">
-                <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <h1 className="text-xl font-bold sm:text-2xl">
-                        Whereabouts - {format(date, 'MMMM yyyy')}
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleMonthChange(-1)}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleMonthChange(1)}
-                        >
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="flex flex-col items-stretch gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                    <Select
-                        value={String(date.getMonth())}
-                        onValueChange={(val) => {
-                            const newDate = new Date(
-                                date.getFullYear(),
-                                parseInt(val),
-                                1,
-                            );
-                            router.visit(
-                                `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
-                            );
-                        }}
-                    >
-                        <SelectTrigger className="w-full border-gray-300 sm:w-[140px] dark:border-neutral-700 dark:bg-neutral-950">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                            <SelectItem value="0">January</SelectItem>
-                            <SelectItem value="1">February</SelectItem>
-                            <SelectItem value="2">March</SelectItem>
-                            <SelectItem value="3">April</SelectItem>
-                            <SelectItem value="4">May</SelectItem>
-                            <SelectItem value="5">June</SelectItem>
-                            <SelectItem value="6">July</SelectItem>
-                            <SelectItem value="7">August</SelectItem>
-                            <SelectItem value="8">September</SelectItem>
-                            <SelectItem value="9">October</SelectItem>
-                            <SelectItem value="10">November</SelectItem>
-                            <SelectItem value="11">December</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select
-                        value={String(date.getFullYear())}
-                        onValueChange={(val) => {
-                            const newDate = new Date(
-                                parseInt(val),
-                                date.getMonth(),
-                                1,
-                            );
-                            router.visit(
-                                `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
-                            );
-                        }}
-                    >
-                        <SelectTrigger className="w-full border-gray-300 sm:w-[100px] dark:border-neutral-700 dark:bg-neutral-950">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                            {Array.from({ length: 10 }, (_, i) => {
-                                const year = new Date().getFullYear() - 5 + i;
-                                return (
-                                    <SelectItem key={year} value={String(year)}>
-                                        {year}
-                                    </SelectItem>
-                                );
-                            })}
-                        </SelectContent>
-                    </Select>
-
-                    <Button
-                        variant="outline"
-                        className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 hover:text-white sm:w-auto md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                        onClick={() => {
-                            const today = new Date();
-                            router.visit(
-                                `/whereabouts?date=${format(today, 'yyyy-MM-dd')}`,
-                            );
-                        }}
-                    >
-                        Today
-                    </Button>
-
-                    <Select
-                        value={selectedSection}
-                        onValueChange={setSelectedSection}
-                    >
-                        <SelectTrigger className="w-full border-gray-300 sm:ml-auto sm:w-[200px] dark:border-neutral-700 dark:bg-neutral-950">
-                            <SelectValue placeholder="Select Section" />
-                        </SelectTrigger>
-                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                            {SECTION_FILTERS.map((filter) => (
-                                <SelectItem
-                                    key={filter.value}
-                                    value={filter.value}
-                                >
-                                    {filter.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="mb-2 flex flex-wrap gap-2 sm:mb-4 sm:gap-4">
-                    {Object.entries(STATUS_COLORS).map(
-                        ([status, colorClass]) => (
-                            <div
-                                key={status}
-                                className="flex items-center gap-1.5 sm:gap-2"
+                <div className="mb-4 flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Select
+                                value={String(date.getMonth())}
+                                onValueChange={(val) => {
+                                    const newDate = new Date(
+                                        date.getFullYear(),
+                                        parseInt(val),
+                                        1,
+                                    );
+                                    router.visit(
+                                        `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                                    );
+                                }}
                             >
-                                <div
-                                    className={cn(
-                                        'h-3 w-3 rounded sm:h-4 sm:w-4',
-                                        colorClass,
-                                    )}
-                                ></div>
-                                <span className="text-xs sm:text-sm">
-                                    {status}
-                                </span>
-                            </div>
-                        ),
-                    )}
+                                <SelectTrigger className="w-full border-gray-300 sm:w-[140px] dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    <SelectItem value="0">January</SelectItem>
+                                    <SelectItem value="1">February</SelectItem>
+                                    <SelectItem value="2">March</SelectItem>
+                                    <SelectItem value="3">April</SelectItem>
+                                    <SelectItem value="4">May</SelectItem>
+                                    <SelectItem value="5">June</SelectItem>
+                                    <SelectItem value="6">July</SelectItem>
+                                    <SelectItem value="7">August</SelectItem>
+                                    <SelectItem value="8">September</SelectItem>
+                                    <SelectItem value="9">October</SelectItem>
+                                    <SelectItem value="10">November</SelectItem>
+                                    <SelectItem value="11">December</SelectItem>
+                                </SelectContent>
+                            </Select>
+
+                            <Select
+                                value={String(date.getFullYear())}
+                                onValueChange={(val) => {
+                                    const newDate = new Date(
+                                        parseInt(val),
+                                        date.getMonth(),
+                                        1,
+                                    );
+                                    router.visit(
+                                        `/whereabouts?date=${format(newDate, 'yyyy-MM-dd')}`,
+                                    );
+                                }}
+                            >
+                                <SelectTrigger className="w-full border-gray-300 sm:w-[100px] dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    {Array.from({ length: 10 }, (_, i) => {
+                                        const year = new Date().getFullYear() - 5 + i;
+                                        return (
+                                            <SelectItem key={year} value={String(year)}>
+                                                {year}
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+
+                            <Button
+                                variant="outline"
+                                className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 hover:text-white sm:w-auto md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                onClick={() => {
+                                    const today = new Date();
+                                    router.visit(
+                                        `/whereabouts?date=${format(today, 'yyyy-MM-dd')}`,
+                                    );
+                                }}
+                            >
+                                Today
+                            </Button>
+
+                            <Select
+                                value={selectedSection}
+                                onValueChange={setSelectedSection}
+                            >
+                                <SelectTrigger className="w-full border-gray-300 sm:w-[200px] dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectValue placeholder="Select Section" />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    {SECTION_FILTERS.map((filter) => (
+                                        <SelectItem
+                                            key={filter.value}
+                                            value={filter.value}
+                                        >
+                                            {filter.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            {Object.entries(STATUS_COLORS).map(
+                                ([status, colorClass]) => {
+                                    const IconComponent = STATUS_ICONS[status];
+                                    return (
+                                        <div
+                                            key={status}
+                                            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1 shadow-sm transition-all hover:shadow-md dark:border-neutral-600 dark:bg-neutral-800"
+                                        >
+                                            <div
+                                                className={cn(
+                                                    'flex h-3 w-3 items-center justify-center rounded text-xs font-bold shadow-sm',
+                                                    colorClass,
+                                                )}
+                                            >
+                                                {IconComponent && React.createElement(IconComponent, { className: 'h-2 w-2' })}
+                                            </div>
+                                            <span className="text-xs font-medium">
+                                                {status}
+                                            </span>
+                                        </div>
+                                    );
+                                },
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <DndContext
@@ -620,28 +667,43 @@ export default function Whereabouts({
                     collisionDetection={closestCenter}
                     onDragEnd={handleDragEnd}
                 >
-                    <div className="overflow-auto rounded-lg border border-gray-300 bg-white shadow dark:border-neutral-800 dark:bg-neutral-900">
+                    <div className="hidden lg:block overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
                         <table className="w-full border-collapse text-sm">
                             <thead>
                                 <tr>
-                                    <th className="sticky left-0 z-20 min-w-[120px] border border-gray-300 bg-gray-100 p-1.5 text-left text-xs sm:min-w-[200px] sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-800">
+                                    <th className="sticky left-0 z-20 min-w-[140px] border-r-2 border-gray-300 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-left text-xs font-semibold shadow-sm sm:min-w-[200px] sm:p-4 sm:text-sm dark:border-neutral-600 dark:from-neutral-800 dark:to-neutral-900 dark:text-white">
                                         CROP PEST MANAGEMENT DIVISION
                                     </th>
                                     {days.map((day: Date) => (
                                         <th
                                             key={day.toString()}
                                             className={cn(
-                                                'min-w-[30px] border border-gray-300 p-0.5 text-center text-xs font-normal sm:min-w-[40px] sm:p-1 sm:text-sm dark:border-neutral-700',
+                                                'min-w-[35px] border-r border-b border-gray-200 p-1 text-center text-xs font-medium transition-all sm:min-w-[45px] sm:p-2 sm:text-sm dark:border-neutral-600',
                                                 isWeekend(day)
-                                                    ? 'bg-gray-50 dark:bg-gray-800/50'
+                                                    ? 'bg-gradient-to-b from-gray-50 to-gray-100 text-gray-600 dark:from-gray-800/50 dark:to-gray-800 dark:text-gray-400'
+                                                    : 'bg-gradient-to-b from-white to-gray-50 text-gray-900 dark:from-neutral-900 dark:to-neutral-800 dark:text-white',
+                                                format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                                                    ? 'bg-gradient-to-b from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/50 shadow-sm'
                                                     : '',
                                             )}
                                         >
-                                            <div className="text-xs font-bold sm:text-sm">
-                                                {format(day, 'd')}
-                                            </div>
-                                            <div className="text-[10px] text-gray-500 sm:text-xs dark:text-gray-400">
-                                                {format(day, 'EEE')}
+                                            <div className="flex flex-col items-center justify-center gap-0.5">
+                                                <div className={cn(
+                                                    'text-xs font-bold sm:text-sm',
+                                                    format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                                                        ? 'text-blue-600 dark:text-blue-400'
+                                                        : ''
+                                                )}>
+                                                    {format(day, 'd')}
+                                                </div>
+                                                <div className={cn(
+                                                    'text-[10px] font-medium uppercase tracking-wide text-gray-500 sm:text-xs dark:text-gray-400',
+                                                    format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                                                        ? 'text-blue-600 dark:text-blue-400'
+                                                        : ''
+                                                )}>
+                                                    {format(day, 'EEE')}
+                                                </div>
                                             </div>
                                         </th>
                                     ))}
@@ -660,12 +722,15 @@ export default function Whereabouts({
                                                 verticalListSortingStrategy
                                             }
                                         >
-                                            <tr className="bg-gray-100 dark:bg-neutral-800">
+                                            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-neutral-800 dark:to-neutral-900">
                                                 <td
                                                     colSpan={days.length + 1}
-                                                    className="sticky left-0 z-10 border border-gray-300 bg-gray-100 p-1.5 text-xs font-bold sm:p-2 sm:text-sm dark:border-neutral-700 dark:bg-neutral-800"
+                                                    className="sticky left-0 z-10 border-r border-b border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200 p-2 text-xs font-bold uppercase tracking-wide text-gray-700 shadow-sm sm:p-3 sm:text-sm dark:border-neutral-600 dark:from-neutral-700 dark:to-neutral-800 dark:text-gray-300"
                                                 >
-                                                    {office}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-1 w-4 rounded-full bg-blue-500"></div>
+                                                        {office}
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {officeUsers.map((user) => (
@@ -679,6 +744,7 @@ export default function Whereabouts({
                                                     }
                                                     canReorder={canReorder}
                                                     authUser={auth.user}
+                                                    loadingCells={loadingCells}
                                                 />
                                             ))}
                                         </SortableContext>
@@ -687,6 +753,118 @@ export default function Whereabouts({
                         </table>
                     </div>
                 </DndContext>
+
+                {/* Mobile Card View - Mobile Only */}
+                <div className="mt-6 lg:hidden">
+                    <div className="space-y-4">
+                        {Object.entries(usersByOffice)
+                            .filter(([office]) =>
+                                matchesFilter(office, selectedSection),
+                            )
+                            .map(([office, officeUsers]) => (
+                                <div key={office} className="rounded-xl border border-gray-200 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900">
+                                    <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 dark:border-neutral-600 dark:from-neutral-800 dark:to-neutral-900">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1 w-6 rounded-full bg-blue-500"></div>
+                                            <h3 className="font-bold text-gray-900 dark:text-white">{office}</h3>
+                                        </div>
+                                    </div>
+                                    <div className="divide-y divide-gray-200 dark:divide-neutral-700">
+                                        {officeUsers.map((user) => (
+                                            <div key={user.id} className="p-4">
+                                                <div className="mb-3 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        {canReorder && (
+                                                            <button
+                                                                className="cursor-grab rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 active:cursor-grabbing dark:text-gray-500 dark:hover:bg-neutral-700 dark:hover:text-gray-400"
+                                                            >
+                                                                <GripVertical className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                        <h4 className="font-semibold text-gray-900 dark:text-white">{user.name}</h4>
+                                                    </div>
+                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-neutral-700 dark:text-gray-400">{user.cpmd}</span>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+                                                    {days.map((day: Date) => {
+                                                        const dateStr = format(day, 'yyyy-MM-dd');
+                                                        const entry = whereabouts[user.id]?.[dateStr];
+                                                        const isWknd = isWeekend(day);
+                                                        const isEditable =
+                                                            auth.user.role === 'admin' ||
+                                                            auth.user.role === 'superadmin' ||
+                                                            auth.user.id === user.id;
+                                                        const IconComponent = entry ? STATUS_ICONS[entry.status] : null;
+
+                                                        return (
+                                                            <button
+                                                                key={day.toString()}
+                                                                onClick={() =>
+                                                                    !isWknd && isEditable && handleCellClick(user, day)
+                                                                }
+                                                                onKeyDown={(e) => {
+                                                                    if (!isWknd && isEditable && (e.key === 'Enter' || e.key === ' ')) {
+                                                                        e.preventDefault();
+                                                                        handleCellClick(user, day);
+                                                                    }
+                                                                }}
+                                                                tabIndex={!isWknd && isEditable ? 0 : -1}
+                                                                className={cn(
+                                                                    'relative flex h-10 w-full items-center justify-center rounded-lg border text-xs font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50',
+                                                                    !isWknd && isEditable
+                                                                        ? 'cursor-pointer hover:scale-105 hover:shadow-md hover:z-10 border-gray-300'
+                                                                        : 'cursor-default border-gray-200',
+                                                                    entry
+                                                                        ? STATUS_COLORS[entry.status]
+                                                                        : isWknd
+                                                                          ? 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-500 dark:from-gray-800/30 dark:to-gray-800/50 dark:text-gray-400'
+                                                                          : 'bg-gradient-to-br from-white to-gray-50 text-gray-600 hover:bg-gray-100 dark:from-neutral-900 dark:to-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700',
+                                                                    format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+                                                                        ? 'ring-2 ring-blue-400 ring-opacity-60 dark:ring-blue-500'
+                                                                        : '',
+                                                                )}
+                                                                aria-label={`
+                                                                    ${format(day, 'MMMM d, yyyy')}: 
+                                                                    ${entry ? entry.status : 'Not set'}
+                                                                    ${entry?.reason ? ` - ${entry.reason}` : ''}
+                                                                    ${entry?.location ? ` - Location: ${entry.location}` : ''}
+                                                                    ${!isEditable ? ' - No edit permission' : ' - Click to edit'}
+                                                                `}
+                                                                title={
+                                                                    entry
+                                                                        ? `${format(day, 'MMM d')}: ${entry.status}${entry.reason ? ` - ${entry.reason}` : ''}${entry.location ? ` 📍 ${entry.location}` : ''}`
+                                                                        : `${format(day, 'MMM d')}: Not set`
+                                                                }
+                                                            >
+                                                                <div className="flex flex-col items-center gap-0.5">
+                                                                    {IconComponent && (
+                                                                        <div className="flex items-center justify-center">
+                                                                            {React.createElement(IconComponent, { className: 'h-3 w-3' })}
+                                                                        </div>
+                                                                    )}
+                                                                    <span className="text-[10px] font-medium">
+                                                                        {format(day, 'd')}
+                                                                    </span>
+                                                                </div>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                                
+                                                {user.office && (
+                                                    <div className="mt-3 flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        <MapPin className="h-3 w-3" />
+                                                        <span>{user.office}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
             </div>
 
             <Dialog

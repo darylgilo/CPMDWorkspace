@@ -11,6 +11,12 @@ import {
     User,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 type Category =
     | 'Announcement'
@@ -176,13 +182,35 @@ export default function ReminderPage() {
         return reminders.filter((reminder) => {
             if (!reminder.date) return false;
             const reminderDate = new Date(reminder.date);
+            const daysUntil = getDaysUntilDeadline(reminderDate);
             const isOverdue = isPastDate(reminderDate);
+            const isDone = daysUntil < -6;
 
             if (filterType === 'upcoming') return !isOverdue;
-            if (filterType === 'overdue') return isOverdue;
+            if (filterType === 'overdue') return isOverdue && !isDone; // Exclude done items from overdue filter
             return true;
         });
     }, [reminders, filterType]);
+
+    // Edit dialog state
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editFiles, setEditFiles] = useState<Array<{name: string; url: string; type: string; size: number}>>([]);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+
+    // Open edit dialog and populate with notice data
+    function openEditDialog(notice: Notice) {
+        setEditingNotice(notice);
+        setEditTitle(notice.title);
+        setEditDescription(notice.description);
+        setEditFiles(notice.files || []);
+        setEditDate(notice.date || '');
+        setEditTime(notice.time || '');
+        setEditOpen(true);
+    }
 
     // Group reminders by date
     const remindersByDate = useMemo(() => {
@@ -305,8 +333,13 @@ export default function ReminderPage() {
     }, [reminders]);
 
     const overdueCount = useMemo(() => {
-        return reminders.filter((r) => r.date && isPastDate(new Date(r.date)))
-            .length;
+        return reminders.filter((r) => {
+            if (!r.date) return false;
+            const daysUntil = getDaysUntilDeadline(new Date(r.date));
+            const isOverdue = isPastDate(new Date(r.date));
+            const isDone = daysUntil < -6;
+            return isOverdue && !isDone; // Exclude done items
+        }).length;
     }, [reminders]);
 
     const today = new Date();
@@ -353,10 +386,10 @@ export default function ReminderPage() {
                     </div>
 
                     {/* Filter Buttons */}
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-nowrap gap-1 overflow-x-auto sm:flex-wrap sm:overflow-x-visible">
                         <button
                             onClick={() => setFilterType('all')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'all'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -366,7 +399,7 @@ export default function ReminderPage() {
                         </button>
                         <button
                             onClick={() => setFilterType('upcoming')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'upcoming'
                                     ? 'bg-[#163832] text-white dark:bg-[#235347]'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -376,7 +409,7 @@ export default function ReminderPage() {
                         </button>
                         <button
                             onClick={() => setFilterType('overdue')}
-                            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                            className={`rounded-md px-2 py-1.5 text-xs font-medium transition whitespace-nowrap flex-shrink-0 ${
                                 filterType === 'overdue'
                                     ? 'bg-red-600 text-white dark:bg-red-700'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-neutral-800 dark:text-gray-300 dark:hover:bg-neutral-700'
@@ -400,17 +433,7 @@ export default function ReminderPage() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing{' '}
-                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
-                                        to{' '}
-                                        {Math.min(
-                                            currentPage * itemsPerPage,
-                                            sortedReminders.length,
-                                        )}{' '}
-                                        of {sortedReminders.length} reminders
-                                    </div>
+                                <div className="mb-4 flex justify-center">
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() =>
@@ -455,161 +478,118 @@ export default function ReminderPage() {
                                                   new Date(reminder.date),
                                               )
                                             : null;
+                                        
+                                        // Check if deadline is overdue more than 6 days (should be marked as done)
+                                        const isDone = daysUntil !== null && daysUntil < -6;
 
                                         return (
                                             <div
                                                 key={reminder.id}
-                                                className={`group rounded-lg border p-4 transition hover:shadow-md ${
-                                                    isOverdue
-                                                        ? 'border-red-300 bg-red-50 hover:border-red-400 dark:border-red-800 dark:bg-red-950/20'
-                                                        : 'border-gray-200 bg-gray-50 hover:border-[#163832] dark:border-neutral-700 dark:bg-neutral-800'
+                                                className={`group flex flex-col rounded-lg bg-white p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:bg-neutral-900 ${
+                                                    isDone
+                                                        ? 'border-l-4 border-l-gray-400 bg-gray-50 dark:bg-gray-800/50 opacity-75'
+                                                        : isOverdue
+                                                            ? 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20'
+                                                            : 'border-l-4 border-l-gray-200 bg-white dark:border-l-neutral-700'
                                                 }`}
                                             >
-                                                <div className="mb-3 flex items-start justify-between">
-                                                    <div className="flex flex-1 items-start gap-3">
-                                                        <AlertCircle
-                                                            className={`h-6 w-6 flex-shrink-0 ${
-                                                                isOverdue
-                                                                    ? 'text-red-600 dark:text-red-400'
-                                                                    : 'text-[#163832] dark:text-[#235347]'
-                                                            }`}
-                                                            aria-hidden
-                                                        />
-                                                        <div className="flex-1">
-                                                            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                {reminder.title}
-                                                            </h3>
-                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                <span className="flex items-center gap-1">
-                                                                    <User className="h-3 w-3" />
-                                                                    {
-                                                                        reminder.username
-                                                                    }
-                                                                </span>
-                                                                <span>
-                                                                    Posted on{' '}
-                                                                    {new Date(
-                                                                        reminder.createdAt,
-                                                                    ).toLocaleString()}
-                                                                </span>
-                                                            </div>
+                                                {/* Header with title and overdue badge */}
+                                                <div className="mb-2 flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
+                                                            {reminder.title}
+                                                        </h3>
+                                                        <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                                            Posted on {new Date(reminder.createdAt).toLocaleDateString()} {new Date(reminder.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                         </div>
                                                     </div>
 
-                                                    {/* Deadline Badge */}
+                                                    {/* Overdue Badge */}
                                                     {daysUntil !== null && (
                                                         <div
-                                                            className={`ml-2 flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                                                                isOverdue
-                                                                    ? 'bg-red-600 text-white dark:bg-red-700'
-                                                                    : daysUntil <=
-                                                                        3
-                                                                      ? 'bg-orange-500 text-white dark:bg-orange-600'
-                                                                      : 'bg-blue-500 text-white dark:bg-blue-600'
+                                                            className={`ml-2 flex-shrink-0 rounded-full px-2 py-1 text-xs font-semibold ${
+                                                                isDone
+                                                                    ? 'bg-gray-500 text-white'
+                                                                    : isOverdue
+                                                                        ? 'bg-red-500 text-white'
+                                                                        : daysUntil <= 3
+                                                                          ? 'bg-orange-500 text-white'
+                                                                          : 'bg-blue-500 text-white'
                                                             }`}
                                                         >
-                                                            {isOverdue
-                                                                ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`
-                                                                : daysUntil ===
-                                                                    0
-                                                                  ? 'Due today'
-                                                                  : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
+                                                            {isDone
+                                                                ? 'Done'
+                                                                : isOverdue
+                                                                    ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) !== 1 ? 's' : ''} overdue`
+                                                                    : daysUntil === 0
+                                                                      ? 'Due today'
+                                                                      : `${daysUntil} day${daysUntil !== 1 ? 's' : ''} left`}
                                                         </div>
                                                     )}
                                                 </div>
 
+                                                {/* Description */}
                                                 <div
-                                                    className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                    className={`mb-2 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-2'}`}
                                                 >
-                                                    {renderTextWithLinks(
-                                                        reminder.description,
-                                                    )}
+                                                    {renderTextWithLinks(reminder.description)}
                                                 </div>
-                                                {reminder.description.length >
-                                                    150 && (
+
+                                                {/* Date and Time */}
+                                                {reminder.date && (
+                                                    <div className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                        <CalendarIcon className="h-3 w-3" />
+                                                        {new Date(reminder.date).toLocaleDateString()}
+                                                        {reminder.time && (
+                                                            <>
+                                                                <Clock className="h-3 w-3" />
+                                                                {reminder.time}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Files */}
+                                                {(reminder.file || (reminder.files && reminder.files.length > 0)) && (
+                                                    <div className="mb-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                                                        <FileText className="h-3 w-3" />
+                                                        <span>
+                                                            {reminder.file ? '1 file' : `${reminder.files?.length} files`}
+                                                        </span>
+                                                        {reminder.files_download_url && (
+                                                            <a
+                                                                href={reminder.files_download_url}
+                                                                className="ml-auto font-medium hover:underline"
+                                                                download
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                Download
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Expand button */}
+                                                {reminder.description.length > 150 && (
                                                     <button
-                                                        onClick={() =>
-                                                            toggleCardExpansion(
-                                                                reminder.id,
-                                                            )
-                                                        }
-                                                        className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                        onClick={() => toggleCardExpansion(reminder.id)}
+                                                        className="text-xs text-blue-500 hover:underline dark:text-blue-400"
                                                     >
-                                                        {isExpanded
-                                                            ? 'Show less'
-                                                            : 'Read more'}
+                                                        {isExpanded ? 'Show less' : 'Show more'}
                                                     </button>
                                                 )}
 
-                                                {/* Attachments */}
-                                                {reminder.files &&
-                                                    reminder.files.length >
-                                                        0 && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
-                                                            <span>
-                                                                {
-                                                                    reminder
-                                                                        .files
-                                                                        .length
-                                                                }{' '}
-                                                                attachment(s)
-                                                            </span>
-                                                            {reminder.files_download_url && (
-                                                                <a
-                                                                    href={
-                                                                        reminder.files_download_url
-                                                                    }
-                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download
-                                                                >
-                                                                    Download All
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                {reminder.file &&
-                                                    !reminder.files?.length && (
-                                                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                            <FileText className="h-4 w-4" />
-                                                            <a
-                                                                href={
-                                                                    reminder
-                                                                        .file
-                                                                        .url
-                                                                }
-                                                                className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                download={
-                                                                    reminder
-                                                                        .file
-                                                                        .name
-                                                                }
-                                                            >
-                                                                {
-                                                                    reminder
-                                                                        .file
-                                                                        .name
-                                                                }
-                                                            </a>
-                                                        </div>
-                                                    )}
-
-                                                <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                    {reminder.date && (
-                                                        <span className="flex items-center gap-1 font-medium">
-                                                            <CalendarIcon className="h-3 w-3" />
-                                                            {new Date(
-                                                                reminder.date,
-                                                            ).toLocaleDateString()}
-                                                        </span>
-                                                    )}
-                                                    {reminder.time && (
-                                                        <span className="flex items-center gap-1">
-                                                            <Clock className="h-3 w-3" />
-                                                            {reminder.time}
-                                                        </span>
-                                                    )}
+                                                {/* Footer */}
+                                                <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+                                                    <span className="text-gray-500 dark:text-gray-400">
+                                                        {reminder.username}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => openEditDialog(reminder)}
+                                                        className="px-2 py-1 bg-[#163832] text-white rounded hover:bg-[#163832]/90 transition-colors text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                                    >
+                                                        View
+                                                    </button>
                                                 </div>
                                             </div>
                                         );
@@ -762,6 +742,91 @@ export default function ReminderPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* View Reminder Dialog */}
+                <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>View Reminder</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Title</label>
+                                <textarea
+                                    value={editTitle}
+                                    readOnly
+                                    rows={Math.ceil(editTitle.length / 80) || 1}
+                                    onFocus={(e) => e.target.blur()}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    style={{
+                                        userSelect: 'none',
+                                        resize: 'none',
+                                    }}
+                                    className="w-full cursor-default rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium">Status</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editingNotice?.date && isPastDate(new Date(editingNotice.date)) ? 'Overdue' : 'Upcoming'}
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Description</label>
+                                <div
+                                    className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950 whitespace-pre-wrap"
+                                    style={{ minHeight: '120px' }}
+                                >
+                                    {renderTextWithLinks(editDescription)}
+                                </div>
+                            </div>
+
+                            {(editDate || editTime) && (
+                                <>
+                                    {editDate && (
+                                        <div>
+                                            <label className="text-sm font-medium">Deadline Date</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editDate}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {editTime && (
+                                        <div>
+                                            <label className="text-sm font-medium">Deadline Time</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editTime}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Posted by</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editingNotice?.username}
+                                </div>
+                            </div>
+
+                            {editFiles.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Attachments</label>
+                                    <div className="mt-1 space-y-2">
+                                        {editFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 p-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                <FileText className="h-4 w-4" />
+                                                <span>{file.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );

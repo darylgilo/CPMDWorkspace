@@ -116,8 +116,8 @@ const WriteupsWidget: React.FC = () => {
             <Card className="w-full border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900">
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                        <FileText className="h-5 w-5 text-[#163832]" />
-                        Write-ups for Review
+                        <FileText className="h-5 w-5 text-[#163832] dark:text-green-400" />
+                         Write-up for Review
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -133,8 +133,8 @@ const WriteupsWidget: React.FC = () => {
         <Card className="w-full border-gray-200 bg-white shadow-md transition-all duration-200 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                    <FileText className="h-5 w-5 text-[#163832]" />
-                    Write-ups for Review
+                    <FileText className="h-5 w-5 text-[#163832] dark:text-green-400" />
+                    Write-up for Review
                 </CardTitle>
             </CardHeader>
             <CardContent>

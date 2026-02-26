@@ -89,6 +89,30 @@ class TaskboardController extends Controller
                 'avatar' => $u->profile_picture_url,
             ]);
 
+        // Get all tasks for timeline view
+        $allTasks = Task::with('creator')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'description' => $task->description,
+                    'end_date' => $task->end_date,
+                    'status' => $task->status,
+                    'priority' => $task->priority,
+                    'progress' => $task->progress,
+                    'created_by' => $task->created_by,
+                    'assignees' => $task->assignees,
+                    'created_at' => $task->created_at,
+                    'creator' => $task->creator ? [
+                        'id' => $task->creator->id,
+                        'name' => $task->creator->name,
+                        'avatar' => $task->creator->profile_picture_url,
+                    ] : null,
+                ];
+            });
+
         return Inertia::render('Taskboard/TaskboardIndex', [
             'activeTab' => $tab,
             'search' => $search,
@@ -100,6 +124,7 @@ class TaskboardController extends Controller
             'users' => $users,
             'statusFilter' => $status,
             'priorityFilter' => $priority,
+            'allTasks' => $allTasks,
         ]);
     }
 
@@ -161,6 +186,38 @@ class TaskboardController extends Controller
 
         if ($task->progress != $oldProgress || !empty($addedAssignees)) {
             SendTaskEmailJob::dispatch($task, 'updated', $assigneeNames);
+        }
+
+        // For API requests (like drag-and-drop), return JSON
+        if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Get fresh allTasks data
+            $allTasks = Task::with('creator')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($task) {
+                    return [
+                        'id' => $task->id,
+                        'title' => $task->title,
+                        'description' => $task->description,
+                        'end_date' => $task->end_date,
+                        'status' => $task->status,
+                        'priority' => $task->priority,
+                        'progress' => $task->progress,
+                        'created_by' => $task->created_by,
+                        'assignees' => $task->assignees,
+                        'created_at' => $task->created_at,
+                        'creator' => $task->creator ? [
+                            'id' => $task->creator->id,
+                            'name' => $task->creator->name,
+                            'avatar' => $task->creator->profile_picture_url,
+                        ] : null,
+                    ];
+                });
+
+            return response()->json([
+                'success' => 'Task updated successfully.',
+                'allTasks' => $allTasks
+            ]);
         }
 
         return redirect()->back()->with('success', 'Task updated successfully.');

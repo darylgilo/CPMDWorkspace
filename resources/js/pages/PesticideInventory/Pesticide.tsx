@@ -32,6 +32,7 @@ import {
     ChevronDown,
     ChevronUp,
     Edit3,
+    MoreHorizontal,
     MoreVertical,
     Package,
     PackageCheck,
@@ -538,21 +539,20 @@ export default function PesticideIndex() {
                 {/* Table Container */}
                 <div className="relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 shadow-sm md:min-h-min dark:border-neutral-600 dark:border-t-[#235347] dark:bg-neutral-900">
                     {/* Controls */}
-                    <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-start">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3">
                             <Button
                                 onClick={handleAdd}
-                                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                             >
                                 <Plus className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Add Pesticide
-                                </span>
+                                <span className="hidden sm:inline">Add Pesticide</span>
+                                <span className="sm:hidden">Add</span>
                             </Button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                                 <label
                                     htmlFor="entries"
-                                    className="font-medium"
+                                    className="text-xs font-medium sm:text-sm"
                                 >
                                     Show
                                 </label>
@@ -575,7 +575,7 @@ export default function PesticideIndex() {
                                         );
                                     }}
                                 >
-                                    <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectTrigger className="w-[60px] h-8 border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950 sm:w-[80px] sm:h-auto sm:text-sm">
                                         <SelectValue placeholder="10" />
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -585,10 +585,10 @@ export default function PesticideIndex() {
                                         <SelectItem value="100">100</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <span>entries</span>
+                                <span className="text-xs text-gray-600 sm:text-sm">entries</span>
                             </div>
                         </div>
-                        <div className="flex w-full items-center gap-2 md:w-auto">
+                        <div className="flex w-full items-center gap-2 sm:w-auto">
                             <ExportPesticide
                                 data={pesticides.data}
                                 filename="pesticide-inventory"
@@ -631,7 +631,8 @@ export default function PesticideIndex() {
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
@@ -870,6 +871,151 @@ export default function PesticideIndex() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3 sm:space-y-4">
+                        {sortedPesticides.length > 0 ? (
+                            sortedPesticides.map((pesticide) => (
+                                <div
+                                    key={pesticide.id}
+                                    className="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-neutral-900"
+                                >
+                                    {/* Facebook-style Card Header */}
+                                    <div className="p-3 sm:p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#163832] dark:bg-[#235347] flex-shrink-0">
+                                                    <Package className="h-5 w-5 text-white" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate sm:text-lg">
+                                                        {pesticide.brand_name}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                                        {pesticide.active_ingredient}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                                                            {pesticide.type_of_pesticide}
+                                                        </span>
+                                                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-gray-300">
+                                                            {pesticide.unit}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="w-40"
+                                                >
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleEdit(pesticide)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <Edit3 className="mr-2 h-4 w-4" />
+                                                        <span>Edit</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleDelete(pesticide.id)}
+                                                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Delete</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+
+                                        {/* Content Section */}
+                                        <div className="mb-3">
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="font-medium">Mode of Action:</span>
+                                                    <span>{pesticide.mode_of_action}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Stock Status */}
+                                        <div className="mb-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Stock:</span>
+                                                    <span className={`text-sm font-semibold ${
+                                                        pesticide.stock === 0
+                                                            ? 'text-gray-500 dark:text-gray-400'
+                                                            : pesticide.stock < 10
+                                                              ? 'text-red-600 dark:text-red-400'
+                                                              : 'text-green-600 dark:text-green-400'
+                                                    }`}>
+                                                        {pesticide.stock} {pesticide.unit}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {pesticide.stock === 0 && (
+                                                        <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-full dark:bg-neutral-800 dark:text-gray-400">
+                                                            Out of Stock
+                                                        </span>
+                                                    )}
+                                                    {pesticide.stock > 0 && pesticide.stock < 10 && (
+                                                        <span className="px-2 py-1 text-xs font-medium text-red-600 bg-red-100 rounded-full dark:bg-red-900/20 dark:text-red-400">
+                                                            Low Stock
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Details Grid */}
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Received</p>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {new Date(pesticide.received_date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Expires</p>
+                                                <p className={`font-medium ${
+                                                    isExpiringWithinTwoMonths(pesticide.expiry_date)
+                                                        ? 'text-orange-600 dark:text-orange-400'
+                                                        : 'text-gray-900 dark:text-gray-100'
+                                                }`}>
+                                                    {new Date(pesticide.expiry_date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Source</p>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                    {pesticide.source_of_fund}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Quantity</p>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {pesticide.quantity}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                No pesticides found.
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}

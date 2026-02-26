@@ -164,7 +164,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({ className }) => {
         >
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
-                    <Calendar className="h-5 w-5 text-[#163832]" />
+                    <Calendar className="h-5 w-5 text-[#163832] dark:text-green-400" />
                     Calendar & Events
                 </CardTitle>
             </CardHeader>

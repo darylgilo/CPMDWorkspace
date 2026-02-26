@@ -81,7 +81,7 @@ const PostedWriteupsWidget: React.FC = () => {
         <Card className="h-full border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <FileText className="h-5 w-5 text-blue-600 dark:text-green-400" />
                     Writeup Posted
                 </CardTitle>
             </CardHeader>

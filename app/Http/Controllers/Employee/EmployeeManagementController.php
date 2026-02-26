@@ -48,6 +48,25 @@ class EmployeeManagementController extends Controller
             }
         }
 
+        // Add latest whereabouts update date and status
+        $query->addSelect(['whereabouts_updated_at' => function ($q) {
+            $q->select('updated_at')
+              ->from('whereabouts')
+              ->whereColumn('whereabouts.user_id', 'users.id')
+              ->whereDate('whereabouts.date', '=', date('Y-m-d'))
+              ->orderByDesc('whereabouts.updated_at')
+              ->limit(1);
+        }]);
+
+        $query->addSelect(['whereabouts_status' => function ($q) {
+            $q->select('status')
+              ->from('whereabouts')
+              ->whereColumn('whereabouts.user_id', 'users.id')
+              ->whereDate('whereabouts.date', '=', date('Y-m-d'))
+              ->orderByDesc('whereabouts.updated_at')
+              ->limit(1);
+        }]);
+
         // Calculate statistics for CPMD employees
         $stats = [
             'total' => (clone $query)->where('office', 'CPMD')->count(),

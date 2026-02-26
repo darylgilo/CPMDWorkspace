@@ -67,6 +67,13 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
                         posted_date: notice.created_at,
                     }),
                 )
+                .filter((deadline: Deadline) => {
+                    // Filter out deadlines overdue for 6 days or more
+                    const deadlineDateTime = new Date(`${deadline.date} ${deadline.time}`);
+                    const now = new Date();
+                    const daysOverdue = Math.floor((now.getTime() - deadlineDateTime.getTime()) / (1000 * 60 * 60 * 24));
+                    return daysOverdue < 6;
+                })
                 .sort((a: Deadline, b: Deadline) => {
                     const dateA = new Date(`${a.date} ${a.time}`);
                     const dateB = new Date(`${b.date} ${b.time}`);
@@ -174,7 +181,7 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
             <Card className="border-gray-200 bg-white shadow-md">
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                        <CalendarDays className="h-4 w-4 text-[#163832]" />
+                        <CalendarDays className="h-4 w-4 text-[#163832] dark:text-green-400" />
                         Reminders/Deadlines
                     </CardTitle>
                 </CardHeader>
@@ -192,7 +199,7 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
             <Card className="border-gray-200 bg-white shadow-md dark:border-neutral-800 dark:bg-neutral-900">
                 <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        <CalendarDays className="h-4 w-4 text-[#163832]" />
+                        <CalendarDays className="h-4 w-4 text-[#163832] dark:text-green-400" />
                         Reminders/Deadlines
                     </CardTitle>
                 </CardHeader>
@@ -215,7 +222,7 @@ export default function DeadlinesWidget({ className }: { className?: string }) {
         >
             <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                    <CalendarDays className="h-4 w-4 text-[#163832]" />
+                    <CalendarDays className="h-4 w-4 text-[#163832] dark:text-green-400" />
                     Reminders/Deadlines
                 </CardTitle>
             </CardHeader>

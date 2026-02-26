@@ -54,7 +54,7 @@ export default function AIchatbot() {
     };
     const [messages, setMessages] = useState<ChatMessage[]>(() => {
         // Initialize with a welcome message that includes the user's name if available
-        const welcomeMessage = `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI assistant. Ask me anything or type a message below.`;
+        const welcomeMessage = `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your Research AI assistant. Ask me anything or type a message below.`;
 
         return [
             {
@@ -92,6 +92,46 @@ export default function AIchatbot() {
             return m.variants[m.variantIndex] ?? m.content;
         }
         return m.content;
+    };
+
+    // Function to format AI text with proper spacing and markdown
+    const formatAIText = (text: string) => {
+        return text
+            // Handle ### headers (convert to bold)
+            .replace(/^###\s+(.+)$/gm, '<strong>$1</strong>')
+            // Handle ## headers (convert to bold)
+            .replace(/^##\s+(.+)$/gm, '<strong>$1</strong>')
+            // Handle # headers (convert to bold)
+            .replace(/^#\s+(.+)$/gm, '<strong>$1</strong>')
+            // Replace **bold** with <strong>bold</strong>
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // Replace *italic* with <em>italic</em>
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // Replace ***bold italic*** with <strong><em>bold italic</em></strong>
+            .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+            // Handle line breaks - convert double newlines to paragraphs
+            .split('\n\n')
+            .map((paragraph) => {
+                // Handle single line breaks within paragraphs
+                const formattedParagraph = paragraph
+                    .replace(/\n/g, '<br />');
+                
+                // Handle bullet points (lines starting with * or -)
+                if (formattedParagraph.trim().startsWith('* ') || formattedParagraph.trim().startsWith('- ')) {
+                    return `<div class="mb-2 ml-4"><span class="text-gray-600 dark:text-gray-400">•</span> ${formattedParagraph.replace(/^[\*\-]\s/, '')}</div>`;
+                }
+                
+                // Handle numbered lists (lines starting with 1., 2., etc.)
+                if (/^\d+\.\s/.test(formattedParagraph.trim())) {
+                    const match = formattedParagraph.match(/^\d+\./);
+                    const number = match ? match[0] : '';
+                    return `<div class="mb-2 ml-4"><span class="text-gray-600 dark:text-gray-400">${number}</span> ${formattedParagraph.replace(/^\d+\.\s/, '')}</div>`;
+                }
+                
+                // Regular paragraph
+                return `<div class="mb-2">${formattedParagraph || '&nbsp;'}</div>`;
+            })
+            .join('');
     };
 
     const handleDownloadMessage = (m: ChatMessage) => {
@@ -165,9 +205,9 @@ export default function AIchatbot() {
                 {
                     id: 'm1',
                     role: 'assistant',
-                    content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI Chatbot. Ask me anything, type a message below.`,
+                    content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your Research AI assistant. Ask me anything, type a message below.`,
                     variants: [
-                        `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your AI Chatbot. Ask me anything, type a message below.`,
+                        `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your Research AI assistant. Ask me anything, type a message below.`,
                     ],
                     variantIndex: 0,
                 },
@@ -347,155 +387,217 @@ export default function AIchatbot() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="AI Chatbot" />
-            <div className="flex h-[calc(100vh-12rem)] flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-sidebar-border/70 p-3 md:h-[calc(100vh-10rem)] dark:border-sidebar-border">
-                <div className="flex items-center gap-2 rounded-md bg-muted/40 p-2 text-sm">
-                    <Bot className="h-4 w-4" />
-                    <span>Gemini-2.5-flash</span>
+            <style>{`
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .hide-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            `}</style>
+            <div className="flex h-[calc(100vh-5rem)] flex-col overflow-hidden bg-white dark:bg-neutral-900">
+                {/* Fixed Header */}
+                <div className="flex-shrink-0 border-b border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+                    <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-green-400 to-[#163832] dark:from-green-600 dark:to-[#235347] shadow-sm">
+                                <Bot className="h-5 w-5 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-base font-semibold text-gray-900 dark:text-white sm:text-lg">Research AI Assistant</h1>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Powered by Gemini-2.5-flash</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setMessages([
+                                        {
+                                            id: crypto.randomUUID(),
+                                            role: 'assistant',
+                                            content: `Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your Research AI assistant. How can I help you today?`,
+                                            variants: [`Hi${authUser?.name ? ' ' + authUser.name : ''}! I'm your Research AI assistant. How can I help you today?`],
+                                            variantIndex: 0,
+                                        },
+                                    ]);
+                                }}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                title="New chat"
+                            >
+                                <RefreshCw className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Scrollable Messages Container */}
                 <div
                     ref={listRef}
-                    className="flex-1 space-y-3 overflow-y-auto pr-1"
+                    className="flex-1 overflow-y-auto hide-scrollbar"
                 >
-                    {messages.map((m: ChatMessage) => (
-                        <div
-                            key={m.id}
-                            className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
+                    <div className="max-w-3xl mx-auto px-4 py-6 sm:px-6">
+                        {messages.map((m: ChatMessage, index: number) => (
                             <div
-                                className={`flex max-w-[80%] items-start gap-2`}
+                                key={m.id}
+                                className={`mb-6 ${m.role === 'user' ? 'sm:ml-auto' : ''}`}
                             >
-                                {m.role === 'assistant' && (
-                                    <div className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                                        <Bot className="h-4 w-4" />
-                                    </div>
-                                )}
-                                <div
-                                    className={`rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap ${
-                                        m.role === 'user'
-                                            ? 'rounded-br-sm bg-primary text-primary-foreground'
-                                            : 'bg-muted'
-                                    }`}
-                                >
-                                    {m.role === 'assistant'
-                                        ? getAssistantText(m)
-                                        : m.content}
-                                </div>
-                                {m.role === 'user' && (
-                                    <div className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                                        <UserIcon className="h-4 w-4" />
-                                    </div>
-                                )}
-                            </div>
-                            {m.role === 'assistant' && (
-                                <div className="ml-9 flex items-center gap-1 py-1 text-xs text-foreground/80">
-                                    <button
-                                        onClick={() => handleDownloadMessage(m)}
-                                        className="inline-flex h-6 items-center justify-center rounded px-2 hover:bg-muted"
-                                        title="Download"
-                                        aria-label="Download"
-                                    >
-                                        <Download className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                        onClick={() => redoAssistant(m.id)}
-                                        className="inline-flex h-6 items-center justify-center rounded px-2 hover:bg-muted"
-                                        title="Redo"
-                                        aria-label="Redo"
-                                    >
-                                        <RefreshCw className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleShare(m)}
-                                        className="inline-flex h-6 items-center justify-center rounded px-2 hover:bg-muted"
-                                        title="Share"
-                                        aria-label="Share"
-                                    >
-                                        <Share2 className="h-3.5 w-3.5" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleCopy(m)}
-                                        className="inline-flex h-6 items-center justify-center rounded px-2 hover:bg-muted"
-                                        title="Copy"
-                                        aria-label="Copy"
-                                    >
-                                        <Copy className="h-3.5 w-3.5" />
-                                    </button>
-                                    {m.variants && m.variants.length > 1 && (
-                                        <div className="ml-2 inline-flex items-center gap-1">
-                                            <button
-                                                onClick={() =>
-                                                    handleVariantNav(
-                                                        m.id,
-                                                        'prev',
-                                                    )
-                                                }
-                                                className="inline-flex h-6 items-center justify-center rounded px-1 hover:bg-muted"
-                                                title="Previous variation"
-                                                aria-label="Previous variation"
-                                            >
-                                                <ChevronLeft className="h-3.5 w-3.5" />
-                                            </button>
-                                            <span className="tabular-nums">
-                                                {(m.variantIndex ?? 0) + 1} /{' '}
-                                                {m.variants.length}
-                                            </span>
-                                            <button
-                                                onClick={() =>
-                                                    handleVariantNav(
-                                                        m.id,
-                                                        'next',
-                                                    )
-                                                }
-                                                className="inline-flex h-6 items-center justify-center rounded px-1 hover:bg-muted"
-                                                title="Next variation"
-                                                aria-label="Next variation"
-                                            >
-                                                <ChevronRight className="h-3.5 w-3.5" />
-                                            </button>
+                                <div className={`flex gap-3 ${m.role === 'user' ? 'justify-end sm:flex-row-reverse' : ''}`}>
+                                    {/* Avatar */}
+                                    <div className={`flex-shrink-0 ${m.role === 'user' ? 'sm:order-2' : ''}`}>
+                                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                                            m.role === 'user'
+                                                ? 'bg-[#163832] dark:bg-[#235347]'
+                                                : 'bg-gradient-to-br from-green-400 to-[#163832] dark:from-green-600 dark:to-[#235347] shadow-sm'
+                                        }`}>
+                                            {m.role === 'user' ? (
+                                                <UserIcon className="h-4 w-4 text-white" />
+                                            ) : (
+                                                <Bot className="h-4 w-4 text-white" />
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                                    </div>
 
-                    {isTyping && (
-                        <div className="flex justify-start">
-                            <div className="flex max-w-[80%] items-start gap-2">
-                                <div className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                                    <Bot className="h-4 w-4" />
-                                </div>
-                                <div className="rounded-2xl bg-muted px-3 py-2 text-sm">
-                                    <span className="inline-flex items-center gap-1">
-                                        <span className="h-1 w-1 animate-bounce rounded-full bg-foreground [animation-delay:0ms]"></span>
-                                        <span className="h-1 w-1 animate-bounce rounded-full bg-foreground [animation-delay:150ms]"></span>
-                                        <span className="h-1 w-1 animate-bounce rounded-full bg-foreground [animation-delay:300ms]"></span>
-                                    </span>
+                                    {/* Message Content */}
+                                    <div className={`flex-1 ${m.role === 'user' ? 'sm:order-1 sm:max-w-lg' : 'sm:max-w-2xl'}`}>
+                                        <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                                            m.role === 'user'
+                                                ? 'bg-[#163832] text-white sm:rounded-2xl sm:rounded-tl-none'
+                                                : 'bg-gray-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 sm:rounded-2xl sm:rounded-tr-none'
+                                        }`}>
+                                            {m.role === 'assistant' ? (
+                                                <div dangerouslySetInnerHTML={{ __html: formatAIText(getAssistantText(m)) }} />
+                                            ) : (
+                                                <div>{m.content}</div>
+                                            )}
+                                        </div>
+
+                                        {/* Action Buttons */}
+                                        {m.role === 'assistant' && (
+                                            <div className="mt-2 flex items-center gap-1">
+                                                <button
+                                                    onClick={() => handleCopy(m)}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    title="Copy"
+                                                >
+                                                    <Copy className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleShare(m)}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    title="Share"
+                                                >
+                                                    <Share2 className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                                                </button>
+                                                <button
+                                                    onClick={() => redoAssistant(m.id)}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    title="Regenerate"
+                                                >
+                                                    <RefreshCw className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDownloadMessage(m)}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    title="Download"
+                                                >
+                                                    <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
+                                                </button>
+                                                {m.variants && m.variants.length > 1 && (
+                                                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800">
+                                                        <button
+                                                            onClick={() => handleVariantNav(m.id, 'prev')}
+                                                            className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-neutral-700"
+                                                            title="Previous variation"
+                                                        >
+                                                            <ChevronLeft className="h-3 w-3.5 text-gray-600 dark:text-gray-400" />
+                                                        </button>
+                                                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                            {(m.variantIndex ?? 0) + 1}/{m.variants.length}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleVariantNav(m.id, 'next')}
+                                                            className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-neutral-700"
+                                                            title="Next variation"
+                                                        >
+                                                            <ChevronRight className="h-3 w-3.5 text-gray-600 dark:text-gray-400" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        ))}
+
+                        {/* Typing Indicator */}
+                        {isTyping && (
+                            <div className="mb-6">
+                                <div className="flex gap-3">
+                                    <div className="flex-shrink-0">
+                                        <div className="h-8 w-8 rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-[#163832] dark:from-green-600 dark:to-[#235347] shadow-sm">
+                                            <Bot className="h-4 w-4 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 sm:max-w-2xl">
+                                        <div className="rounded-2xl bg-gray-100 dark:bg-neutral-800 px-4 py-3 sm:rounded-tr-none">
+                                            <div className="flex items-center gap-1">
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 [animation-delay:0ms]"></span>
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 [animation-delay:150ms]"></span>
+                                                <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 [animation-delay:300ms]"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="border-t border-sidebar-border/70 pt-2 dark:border-sidebar-border">
-                    <div className="flex items-end gap-2">
-                        <textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            rows={2}
-                            placeholder="Type a message..."
-                            className="min-h-[44px] w-full resize-y rounded-md border bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-                        />
-                        <button
-                            onClick={sendMessage}
-                            disabled={!canSend}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                            <Send className="h-4 w-4" />
-                            Send
-                        </button>
+                {/* Fixed Input Area */}
+                <div className="flex-shrink-0 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+                    <div className="max-w-3xl mx-auto px-4 py-4 sm:px-6">
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    rows={1}
+                                    placeholder="Type your message..."
+                                    className="w-full resize-none rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm placeholder-gray-500 outline-none focus:border-[#163832] focus:ring-2 focus:ring-[#163832]/20 dark:border-neutral-700 dark:bg-neutral-800 dark:placeholder-gray-400 dark:text-white dark:focus:border-[#235347] dark:focus:ring-[#235347]/20"
+                                    style={{
+                                        height: '40px',
+                                        minHeight: '40px',
+                                        maxHeight: '120px',
+                                        resize: 'none',
+                                    }}
+                                    onInput={(e) => {
+                                        const target = e.target as HTMLTextAreaElement;
+                                        if (target.scrollHeight <= 40) {
+                                            target.style.height = '40px';
+                                        } else {
+                                            target.style.height = Math.min(target.scrollHeight, 120) + 'px';
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <button
+                                onClick={sendMessage}
+                                disabled={!canSend}
+                                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all flex-shrink-0 ${
+                                    canSend
+                                        ? 'bg-gradient-to-br from-green-400 to-[#163832] text-white hover:from-green-500 hover:to-[#163832]/90 shadow-sm dark:from-green-600 dark:to-[#235347] dark:hover:from-green-700 dark:hover:to-[#235347]/90'
+                                        : 'bg-gray-200 text-gray-400 dark:bg-neutral-700 dark:text-gray-500'
+                                }`}
+                            >
+                                <Send className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <p className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400">
+                            AI can make mistakes. Consider checking important information.
+                        </p>
                     </div>
                 </div>
             </div>

@@ -202,6 +202,10 @@ export default function Approved() {
         router.get(`/editdocument/${document.id}`, { tab: 'approved' });
     };
 
+    const handleView = (document: Document) => {
+        router.get(`/PostedView/${document.id}`, { tab: 'approved' });
+    };
+
     const handleDelete = (document: Document) => {
         if (
             confirm('Are you sure you want to delete this approved document?')
@@ -320,7 +324,10 @@ export default function Approved() {
                     </h2>
 
                     {approvedDocuments.length > 0 ? (
-                        <Table>
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
                                     <TableHead
@@ -462,6 +469,93 @@ export default function Approved() {
                                 ))}
                             </TableBody>
                         </Table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="lg:hidden space-y-3 sm:space-y-4">
+                                {sortedDocuments.map((document: Document) => (
+                                    <div
+                                        key={document.id}
+                                        className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
+                                    >
+                                        <div className="p-4 sm:p-5">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 dark:bg-green-700 flex-shrink-0">
+                                                        <CheckCircle className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3 className="text-base font-bold text-gray-900 dark:text-white truncate sm:text-lg">
+                                                            {document.title}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <button
+                                                                className={`inline-flex cursor-pointer items-center rounded-full px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80 ${getStatusColor(document.status)}`}
+                                                            >
+                                                                {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
+                                                            </button>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {document.category === 'posting' ? 'Posting' : 'Travel Report'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="h-8 w-8 p-0 flex-shrink-0 sm:h-9 sm:w-9"
+                                                        >
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-40">
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleView(document)}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <Edit3 className="mr-2 h-4 w-4" />
+                                                            View
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleEdit(document)}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <Edit3 className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleDelete(document)}
+                                                            className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+
+                                            {/* Details Grid */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Updated</p>
+                                                    <p className="text-xs text-gray-700 dark:text-gray-300">
+                                                        {new Date(document.updated_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Author</p>
+                                                    <p className="text-xs text-gray-700 dark:text-gray-300">
+                                                        {document.author.name}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
                     ) : (
                         <div className="py-12 text-center">
                             <CheckCircle className="mx-auto mb-4 h-12 w-12 text-gray-400" />

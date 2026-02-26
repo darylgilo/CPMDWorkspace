@@ -213,7 +213,7 @@ export default function Dashboard() {
                                     </p>
                                 </div>
                                 <div className="rounded-lg bg-yellow-100 p-3 dark:bg-yellow-900/40">
-                                    <FileText className="h-6 w-6 text-yellow-600" />
+                                    <FileText className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -231,7 +231,7 @@ export default function Dashboard() {
                                     </p>
                                 </div>
                                 <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/40">
-                                    <UserCheck className="h-6 w-6 text-green-600" />
+                                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
                                 </div>
                             </div>
                         </CardContent>

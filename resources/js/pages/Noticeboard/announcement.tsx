@@ -12,6 +12,12 @@ import {
     User,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 type Category =
     | 'Announcement'
@@ -247,6 +253,28 @@ export default function AnnouncementPage() {
         return announcementsByDate.has(dateKey);
     };
 
+    // Edit dialog state
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editCategory, setEditCategory] = useState<Category>('Announcement');
+    const [editDescription, setEditDescription] = useState('');
+    const [editFiles, setEditFiles] = useState<Array<{name: string; url: string; type: string; size: number}>>([]);
+    const [editDate, setEditDate] = useState('');
+    const [editTime, setEditTime] = useState('');
+
+    // Open edit dialog and populate with notice data
+    function openEditDialog(notice: Notice) {
+        setEditingNotice(notice);
+        setEditTitle(notice.title);
+        setEditCategory(notice.category);
+        setEditDescription(notice.description);
+        setEditFiles(notice.files || []);
+        setEditDate(notice.date || '');
+        setEditTime(notice.time || '');
+        setEditOpen(true);
+    }
+
     // Get announcement count for a date
     const getAnnouncementCount = (date: Date): number => {
         const dateKey = formatDate(date);
@@ -312,18 +340,7 @@ export default function AnnouncementPage() {
 
                             {/* Pagination */}
                             {totalPages > 1 && (
-                                <div className="mb-4 flex items-center justify-between">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing{' '}
-                                        {(currentPage - 1) * itemsPerPage + 1}{' '}
-                                        to{' '}
-                                        {Math.min(
-                                            currentPage * itemsPerPage,
-                                            displayedAnnouncements.length,
-                                        )}{' '}
-                                        of {displayedAnnouncements.length}{' '}
-                                        announcements
-                                    </div>
+                                <div className="mb-4 flex justify-center">
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() =>
@@ -365,132 +382,89 @@ export default function AnnouncementPage() {
                                             return (
                                                 <div
                                                     key={announcement.id}
-                                                    className="group rounded-lg border border-gray-200 bg-gray-50 p-4 transition hover:border-[#163832] hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800"
+                                                    className="group flex flex-col rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-200 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900"
                                                 >
-                                                    <div className="mb-3 flex items-start justify-between">
+                                                    {/* Header */}
+                                                    <div className="mb-2 flex items-start justify-between">
                                                         <div className="flex items-center gap-2">
-                                                            <Megaphone
-                                                                className="h-6 w-6"
-                                                                aria-hidden
-                                                            />
+                                                            <Megaphone className="h-4 w-4 text-blue-500" aria-hidden />
                                                             <div>
-                                                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                                                                    {
-                                                                        announcement.title
-                                                                    }
+                                                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
+                                                                    {announcement.title}
                                                                 </h3>
-                                                                <div className="mt-1 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                                                                    <span className="flex items-center gap-1">
-                                                                        <User className="h-3 w-3" />
-                                                                        {
-                                                                            announcement.username
-                                                                        }
-                                                                    </span>
-                                                                    Posted on{' '}
-                                                                    {new Date(
-                                                                        announcement.createdAt,
-                                                                    ).toLocaleString()}
+                                                                <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                                                                    Posted on {new Date(announcement.createdAt).toLocaleDateString()} {new Date(announcement.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
+                                                    {/* Description */}
                                                     <div
-                                                        className={`mb-3 text-sm whitespace-pre-wrap text-gray-700 dark:text-gray-300 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                                        className={`mb-2 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-2'}`}
                                                     >
-                                                        {renderTextWithLinks(
-                                                            announcement.description,
-                                                        )}
+                                                        {renderTextWithLinks(announcement.description)}
                                                     </div>
-                                                    {announcement.description
-                                                        .length > 150 && (
+
+                                                    {/* Date and Time */}
+                                                    {(announcement.date || announcement.time) && (
+                                                        <div className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                            {announcement.date && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <CalendarIcon className="h-3 w-3" />
+                                                                    {new Date(announcement.date).toLocaleDateString()}
+                                                                </span>
+                                                            )}
+                                                            {announcement.time && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Clock className="h-3 w-3" />
+                                                                    {announcement.time}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Files */}
+                                                    {(announcement.file || (announcement.files && announcement.files.length > 0)) && (
+                                                        <div className="mb-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                                                            <FileText className="h-3 w-3" />
+                                                            <span>
+                                                                {announcement.file ? '1 file' : `${announcement.files?.length} files`}
+                                                            </span>
+                                                            {announcement.files_download_url && (
+                                                                <a
+                                                                    href={announcement.files_download_url}
+                                                                    className="ml-auto font-medium hover:underline"
+                                                                    download
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                >
+                                                                    Download
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Expand button */}
+                                                    {announcement.description.length > 150 && (
                                                         <button
-                                                            onClick={() =>
-                                                                toggleCardExpansion(
-                                                                    announcement.id,
-                                                                )
-                                                            }
-                                                            className="text-xs text-[#163832] hover:underline dark:text-[#235347]"
+                                                            onClick={() => toggleCardExpansion(announcement.id)}
+                                                            className="text-xs text-blue-500 hover:underline dark:text-blue-400"
                                                         >
-                                                            {isExpanded
-                                                                ? 'Show less'
-                                                                : 'Read more'}
+                                                            {isExpanded ? 'Show less' : 'Show more'}
                                                         </button>
                                                     )}
 
-                                                    {/* Attachments */}
-                                                    {announcement.files &&
-                                                        announcement.files
-                                                            .length > 0 && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
-                                                                <span>
-                                                                    {
-                                                                        announcement
-                                                                            .files
-                                                                            .length
-                                                                    }{' '}
-                                                                    attachment(s)
-                                                                </span>
-                                                                {announcement.files_download_url && (
-                                                                    <a
-                                                                        href={
-                                                                            announcement.files_download_url
-                                                                        }
-                                                                        className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                        download
-                                                                    >
-                                                                        Download
-                                                                        All
-                                                                    </a>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                    {announcement.file &&
-                                                        !announcement.files
-                                                            ?.length && (
-                                                            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                                                <FileText className="h-4 w-4" />
-                                                                <a
-                                                                    href={
-                                                                        announcement
-                                                                            .file
-                                                                            .url
-                                                                    }
-                                                                    className="text-[#163832] hover:underline dark:text-[#235347]"
-                                                                    download={
-                                                                        announcement
-                                                                            .file
-                                                                            .name
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        announcement
-                                                                            .file
-                                                                            .name
-                                                                    }
-                                                                </a>
-                                                            </div>
-                                                        )}
-
-                                                    <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
-                                                        {announcement.date && (
-                                                            <span className="flex items-center gap-1">
-                                                                <CalendarIcon className="h-3 w-3" />
-                                                                {new Date(
-                                                                    announcement.date,
-                                                                ).toLocaleDateString()}
-                                                            </span>
-                                                        )}
-                                                        {announcement.time && (
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" />
-                                                                {
-                                                                    announcement.time
-                                                                }
-                                                            </span>
-                                                        )}
+                                                    {/* Footer */}
+                                                    <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700 text-xs">
+                                                        <span className="text-gray-500 dark:text-gray-400">
+                                                            {announcement.username}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => openEditDialog(announcement)}
+                                                            className="px-2 py-1 bg-[#163832] text-white rounded hover:bg-[#163832]/90 transition-colors text-xs dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                                        >
+                                                            View
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -621,6 +595,91 @@ export default function AnnouncementPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* View Notice Dialog */}
+                <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>View Announcement</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Title</label>
+                                <textarea
+                                    value={editTitle}
+                                    readOnly
+                                    rows={Math.ceil(editTitle.length / 80) || 1}
+                                    onFocus={(e) => e.target.blur()}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    style={{
+                                        userSelect: 'none',
+                                        resize: 'none',
+                                    }}
+                                    className="w-full cursor-default rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium">Category</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editCategory}
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Description</label>
+                                <div
+                                    className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm transition outline-none focus:border-gray-500 dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950 whitespace-pre-wrap"
+                                    style={{ minHeight: '120px' }}
+                                >
+                                    {renderTextWithLinks(editDescription)}
+                                </div>
+                            </div>
+
+                            {(editDate || editTime) && (
+                                <>
+                                    {editDate && (
+                                        <div>
+                                            <label className="text-sm font-medium">Date</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editDate}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {editTime && (
+                                        <div>
+                                            <label className="text-sm font-medium">Time</label>
+                                            <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                {editTime}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-medium">Posted by</label>
+                                <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                    {editingNotice?.username}
+                                </div>
+                            </div>
+
+                            {editFiles.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Attachments</label>
+                                    <div className="mt-1 space-y-2">
+                                        {editFiles.map((file, index) => (
+                                            <div key={index} className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 p-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                                <FileText className="h-4 w-4" />
+                                                <span>{file.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </>
     );
