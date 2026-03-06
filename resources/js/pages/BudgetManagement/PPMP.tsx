@@ -894,14 +894,6 @@ export default function PPMP() {
                                 <h3 className="text-lg font-semibold">
                                     {currentFund.fund_name}
                                 </h3>
-                                <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                    <span>
-                                        Total:{' '}
-                                        {formatCurrency(
-                                            currentFund.total_amount || 0,
-                                        )}
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -1641,7 +1633,7 @@ export default function PPMP() {
                                                                     (
                                                                         p: PPMPProject,
                                                                     ) =>
-                                                                        p.general_description ===
+                                                                        p.id.toString() ===
                                                                         value,
                                                                 );
                                                             if (
@@ -1673,23 +1665,17 @@ export default function PPMP() {
                                                         {filteredData.map(
                                                             (
                                                                 project: PPMPProject,
+                                                                index: number,
                                                             ) => (
                                                                 <SelectItem
                                                                     key={
                                                                         project.id
                                                                     }
                                                                     value={
-                                                                        project.general_description
+                                                                        project.id.toString()
                                                                     }
                                                                 >
-                                                                    {
-                                                                        project.general_description
-                                                                    }{' '}
-                                                                    (
-                                                                    {
-                                                                        project.project_type
-                                                                    }
-                                                                    )
+                                                                    {index + 1}. {project.general_description} ({project.project_type})
                                                                 </SelectItem>
                                                             ),
                                                         )}
