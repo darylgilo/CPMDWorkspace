@@ -331,7 +331,7 @@ class BudgetManagementController extends Controller
             'doctrack_no' => 'required|string|max:255',
             'pr_no' => 'required|string|max:255',
             'specific_items' => 'required|string',
-            'category' => 'required|in:' . implode(',', FundTransaction::CATEGORIES),
+            'category' => 'required|string',
             'amount_pr' => 'required|numeric|min:0',
             'resolution_no' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
@@ -367,7 +367,7 @@ class BudgetManagementController extends Controller
             'doctrack_no' => 'required|string|max:255',
             'pr_no' => 'required|string|max:255',
             'specific_items' => 'required|string',
-            'category' => 'required|in:' . implode(',', FundTransaction::CATEGORIES),
+            'category' => 'required|string',
             'amount_pr' => 'required|numeric|min:0',
             'resolution_no' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
@@ -405,11 +405,6 @@ class BudgetManagementController extends Controller
      */
     public function destroyTransaction(FundTransaction $transaction): JsonResponse
     {
-        // Check if transaction has related records (prevent deletion if needed)
-        if ($transaction->delivery_date || $transaction->dv_no || $transaction->amount_dv) {
-            return response()->json(['message' => 'Cannot delete transaction with existing delivery records, DV numbers, or DV amounts'], 422);
-        }
-
         $doctrack = $transaction->doctrack_no;
         $transaction->delete();
 
@@ -525,7 +520,7 @@ class BudgetManagementController extends Controller
             'quantities.*.quantity_size' => 'required|string',
             'mode_of_procurement' => 'nullable|string',
             'pre_procurement_conference' => 'required|in:Yes,No',
-            'estimated_budget' => 'required|numeric|min:0',
+            'estimated_budget' => 'nullable|numeric|min:0',
             'supporting_documents' => 'nullable|string',
             'remarks' => 'nullable|string',
             'timelines' => 'required|array|min:1',
@@ -537,12 +532,34 @@ class BudgetManagementController extends Controller
         // Create funding details for each quantity
         $totalItems = 0;
         foreach ($validated['quantities'] as $quantity) {
+            // Check if estimated_budget is empty or null, then merge with existing quantity's budget
+            $estimatedBudget = $validated['estimated_budget'];
+            if (empty($estimatedBudget) || $estimatedBudget === 0) {
+                // Look for existing funding detail with the same quantity_size for this project
+                $existingDetail = PpmpFundingDetail::where('ppmp_project_id', $validated['ppmp_project_id'])
+                    ->where('quantity_size', $quantity['quantity_size'])
+                    ->first();
+                
+                if ($existingDetail && $existingDetail->estimated_budget) {
+                    $estimatedBudget = $existingDetail->estimated_budget;
+                    \Log::info('Budget merged for new quantity', [
+                        'project_id' => $validated['ppmp_project_id'],
+                        'quantity_size' => $quantity['quantity_size'],
+                        'merged_budget' => $estimatedBudget,
+                        'existing_detail_id' => $existingDetail->id
+                    ]);
+                }
+            }
+            
+            // Ensure estimated_budget is not null before creating
+            $estimatedBudget = $estimatedBudget ?? 0;
+            
             $fundingDetail = PpmpFundingDetail::create([
                 'ppmp_project_id' => $validated['ppmp_project_id'],
                 'quantity_size' => $quantity['quantity_size'],
                 'mode_of_procurement' => $validated['mode_of_procurement'],
                 'pre_procurement_conference' => $validated['pre_procurement_conference'],
-                'estimated_budget' => $validated['estimated_budget'],
+                'estimated_budget' => $estimatedBudget,
                 'supporting_documents' => $validated['supporting_documents'],
                 'remarks' => $validated['remarks'],
             ]);
@@ -576,7 +593,7 @@ class BudgetManagementController extends Controller
             'quantities.*.quantity_size' => 'required|string',
             'mode_of_procurement' => 'nullable|string',
             'pre_procurement_conference' => 'required|in:Yes,No',
-            'estimated_budget' => 'required|numeric|min:0',
+            'estimated_budget' => 'nullable|numeric|min:0',
             'supporting_documents' => 'required|string',
             'remarks' => 'nullable|string',
             'timelines' => 'required|array',
@@ -585,12 +602,36 @@ class BudgetManagementController extends Controller
             'timelines.*.delivery_period' => 'required|string',
         ]);
 
+        // Check if estimated_budget is empty or null, then merge with existing quantity's budget
+        $estimatedBudget = $validated['estimated_budget'];
+        if (empty($estimatedBudget) || $estimatedBudget === 0) {
+            // Look for existing funding detail with the same quantity_size for this project (excluding current one)
+            $existingDetail = PpmpFundingDetail::where('ppmp_project_id', $fundingDetail->ppmp_project_id)
+                ->where('quantity_size', $validated['quantities'][0]['quantity_size'])
+                ->where('id', '!=', $fundingDetail->id)
+                ->first();
+            
+            if ($existingDetail && $existingDetail->estimated_budget) {
+                $estimatedBudget = $existingDetail->estimated_budget;
+                \Log::info('Budget merged for updated quantity', [
+                    'project_id' => $fundingDetail->ppmp_project_id,
+                    'quantity_size' => $validated['quantities'][0]['quantity_size'],
+                    'merged_budget' => $estimatedBudget,
+                    'existing_detail_id' => $existingDetail->id,
+                    'updated_detail_id' => $fundingDetail->id
+                ]);
+            }
+        }
+
+        // Ensure estimated_budget is not null before updating
+        $estimatedBudget = $estimatedBudget ?? 0;
+
         // Update the funding detail
         $fundingDetail->update([
             'quantity_size' => $validated['quantities'][0]['quantity_size'],
             'mode_of_procurement' => $validated['mode_of_procurement'],
             'pre_procurement_conference' => $validated['pre_procurement_conference'],
-            'estimated_budget' => $validated['estimated_budget'],
+            'estimated_budget' => $estimatedBudget,
             'supporting_documents' => $validated['supporting_documents'],
             'remarks' => $validated['remarks'],
         ]);
@@ -607,7 +648,8 @@ class BudgetManagementController extends Controller
             ]);
         }
 
-        $this->logActivity('Updated', "Updated funding details for projet: {$fundingDetail->ppmpProject->general_description}", $fundingDetail);
+        $projectDescription = $fundingDetail->ppmpProject ? $fundingDetail->ppmpProject->general_description : 'Unknown Project';
+        $this->logActivity('Updated', "Updated funding details for project: {$projectDescription}", $fundingDetail);
 
         return redirect()->back()->with('success', 'Funding detail updated successfully');
     }
@@ -617,7 +659,7 @@ class BudgetManagementController extends Controller
      */
     public function destroyFundingDetails(PpmpFundingDetail $fundingDetail)
     {
-        $projectDescription = $fundingDetail->ppmpProject->general_description;
+        $projectDescription = $fundingDetail->ppmpProject ? $fundingDetail->ppmpProject->general_description : 'Unknown Project';
         // Delete related timelines first
         $fundingDetail->timelines()->delete();
         
@@ -648,7 +690,8 @@ class BudgetManagementController extends Controller
             'user_id' => auth()->id(),
         ]);
 
-        $this->logActivity('Updated', "PPMP Project updated: {$ppmpProject->general_description}", $ppmpProject);
+        $description = $ppmpProject->general_description ?? 'Unknown Project';
+        $this->logActivity('Updated', "PPMP Project updated: {$description}", $ppmpProject);
 
         return redirect()->back()->with('success', 'PPMP project updated successfully');
     }
@@ -664,7 +707,7 @@ class BudgetManagementController extends Controller
         });
         $ppmpProject->fundingDetails()->delete();
         
-        $description = $ppmpProject->general_description;
+        $description = $ppmpProject->general_description ?? 'Unknown Project';
         // Delete the project
         $ppmpProject->delete();
 
@@ -686,7 +729,7 @@ class BudgetManagementController extends Controller
                     'id' => $highlight->id,
                     'ppmp_project_id' => $highlight->ppmp_project_id,
                     'status' => $highlight->status,
-                    'project_key' => $highlight->ppmpProject->general_description . '|' . $highlight->ppmpProject->project_type,
+                    'project_key' => ($highlight->ppmpProject ? $highlight->ppmpProject->general_description : 'Unknown Project') . '|' . ($highlight->ppmpProject ? $highlight->ppmpProject->project_type : 'Unknown Type'),
                 ];
             });
 
@@ -733,7 +776,7 @@ class BudgetManagementController extends Controller
                 'id' => $highlight->id,
                 'ppmp_project_id' => $highlight->ppmp_project_id,
                 'status' => $highlight->status,
-                'project_key' => $highlight->ppmpProject->general_description . '|' . $highlight->ppmpProject->project_type,
+                'project_key' => ($highlight->ppmpProject ? $highlight->ppmpProject->general_description : 'Unknown Project') . '|' . ($highlight->ppmpProject ? $highlight->ppmpProject->project_type : 'Unknown Type'),
             ]
         ]);
     }

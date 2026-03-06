@@ -12,9 +12,18 @@ class FundTransaction extends Model
 
     const CATEGORIES = [
         'Office Supplies and Materials',
+        'Meals and Accommodation',
+        'Agricultural Supplies',
         'Agricultural and Marine Supplies',
+        'Chemical and Filtering',
+        'ICT Supplies',
+        'ICT Office Supplies',
+        'Other Supplies',
         'Chemical and Filtering Suplies Expenses',
+        'Training Expenses',
+        'Maintenance and Repair Expenses',
         'Other Supplies and Materials',
+        'Others',
     ];
 
     protected $fillable = [

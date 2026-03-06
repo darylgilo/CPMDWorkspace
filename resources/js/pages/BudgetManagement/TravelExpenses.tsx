@@ -1009,7 +1009,7 @@ export default function TravelExpenses() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Funds</SelectItem>
-                                        {funds.data.map((fund: { id: number; fund_name: string; source_year: number }) => (
+                                        {filteredFunds.map((fund: { id: number; fund_name: string; source_year: number }) => (
                                             <SelectItem
                                                 key={fund.id}
                                                 value={fund.id.toString()}
@@ -1021,9 +1021,9 @@ export default function TravelExpenses() {
                                 </Select>
 
                                 <Select
-                                    value={selectedYear?.toString() || 'all'}
+                                    value={selectedYear?.toString()}
                                     onValueChange={(value) => {
-                                        const year = value === 'all' ? null : parseInt(value);
+                                        const year = parseInt(value);
                                         setSelectedYear(year);
                                         setCurrentPage(1);
                                         router.get(
@@ -1046,7 +1046,6 @@ export default function TravelExpenses() {
                                         <SelectValue placeholder="Year" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Years</SelectItem>
                                         {availableYears.map((year: number) => (
                                             <SelectItem
                                                 key={year}

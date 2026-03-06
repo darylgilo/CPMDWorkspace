@@ -32,6 +32,7 @@ import {
     MoreVertical,
     Plus,
     Trash2,
+    X,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 
@@ -109,16 +110,52 @@ export default function BudgetAllocation() {
             label: 'Office Supplies and Materials',
         },
         {
+            value: 'Meals and Accommodation',
+            label: 'Meals and Accommodation',
+        },
+        {
+            value: 'Agricultural Supplies',
+            label: 'Agricultural Supplies',
+        },
+        {
             value: 'Agricultural and Marine Supplies',
             label: 'Agricultural and Marine Supplies',
+        },
+        {
+            value: 'Chemical and Filtering',
+            label: 'Chemical and Filtering',
+        },
+        {
+            value: 'ICT Supplies',
+            label: 'ICT Supplies',
+        },
+        {
+            value: 'ICT Office Supplies',
+            label: 'ICT Office Supplies',
+        },
+        {
+            value: 'Other Supplies',
+            label: 'Other Supplies',
         },
         {
             value: 'Chemical and Filtering Suplies Expenses',
             label: 'Chemical and Filtering Suplies Expenses',
         },
         {
+            value: 'Training Expenses',
+            label: 'Training Expenses',
+        },
+        {
+            value: 'Maintenance and Repair Expenses',
+            label: 'Maintenance and Repair Expenses',
+        },
+        {
             value: 'Other Supplies and Materials',
             label: 'Other Supplies and Materials',
+        },
+        {
+            value: 'Others',
+            label: 'Others',
         },
     ];
 
@@ -140,6 +177,7 @@ export default function BudgetAllocation() {
     );
     const [sortField, setSortField] = useState<string>('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
 
     // Initialize with first available year and fund immediately (only if not set from URL)
     React.useEffect(() => {
@@ -182,15 +220,73 @@ export default function BudgetAllocation() {
             label: 'Specific Items Included',
             type: 'text',
             required: true,
-            gridCols: 2,
-            placeholder: 'e.g., Office supplies, equipment, materials',
+            gridCols: 1,
+            placeholder: 'e.g., meals, biopesticide, etc.',
         },
         {
             name: 'category',
             label: 'Category',
-            type: 'select',
+            type: 'custom',
             required: true,
             options: categoryOptions,
+            customRender: (value: string, onChange?: (value: string) => void) => {
+                return !isCustomCategory ? (
+                    <>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Category:
+                        </label>
+                        <Select
+                            value={value}
+                            onValueChange={(newValue: string) => {
+                                if (newValue === 'Others') {
+                                    setIsCustomCategory(true);
+                                    onChange?.('');
+                                } else {
+                                    onChange?.(newValue);
+                                }
+                            }}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {categoryOptions.map((option: { value: string; label: string }) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Category:
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => onChange?.(e.target.value)}
+                                placeholder="Enter custom category"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setIsCustomCategory(false);
+                                    onChange?.('');
+                                }}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                );
+            },
         },
         {
             name: 'amount_pr',
@@ -207,6 +303,7 @@ export default function BudgetAllocation() {
             type: 'text',
             required: true,
             placeholder: 'e.g., RES-2024-001',
+            gridCols: 1,
         },
         {
             name: 'supplier',
@@ -214,6 +311,7 @@ export default function BudgetAllocation() {
             type: 'text',
             required: true,
             placeholder: 'e.g., ABC Supplies Corp.',
+            gridCols: 1,
         },
         {
             name: 'po_no',
@@ -305,6 +403,7 @@ export default function BudgetAllocation() {
             remarks: '',
         });
         setSelectedTransaction(null);
+        setIsCustomCategory(false);
     };
 
     const handleAddTransaction = (fund: Fund) => {
@@ -846,14 +945,6 @@ export default function BudgetAllocation() {
                                     <h3 className="text-lg font-semibold">
                                         {currentFund.fund_name}
                                     </h3>
-                                    <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                        <span>
-                                            Total:{' '}
-                                            {formatCurrency(
-                                                currentFund.total_amount,
-                                            )}
-                                        </span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
