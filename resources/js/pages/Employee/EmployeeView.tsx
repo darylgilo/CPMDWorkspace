@@ -118,7 +118,7 @@ export default function EmployeeView() {
         contact_person: string;
         contact_number: string;
         status: 'active' | 'inactive';
-        profile_picture?: File | null;
+        profile_picture?: File | null | undefined;
         remove_profile_picture?: boolean;
         _method?: string;
     }
@@ -190,7 +190,7 @@ export default function EmployeeView() {
             contact_person: getStringValue(user?.contact_person),
             contact_number: getStringValue(user?.contact_number),
             status: getEnumValue(user?.status, statuses, 'inactive'),
-            profile_picture: null,
+            profile_picture: undefined,
             remove_profile_picture: false,
             _method: 'PUT',
         };
@@ -205,10 +205,19 @@ export default function EmployeeView() {
 
     // Transform data before submission to ensure correct types for backend
     useEffect(() => {
-        transform((data) => ({
-            ...data,
-            remove_profile_picture: data.remove_profile_picture ? '1' : '0',
-        }));
+        transform((data) => {
+            const transformedData: any = {
+                ...data,
+                remove_profile_picture: data.remove_profile_picture ? '1' : '0',
+            };
+            
+            // Only include profile_picture in the transformed data if it's defined
+            if (data.profile_picture !== undefined) {
+                transformedData.profile_picture = data.profile_picture;
+            }
+            
+            return transformedData;
+        });
     }, [transform]);
 
     // Type assertion for setData to handle FormData keys
@@ -313,7 +322,7 @@ export default function EmployeeView() {
             },
         };
 
-        if (data.profile_picture) {
+        if (data.profile_picture !== undefined) {
             // If there is a file, we must use POST with _method="PUT" (handled by data._method)
             // Inertia will automatically use FormData
             post(`/employees/${user.id}`, submitOptions);
