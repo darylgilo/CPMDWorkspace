@@ -131,11 +131,6 @@ export default function EmployeeDirectoryView() {
                                     <div className="text-base text-gray-900 dark:text-gray-100">
                                         {user.office || 'No office assigned'}
                                     </div>
-                                    {user.position && (
-                                        <p className="text-sm text-muted-foreground">
-                                            {user.position}
-                                        </p>
-                                    )}
                                     {user?.office === 'CPMD' && (
                                         <>
                                             <div className="mt-3 text-sm text-gray-500 dark:text-neutral-400">

@@ -938,12 +938,12 @@ export default function Writeup() {
                                             }
                                             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                                                 document.is_liked
-                                                    ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20'
+                                                    ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20'
                                                     : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-neutral-800'
                                             }`}
                                         >
                                             <Heart
-                                                className={`h-4 w-4 sm:h-5 sm:w-5 ${document.is_liked ? 'fill-current' : ''}`}
+                                                className={`h-4 w-4 sm:h-5 sm:w-5 ${document.is_liked ? 'fill-current text-red-600' : ''}`}
                                             />
                                             <span>{document.likes_count}</span>
                                         </button>
