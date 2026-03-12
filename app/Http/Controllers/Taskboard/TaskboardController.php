@@ -189,7 +189,9 @@ class TaskboardController extends Controller
         }
 
         // For API requests (like drag-and-drop), return JSON
-        if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+        // Only return JSON if it's not an Inertia request
+        if (($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') 
+            && !$request->header('X-Inertia')) {
             // Get fresh allTasks data
             $allTasks = Task::with('creator')
                 ->orderBy('created_at', 'desc')
