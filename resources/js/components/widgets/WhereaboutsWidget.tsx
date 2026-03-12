@@ -212,17 +212,17 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
             className={`w-full border-gray-200 bg-white shadow-md transition-all duration-200 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900 ${className || ''}`}
         >
             <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                         <Users className="h-5 w-5 text-[#163832] dark:text-green-400" />
-                        Employee Whereabouts
+                        <span className="text-sm sm:text-base">Employee Whereabouts</span>
                     </CardTitle>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
                         <input
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="rounded border border-gray-300 bg-transparent px-2 py-1 text-xs focus:outline-none dark:border-neutral-700 dark:text-gray-100"
+                            className="w-full rounded border border-gray-300 bg-transparent px-2 py-1 text-xs focus:outline-none dark:border-neutral-700 dark:text-gray-100 sm:w-auto"
                         />
                         <Button
                             variant="outline"
@@ -232,7 +232,7 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                                     new Date().toISOString().split('T')[0],
                                 )
                             }
-                            className="h-7 border-gray-300 px-2 text-xs hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                            className="h-7 w-full border-gray-300 px-2 text-xs hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800 sm:w-auto"
                         >
                             Today
                         </Button>
@@ -242,7 +242,7 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
             <CardContent>
                 {/* Statistics Overview */}
                 {stats && (
-                    <div className="mb-4 grid grid-cols-3 gap-2">
+                    <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
                         <div className="rounded bg-green-50 p-2 text-center dark:bg-green-900/20">
                             <div className="text-lg font-bold text-green-600 dark:text-green-500">
                                 {stats.onDuty}
@@ -295,20 +295,20 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                 )}
 
                 {/* Employee Carousel */}
-                <div className="min-h-[210px] space-y-1.5">
+                <div className="min-h-[180px] space-y-1.5 sm:min-h-[210px]">
                     {currentWhereabouts.length > 0 ? (
                         currentWhereabouts.map((whereabout) => (
                             <div
                                 key={whereabout.id}
                                 className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50/30 p-2 dark:border-neutral-800 dark:bg-neutral-800/20"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="relative flex-shrink-0">
                                         {whereabout.user.profile_picture ? (
                                             <img
                                                 src={`/storage/${whereabout.user.profile_picture}`}
                                                 alt={whereabout.user.name}
-                                                className="h-8 w-8 rounded-full border border-gray-200 object-cover dark:border-neutral-700"
+                                                className="h-7 w-7 rounded-full border border-gray-200 object-cover dark:border-neutral-700 sm:h-8 sm:w-8"
                                                 onError={(e) => {
                                                     const target =
                                                         e.target as HTMLImageElement;
@@ -323,8 +323,8 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                                             />
                                         ) : null}
                                         {!whereabout.user.profile_picture && (
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#163832]/20 bg-[#163832]/10 dark:bg-[#163832]/20">
-                                                <span className="text-[10px] font-bold text-[#163832] dark:text-[#DAF1DE]">
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#163832]/20 bg-[#163832]/10 dark:bg-[#163832]/20 sm:h-8 sm:w-8">
+                                                <span className="text-[9px] font-bold text-[#163832] dark:text-[#DAF1DE] sm:text-[10px]">
                                                     {whereabout.user.name
                                                         .split(' ')
                                                         .map((n) => n[0])
@@ -335,33 +335,34 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                                             </div>
                                         )}
                                     </div>
-                                    <div>
-                                        <div className="text-xs font-semibold dark:text-gray-200">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="truncate text-xs font-semibold dark:text-gray-200">
                                             {whereabout.user.name}
                                         </div>
                                         {whereabout.location && (
-                                            <div className="flex items-center gap-1 truncate text-[10px] text-gray-500 dark:text-gray-400">
-                                                <MapPin className="h-2.5 w-2.5" />
-                                                {whereabout.location}
+                                            <div className="flex items-center gap-1 truncate text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
+                                                <MapPin className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
+                                                <span className="truncate">{whereabout.location}</span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex items-center">
+                                <div className="flex items-center flex-shrink-0">
                                     <Badge
-                                        className={`px-2 py-0 text-[10px] font-normal ${getStatusColor(whereabout.status)} border-none shadow-none`}
+                                        className={`px-1.5 py-0 text-[9px] font-normal ${getStatusColor(whereabout.status)} border-none shadow-none sm:px-2 sm:text-[10px]`}
                                     >
-                                        <div className="flex items-center gap-1">
+                                        <div className="flex items-center gap-0.5 sm:gap-1">
                                             {getStatusIcon(whereabout.status)}
-                                            {getStatusLabel(whereabout.status)}
+                                            <span className="hidden sm:inline">{getStatusLabel(whereabout.status)}</span>
+                                            <span className="sm:hidden">{getStatusLabel(whereabout.status).split(' ')[0]}</span>
                                         </div>
                                     </Badge>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-                            <Users className="mb-2 h-8 w-8 opacity-20" />
+                        <div className="flex flex-col items-center justify-center py-8 text-gray-400 sm:py-10">
+                            <Users className="mb-2 h-6 w-6 opacity-20 sm:h-8 sm:w-8" />
                             <p className="text-xs">No records for this date</p>
                         </div>
                     )}
@@ -408,28 +409,28 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
 
                 {/* Legend */}
                 <div className="mt-4 border-t border-gray-100 pt-3 dark:border-neutral-800">
-                    <div className="grid grid-cols-3 gap-y-2 text-[10px] text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center gap-1.5">
+                    <div className="grid grid-cols-2 gap-y-2 text-[9px] text-gray-500 dark:text-gray-400 sm:grid-cols-3 sm:text-[10px]">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
                             <span>On Duty</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
                             <span>On Travel</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-purple-500"></div>
                             <span>On Leave</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
                             <span>Absent</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-orange-500"></div>
                             <span>Half Day</span>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1 sm:gap-1.5">
                             <div className="h-1.5 w-1.5 rounded-full bg-indigo-500"></div>
                             <span>WFH</span>
                         </div>

@@ -586,7 +586,7 @@ export default function Taskboard() {
     return (
         <>
             {/* ─── Analytics ─── */}
-            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-4 md:gap-4">
                 <SimpleStatistic
                     label="Total Tasks"
                     value={analytics?.total || 0}

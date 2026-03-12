@@ -126,30 +126,30 @@ export default function Dashboard() {
                 <div className="mb-6 px-6"></div>
 
                 {/* Employee Summary Cards */}
-                <div className="mb-6 grid grid-cols-1 gap-6 px-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-4 grid grid-cols-2 gap-3 px-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card className="relative overflow-hidden border-[#163832] bg-[#163832] shadow-lg transition-shadow hover:shadow-xl dark:border-[#112a26] dark:bg-[#112a26]">
-                        <CardContent className="flex h-[100px] flex-col justify-center p-6">
+                        <CardContent className="flex h-[60px] flex-col justify-center p-3 sm:h-[80px] sm:p-6">
                             {loading ? (
                                 <div className="flex items-center justify-between">
                                     <div className="animate-pulse space-y-2">
-                                        <div className="h-4 w-24 rounded bg-white/20"></div>
-                                        <div className="h-8 w-32 rounded bg-white/20"></div>
+                                        <div className="h-3 w-20 rounded bg-white/20 sm:h-4 sm:w-24"></div>
+                                        <div className="h-6 w-24 rounded bg-white/20 sm:h-8 sm:w-32"></div>
                                     </div>
                                 </div>
                             ) : myTasks.length > 0 ? (
                                 <div className="flex h-full flex-col justify-center">
                                     <div className="mb-1 flex items-center justify-between">
-                                        <p className="text-xs font-bold tracking-wider text-white/80 uppercase">
+                                        <p className="text-[10px] font-bold tracking-wider text-white/80 uppercase sm:text-xs">
                                             My Tasks
                                         </p>
                                     </div>
                                     <div className="transition-all duration-500 ease-in-out">
-                                        <p className="line-clamp-1 truncate text-lg font-bold text-white">
+                                        <p className="line-clamp-1 truncate text-sm font-bold text-white sm:text-lg">
                                             {myTasks[currentTaskIndex].title}
                                         </p>
-                                        <div className="mt-1 flex items-center gap-2">
+                                        <div className="mt-1 flex items-center gap-1 sm:gap-2">
                                             <span
-                                                className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                                                className={`rounded px-1 py-0.5 text-[9px] font-bold uppercase sm:px-1.5 sm:py-0.5 sm:text-[10px] ${
                                                     myTasks[currentTaskIndex]
                                                         .priority === 'urgent'
                                                         ? 'bg-red-500 text-white'
@@ -166,7 +166,7 @@ export default function Dashboard() {
                                                         .priority
                                                 }
                                             </span>
-                                            <span className="text-[10px] text-white/60">
+                                            <span className="text-[9px] text-white/60 sm:text-[10px]">
                                                 {
                                                     myTasks[currentTaskIndex]
                                                         .progress
@@ -179,10 +179,10 @@ export default function Dashboard() {
                             ) : (
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-white/80">
+                                        <p className="text-xs font-medium text-white/80 sm:text-sm">
                                             My Tasks
                                         </p>
-                                        <p className="mt-2 text-lg font-bold text-white/60 italic">
+                                        <p className="mt-2 text-base font-bold text-white/60 italic sm:text-lg">
                                             No active tasks
                                         </p>
                                     </div>
@@ -201,55 +201,55 @@ export default function Dashboard() {
                         )}
                     </Card>
 
-                    <Card className="border-gray-200 bg-white shadow-md transition-shadow hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                        <CardContent className="p-6">
+                    <Card className="border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
+                        <CardContent className="flex h-[60px] flex-col justify-center p-3 sm:h-[80px] sm:p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
                                         Write-up on Review
                                     </p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
                                         {loading ? '...' : writeupCount}
                                     </p>
                                 </div>
-                                <div className="rounded-lg bg-yellow-100 p-3 dark:bg-yellow-900/40">
-                                    <FileText className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                                <div className="rounded-lg bg-yellow-100 p-2 sm:p-3 dark:bg-yellow-900/40">
+                                    <FileText className="h-5 w-5 text-yellow-600 dark:text-yellow-400 sm:h-6 sm:w-6" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-gray-200 bg-white shadow-md transition-shadow hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                        <CardContent className="p-6">
+                    <Card className="border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
+                        <CardContent className="flex h-[60px] flex-col justify-center p-3 sm:h-[80px] sm:p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
                                         Online Users
                                     </p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
                                         {loading ? '...' : employeeStats.online}
                                     </p>
                                 </div>
-                                <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/40">
-                                    <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                <div className="rounded-lg bg-green-100 p-2 sm:p-3 dark:bg-green-900/40">
+                                    <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400 sm:h-6 sm:w-6" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="border-gray-200 bg-white shadow-md transition-shadow hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900">
-                        <CardContent className="p-6">
+                    <Card className="border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900">
+                        <CardContent className="flex h-[60px] flex-col justify-center p-3 sm:h-[80px] sm:p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    <p className="text-xs font-medium text-gray-600 dark:text-gray-400 sm:text-sm">
                                         Total CPMD Employees
                                     </p>
-                                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
                                         {loading ? '...' : employeeStats.total}
                                     </p>
                                 </div>
-                                <div className="rounded-lg bg-gray-100 p-3 dark:bg-neutral-800">
-                                    <Users className="h-6 w-6 text-gray-600" />
+                                <div className="rounded-lg bg-gray-100 p-2 sm:p-3 dark:bg-neutral-800">
+                                    <Users className="h-5 w-5 text-gray-600 sm:h-6 sm:w-6" />
                                 </div>
                             </div>
                         </CardContent>
@@ -257,27 +257,27 @@ export default function Dashboard() {
                 </div>
 
                 {/* Main Content Grid */}
-                <div className="grid grid-cols-1 gap-6 px-6 lg:grid-cols-3">
-                    {/* Left Column - Calendar */}
-                    <div className="flex h-full flex-col">
+                <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-3">
+                    {/* Top Row on Mobile - Calendar */}
+                    <div className="flex h-full flex-col lg:col-span-1">
                         <CalendarWidget className="h-full" />
                     </div>
 
-                    {/* Middle Column - Weather and Deadlines */}
-                    <div className="flex h-full flex-col gap-6">
+                    {/* Middle Row on Mobile - Weather and Deadlines */}
+                    <div className="flex h-full flex-col gap-6 lg:col-span-1">
                         <WeatherWidget />
                         <DeadlinesWidget className="flex-1" />
                     </div>
 
-                    {/* Right Column - Whereabouts only */}
-                    <div className="flex h-full flex-col">
+                    {/* Bottom Row on Mobile - Whereabouts */}
+                    <div className="flex h-full flex-col lg:col-span-1">
                         <WhereaboutsWidget className="h-full" />
                     </div>
                 </div>
 
                 {/* Writeups Section with Right Sidebar - Full width */}
-                <div className="mt-6 px-6 lg:col-span-3">
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                <div className="mt-4 px-4 lg:col-span-3">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
                         {/* Main Content - Writeups Widget (3 columns) */}
                         <div className="lg:col-span-3">
                             <WriteupsWidget />
