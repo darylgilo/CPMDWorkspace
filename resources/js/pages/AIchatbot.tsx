@@ -224,6 +224,22 @@ export default function AIchatbot() {
         listRef.current.scrollTop = listRef.current.scrollHeight;
     }, [messages, isTyping]);
 
+    const getCsrfToken = () => {
+        // First try to get from meta tag
+        const metaTag = document.querySelector(
+            'meta[name="csrf-token"]',
+        ) as HTMLMetaElement | null;
+        if (metaTag?.content) return metaTag.content;
+
+        // Fallback to Laravel's default token name in cookies
+        const token = document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1];
+
+        return token ? decodeURIComponent(token) : '';
+    };
+
     const sendMessage = () => {
         const content = input.trim();
         if (!content || isTyping) return;
@@ -239,11 +255,18 @@ export default function AIchatbot() {
         // Call backend to get real Gemini reply
         (async () => {
             try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    console.error('CSRF token not found');
+                    throw new Error('CSRF token not found');
+                }
+
                 const res = await fetch('/chatbot/message', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-XSRF-TOKEN': csrfToken,
                         Accept: 'application/json',
                     },
                     credentials: 'same-origin',
@@ -285,7 +308,7 @@ export default function AIchatbot() {
                     ...prev,
                     {
                         id: crypto.randomUUID(),
-                        role: 'assistant',
+                        role: 'assistant' as const,
                         content: `Error: ${errorMessage}`,
                     },
                 ]);
@@ -317,7 +340,7 @@ export default function AIchatbot() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         Accept: 'application/json',
                     },
                     body: JSON.stringify({ message: prompt }),
