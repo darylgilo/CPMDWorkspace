@@ -33,6 +33,7 @@ import {
     ChevronDown,
     ChevronUp,
     Edit3,
+    MoreHorizontal,
     MoreVertical,
     PackageMinus,
     Plus,
@@ -566,7 +567,7 @@ export default function Distribution() {
         <>
             <div className="flex flex-col gap-4">
                 {/* Analytics Dashboard */}
-                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-3">
+                <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 lg:gap-4">
                     <SimpleStatistic
                         label="Total Distributions"
                         value={analytics?.totalDistributions || 0}
@@ -593,21 +594,20 @@ export default function Distribution() {
                 {/* Table Container */}
                 <div className="relative min-h-[100vh] flex-1 overflow-x-auto rounded-xl border-t-4 border-r border-b border-l border-gray-200 border-t-[#163832] bg-white p-4 shadow-sm md:min-h-min dark:border-neutral-600 dark:border-t-[#235347] dark:bg-neutral-900">
                     {/* Controls */}
-                    <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div className="flex w-full flex-wrap items-center justify-between gap-3 md:w-auto md:justify-start">
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                        <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3">
                             <Button
                                 onClick={handleAdd}
                                 className="inline-flex items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                             >
                                 <Plus className="h-4 w-4" />
-                                <span className="hidden md:inline">
-                                    Add Distribution
-                                </span>
+                                <span className="hidden sm:inline">Add Distribution</span>
+                                <span className="sm:hidden">Add</span>
                             </Button>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 sm:gap-2">
                                 <label
                                     htmlFor="entries"
-                                    className="font-medium"
+                                    className="text-xs font-medium sm:text-sm"
                                 >
                                     Show
                                 </label>
@@ -632,7 +632,7 @@ export default function Distribution() {
                                         );
                                     }}
                                 >
-                                    <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectTrigger className="w-[60px] h-8 border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950 sm:w-[80px] sm:h-auto sm:text-sm">
                                         <SelectValue placeholder="10" />
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
@@ -642,10 +642,10 @@ export default function Distribution() {
                                         <SelectItem value="100">100</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <span>entries</span>
+                                <span className="text-xs text-gray-600 sm:text-sm">entries</span>
                             </div>
                         </div>
-                        <div className="flex w-full items-center gap-2 md:w-auto">
+                        <div className="flex w-full items-center gap-2 sm:w-auto">
                             <ExportPesticide
                                 data={distributions.data}
                                 filename="pesticide-distributions"
@@ -696,12 +696,13 @@ export default function Distribution() {
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50 dark:bg-neutral-800">
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() => handleSort('brand_name')}
                                     >
                                         <div className="flex items-center">
@@ -710,7 +711,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
                                             handleSort('type_of_pesticide')
                                         }
@@ -721,7 +722,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() => handleSort('quantity')}
                                     >
                                         <div className="flex items-center">
@@ -730,7 +731,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
                                             handleSort('travel_purpose')
                                         }
@@ -741,7 +742,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
                                             handleSort('travel_location')
                                         }
@@ -752,7 +753,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
                                             handleSort('received_by')
                                         }
@@ -763,7 +764,7 @@ export default function Distribution() {
                                         </div>
                                     </TableHead>
                                     <TableHead
-                                        className="cursor-pointer font-semibold hover:bg-gray-100 dark:hover:bg-neutral-700"
+                                        className="group cursor-pointer font-semibold select-none hover:bg-gray-100 dark:hover:bg-neutral-700"
                                         onClick={() =>
                                             handleSort('received_date')
                                         }
@@ -865,7 +866,7 @@ export default function Distribution() {
                                 ) : (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={7}
+                                            colSpan={8}
                                             className="text-center"
                                         >
                                             No distributions found.
@@ -874,6 +875,106 @@ export default function Distribution() {
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3 sm:space-y-4">
+                        {sortedDistributions.length > 0 ? (
+                            sortedDistributions.map((distribution) => (
+                                <div
+                                    key={distribution.id}
+                                    className="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-neutral-900"
+                                >
+                                    {/* Facebook-style Card Header */}
+                                    <div className="p-3 sm:p-4">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-2 sm:gap-3">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#163832] dark:bg-[#235347] flex-shrink-0">
+                                                    <TruckIcon className="h-5 w-5 text-white" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate sm:text-lg">
+                                                        {distribution.pesticide?.brand_name || 'N/A'}
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                                        {distribution.pesticide?.type_of_pesticide || 'N/A'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                                                            {distribution.quantity} {distribution.pesticide?.unit || ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent
+                                                    align="end"
+                                                    className="w-40"
+                                                >
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleEdit(distribution)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <Edit3 className="mr-2 h-4 w-4" />
+                                                        <span>Edit</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleDelete(distribution.id)}
+                                                        className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        <span>Delete</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+
+                                        {/* Content Section */}
+                                        <div className="mb-3">
+                                            <div className="text-sm text-gray-800 dark:text-gray-200">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="font-medium">Travel Purpose:</span>
+                                                    <span>{distribution.travel_purpose}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <span className="font-medium">Location:</span>
+                                                    <span>{distribution.travel_location}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Details Grid */}
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Received By</p>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                                    {distribution.received_by}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 dark:text-gray-400">Date</p>
+                                                <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {new Date(distribution.received_date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                No distributions found.
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}

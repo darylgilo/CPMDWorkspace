@@ -365,7 +365,7 @@ export default function UserManagement() {
                 {/* Page Header */}
 
                 {/* Analytics Dashboard */}
-                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 lg:grid-cols-4">
+                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-4 md:gap-4">
                     {/* Total Users Card */}
                     <SimpleStatistic
                         label="Total Users"

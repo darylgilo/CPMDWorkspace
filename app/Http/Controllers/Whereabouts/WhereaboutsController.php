@@ -147,9 +147,91 @@ class WhereaboutsController extends Controller
         }
     }
 
-    /**
-     * Get whereabouts for widget (API endpoint)
-     */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'dates' => 'required|array|min:1',
+            'dates.*' => 'required|date',
+            'status' => 'required|string',
+            'reason' => 'nullable|string',
+            'location' => 'nullable|string',
+        ]);
+
+        // Check authorization: only admin/superadmin or the user themselves can update
+        $currentUser = $request->user();
+        if ($currentUser->id != $validated['user_id'] && !in_array($currentUser->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Use transaction for atomic updates
+        \DB::beginTransaction();
+        try {
+            $updatedCount = 0;
+            foreach ($validated['dates'] as $date) {
+                Whereabout::updateOrCreate(
+                    [
+                        'user_id' => $validated['user_id'],
+                        'date' => $date,
+                    ],
+                    [
+                        'status' => $validated['status'],
+                        'reason' => $validated['reason'],
+                        'location' => $validated['location'],
+                    ]
+                );
+                $updatedCount++;
+            }
+            
+            \DB::commit();
+            
+            return redirect()->back()->with('success', "Successfully updated whereabouts for {$updatedCount} date(s).");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk store failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to update whereabouts: ' . $e->getMessage());
+        }
+    }
+
+    public function bulkReset(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'dates' => 'required|array|min:1',
+            'dates.*' => 'required|date',
+        ]);
+
+        // Check authorization: only admin/superadmin or the user themselves can delete
+        $currentUser = $request->user();
+        if ($currentUser->id != $validated['user_id'] && !in_array($currentUser->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Use transaction for atomic updates
+        \DB::beginTransaction();
+        try {
+            $deletedCount = Whereabout::where('user_id', $validated['user_id'])
+                ->whereIn('date', $validated['dates'])
+                ->delete();
+            
+            \DB::commit();
+            
+            return redirect()->back()->with('success', "Successfully reset whereabouts for {$deletedCount} date(s).");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Bulk reset failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->back()->with('error', 'Failed to reset whereabouts: ' . $e->getMessage());
+        }
+    }
+
     public function getWhereaboutsForWidget(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));

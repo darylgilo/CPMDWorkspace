@@ -266,7 +266,7 @@ export default function EmployeeManagement() {
 
             <div className="flex flex-col gap-6 p-4">
                 {/* Statistics Section */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-4 md:gap-4">
                     <SimpleStatistic
                         label="Total Employees"
                         value={stats.total}
