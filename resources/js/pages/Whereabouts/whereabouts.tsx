@@ -17,6 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { WhereaboutsTooltip } from '@/components/ui/whereabouts-tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import {
@@ -44,8 +45,9 @@ import {
     isWeekend,
     parseISO,
     startOfMonth,
+    parse,
 } from 'date-fns';
-import { ChevronLeft, ChevronRight, GripVertical, MapPin, Briefcase, Home, Plane, Calendar, Coffee, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, GripVertical, MapPin, Briefcase, Home, Plane, Calendar, Coffee, AlertCircle, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
 interface User {
@@ -102,6 +104,7 @@ const STATUS_ICONS: Record<string, any> = {
     ABSENT: AlertCircle,
     'HALF DAY': Coffee,
     WFH: Home,
+    'DAY OFF': Sun,
 };
 
 const STATUS_OPTIONS = [
@@ -131,6 +134,9 @@ function SortableRow({
     canReorder,
     authUser,
     loadingCells,
+    selectedCell,
+    onTooltipShow,
+    onTooltipHide,
 }: {
     user: User;
     days: Date[];
@@ -139,7 +145,18 @@ function SortableRow({
     canReorder: boolean;
     authUser: AuthUser;
     loadingCells: Set<string>;
+    selectedCell: { user: User; date: Date } | null;
+    onTooltipShow: (data: {
+        entry: Whereabout | null;
+        day: Date;
+        user: User;
+        isEditable: boolean;
+        position: { x: number; y: number };
+    }) => void;
+    onTooltipHide: () => void;
 }) {
+    const [hoveredCell, setHoveredCell] = useState<string | null>(null);
+
     const {
         attributes,
         listeners,
@@ -203,13 +220,18 @@ function SortableRow({
                             format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
                                 ? 'ring-1 ring-blue-300 ring-opacity-50 dark:ring-blue-600'
                                 : '',
+                            selectedCell?.user.id === user.id && format(selectedCell.date, 'yyyy-MM-dd') === dateStr
+                                ? 'ring-2 ring-purple-400 ring-opacity-70 dark:ring-purple-500'
+                                : '',
                             loadingCells.has(`${user.id}-${dateStr}`)
                                 ? 'animate-pulse opacity-70'
                                 : '',
                         )}
-                        onClick={() =>
-                            !isWknd && isEditable && handleCellClick(user, day)
-                        }
+                        onClick={() => {
+                            if (!isWknd && isEditable) {
+                                handleCellClick(user, day);
+                            }
+                        }}
                         onKeyDown={(e) => {
                             if (!isWknd && isEditable && (e.key === 'Enter' || e.key === ' ')) {
                                 e.preventDefault();
@@ -225,20 +247,42 @@ function SortableRow({
                             ${entry?.location ? ` - Location: ${entry.location}` : ''}
                             ${!isEditable ? ' - No edit permission' : ' - Click to edit'}
                         `}
-                        title={
-                            entry
-                                ? `${format(day, 'MMM d')}: ${entry.status}${entry.reason ? ` - ${entry.reason}` : ''}${entry.location ? ` 📍 ${entry.location}` : ''}`
-                                : `${format(day, 'MMM d')}: Click to set status${!isEditable ? ' (no permission)' : ''}`
-                        }
+                        onMouseEnter={(e) => {
+                            const cellKey = `${user.id}-${dateStr}`;
+                            setHoveredCell(cellKey);
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            onTooltipShow({
+                                entry,
+                                day,
+                                user,
+                                isEditable: isEditable && !isWknd,
+                                position: {
+                                    x: rect.left + rect.width / 2,
+                                    y: rect.top
+                                }
+                            });
+                        }}
+                        onMouseLeave={() => {
+                            setHoveredCell(null);
+                            onTooltipHide();
+                        }}
                     >
-                        <div className="flex h-full items-center justify-center">
+                        <div className="flex h-full flex-col items-center justify-center gap-0.5">
                             {entry && STATUS_ICONS[entry.status] && (
-                                <div className="flex items-center gap-1">
-                                    {React.createElement(STATUS_ICONS[entry.status], { className: 'h-3 w-3 sm:h-4 sm:w-4' })}
-                                    {isWknd && (
-                                        <span className="text-[10px] opacity-70">{format(day, 'd')}</span>
-                                    )}
-                                </div>
+                                <>
+                                    <div className="flex items-center justify-center">
+                                        {React.createElement(STATUS_ICONS[entry.status], { className: 'h-3 w-3 sm:h-4 sm:w-4' })}
+                                    </div>
+                                    <span className="text-[10px] opacity-70">{format(day, 'd')}</span>
+                                </>
+                            )}
+                            {!entry && isWknd && (
+                                <>
+                                    <div className="flex items-center justify-center">
+                                        {React.createElement(Sun, { className: 'h-3 w-3 sm:h-4 sm:w-4 text-gray-400 dark:text-gray-500' })}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500">{format(day, 'd')}</span>
+                                </>
                             )}
                             {!entry && !isWknd && (
                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{format(day, 'd')}</span>
@@ -271,6 +315,18 @@ export default function Whereabouts({
         location: '',
     });
     const [selectedSection, setSelectedSection] = useState('all');
+    const [useDateRange, setUseDateRange] = useState(false);
+    const [dateRangeStart, setDateRangeStart] = useState('');
+    const [dateRangeEnd, setDateRangeEnd] = useState('');
+    
+    // Global tooltip state
+    const [globalTooltip, setGlobalTooltip] = useState<{
+        entry: Whereabout | null;
+        day: Date;
+        user: User;
+        isEditable: boolean;
+        position: { x: number; y: number };
+    } | null>(null);
 
     // Local state for users to handle optimistic UI updates during drag
     const [localUsers, setLocalUsers] = useState(users);
@@ -444,6 +500,7 @@ export default function Whereabouts({
             });
         }, 300);
 
+        // Single select mode (original behavior)
         const existing = whereabouts[user.id]?.[dateStr];
 
         setFormData({
@@ -458,30 +515,75 @@ export default function Whereabouts({
         if (!selectedCell) return;
         setIsSubmitting(true);
 
-        router.post(
-            '/whereabouts',
-            {
-                user_id: selectedCell.user.id,
-                date: format(selectedCell.date, 'yyyy-MM-dd'),
-                ...formData,
-            },
-            {
-                onSuccess: () => {
-                    showSuccess(
-                        'Whereabouts Updated',
-                        'Employee whereabouts has been successfully updated.',
-                    );
-                    setSelectedCell(null);
+        if (useDateRange && dateRangeStart && dateRangeEnd) {
+            // Handle date range submission
+            const startDate = parse(dateRangeStart, 'yyyy-MM-dd', new Date());
+            const endDate = parse(dateRangeEnd, 'yyyy-MM-dd', new Date());
+            
+            if (startDate > endDate) {
+                showError('Invalid Date Range', 'Start date must be before end date.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            const datesToProcess = eachDayOfInterval({ start: startDate, end: endDate })
+                .filter(day => !isWeekend(day)) // Filter out weekends
+                .map(day => format(day, 'yyyy-MM-dd'));
+
+            router.post(
+                '/whereabouts/bulk',
+                {
+                    user_id: selectedCell.user.id,
+                    dates: datesToProcess,
+                    ...formData,
                 },
-                onError: (errors) => {
-                    showError(
-                        'Update Failed',
-                        'Unable to update whereabouts. Please try again.',
-                    );
+                {
+                    onSuccess: () => {
+                        showSuccess(
+                            'Whereabouts Updated',
+                            `Successfully updated whereabouts for ${datesToProcess.length} date(s).`,
+                        );
+                        setSelectedCell(null);
+                        setUseDateRange(false);
+                        setDateRangeStart('');
+                        setDateRangeEnd('');
+                    },
+                    onError: (errors) => {
+                        showError(
+                            'Update Failed',
+                            'Unable to update whereabouts. Please try again.',
+                        );
+                    },
+                    onFinish: () => setIsSubmitting(false),
                 },
-                onFinish: () => setIsSubmitting(false),
-            },
-        );
+            );
+        } else {
+            // Handle single date submission
+            router.post(
+                '/whereabouts',
+                {
+                    user_id: selectedCell.user.id,
+                    date: format(selectedCell.date, 'yyyy-MM-dd'),
+                    ...formData,
+                },
+                {
+                    onSuccess: () => {
+                        showSuccess(
+                            'Whereabouts Updated',
+                            'Employee whereabouts has been successfully updated.',
+                        );
+                        setSelectedCell(null);
+                    },
+                    onError: (errors) => {
+                        showError(
+                            'Update Failed',
+                            'Unable to update whereabouts. Please try again.',
+                        );
+                    },
+                    onFinish: () => setIsSubmitting(false),
+                },
+            );
+        }
     };
 
     const handleReset = () => {
@@ -600,19 +702,6 @@ export default function Whereabouts({
                                     })}
                                 </SelectContent>
                             </Select>
-
-                            <Button
-                                variant="outline"
-                                className="w-full bg-[#163832] px-3 py-1.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#163832]/90 hover:text-white sm:w-auto md:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                                onClick={() => {
-                                    const today = new Date();
-                                    router.visit(
-                                        `/whereabouts?date=${format(today, 'yyyy-MM-dd')}`,
-                                    );
-                                }}
-                            >
-                                Today
-                            </Button>
 
                             <Select
                                 value={selectedSection}
@@ -739,12 +828,13 @@ export default function Whereabouts({
                                                     user={user}
                                                     days={days}
                                                     whereabouts={whereabouts}
-                                                    handleCellClick={
-                                                        handleCellClick
-                                                    }
+                                                    handleCellClick={handleCellClick}
                                                     canReorder={canReorder}
                                                     authUser={auth.user}
                                                     loadingCells={loadingCells}
+                                                    selectedCell={selectedCell}
+                                                    onTooltipShow={setGlobalTooltip}
+                                                    onTooltipHide={() => setGlobalTooltip(null)}
                                                 />
                                             ))}
                                         </SortableContext>
@@ -800,9 +890,11 @@ export default function Whereabouts({
                                                         return (
                                                             <button
                                                                 key={day.toString()}
-                                                                onClick={() =>
-                                                                    !isWknd && isEditable && handleCellClick(user, day)
-                                                                }
+                                                                onClick={() => {
+                                                                    if (!isWknd && isEditable) {
+                                                                        handleCellClick(user, day);
+                                                                    }
+                                                                }}
                                                                 onKeyDown={(e) => {
                                                                     if (!isWknd && isEditable && (e.key === 'Enter' || e.key === ' ')) {
                                                                         e.preventDefault();
@@ -823,6 +915,9 @@ export default function Whereabouts({
                                                                     format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
                                                                         ? 'ring-2 ring-blue-400 ring-opacity-60 dark:ring-blue-500'
                                                                         : '',
+                                                                    selectedCell?.user.id === user.id && format(selectedCell.date, 'yyyy-MM-dd') === dateStr
+                                                                        ? 'ring-2 ring-purple-400 ring-opacity-70 dark:ring-purple-500'
+                                                                        : '',
                                                                 )}
                                                                 aria-label={`
                                                                     ${format(day, 'MMMM d, yyyy')}: 
@@ -841,6 +936,11 @@ export default function Whereabouts({
                                                                     {IconComponent && (
                                                                         <div className="flex items-center justify-center">
                                                                             {React.createElement(IconComponent, { className: 'h-3 w-3' })}
+                                                                        </div>
+                                                                    )}
+                                                                    {!IconComponent && isWknd && (
+                                                                        <div className="flex items-center justify-center">
+                                                                            {React.createElement(Sun, { className: 'h-3 w-3 text-gray-400 dark:text-gray-500' })}
                                                                         </div>
                                                                     )}
                                                                     <span className="text-[10px] font-medium">
@@ -871,12 +971,13 @@ export default function Whereabouts({
                 open={!!selectedCell}
                 onOpenChange={(open) => !open && setSelectedCell(null)}
             >
-                <DialogContent>
+                <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Update Whereabouts</DialogTitle>
                     </DialogHeader>
 
                     <div className="grid gap-4 py-4">
+
                         <div className="grid gap-2">
                             <Label>Status</Label>
                             <Select
@@ -899,32 +1000,74 @@ export default function Whereabouts({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label>Reason (Optional)</Label>
-                            <Input
-                                value={formData.reason}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        reason: e.target.value,
-                                    })
-                                }
-                                placeholder="e.g., Sick Leave, Official Business"
-                            />
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="useDateRange"
+                                    checked={useDateRange}
+                                    onChange={(e) => setUseDateRange(e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <Label htmlFor="useDateRange" className="text-sm font-medium cursor-pointer">
+                                    Apply to date range
+                                </Label>
+                            </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label>Location (Optional)</Label>
-                            <Input
-                                value={formData.location}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        location: e.target.value,
-                                    })
-                                }
-                                placeholder="e.g., Manila, Home"
-                            />
-                        </div>
+                        {useDateRange && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Start Date</Label>
+                                    <Input
+                                        type="date"
+                                        value={dateRangeStart}
+                                        onChange={(e) => setDateRangeStart(e.target.value)}
+                                        min={format(date, 'yyyy-MM-dd')}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>End Date</Label>
+                                    <Input
+                                        type="date"
+                                        value={dateRangeEnd}
+                                        onChange={(e) => setDateRangeEnd(e.target.value)}
+                                        min={dateRangeStart || format(date, 'yyyy-MM-dd')}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {(formData.status === 'ABSENT') && (
+                            <div className="grid gap-2">
+                                <Label>Reason (Optional)</Label>
+                                <Input
+                                    value={formData.reason}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            reason: e.target.value,
+                                        })
+                                    }
+                                    placeholder="e.g., Sick Leave, Official Business"
+                                />
+                            </div>
+                        )}
+
+                        {(formData.status === 'ON TRAVEL') && (
+                            <div className="grid gap-2">
+                                <Label>Location (Optional)</Label>
+                                <Input
+                                    value={formData.location}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            location: e.target.value,
+                                        })
+                                    }
+                                    placeholder="e.g., Manila, Home"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="flex justify-between">
@@ -935,33 +1078,62 @@ export default function Whereabouts({
                             >
                                 Cancel
                             </Button>
-                            <div>
-                                {selectedCell &&
-                                    whereabouts[selectedCell.user.id]?.[
-                                        format(selectedCell.date, 'yyyy-MM-dd')
-                                    ] && (
-                                        <LoadingButton
-                                            variant="destructive"
-                                            onClick={handleReset}
-                                            loading={isSubmitting}
-                                            loadingText="Resetting..."
-                                        >
-                                            Reset
-                                        </LoadingButton>
-                                    )}
-                            </div>
+                            {selectedCell &&
+                                whereabouts[selectedCell.user.id]?.[
+                                    format(selectedCell.date, 'yyyy-MM-dd')
+                                ] && (
+                                <LoadingButton
+                                    variant="destructive"
+                                    onClick={handleReset}
+                                    loading={isSubmitting}
+                                    loadingText="Resetting..."
+                                >
+                                    Reset
+                                </LoadingButton>
+                            )}
                             <LoadingButton
                                 className="bg-[#163832] text-white transition-colors duration-200 hover:bg-[#163832]/90 dark:bg-[#235347] dark:hover:bg-[#235347]/90"
                                 onClick={handleSubmit}
                                 loading={isSubmitting}
                                 loadingText="Saving..."
                             >
-                                Save
+                                {useDateRange ? 'Save Range' : 'Save'}
                             </LoadingButton>
                         </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            
+            {/* Global Tooltip */}
+            {globalTooltip && (
+                <div 
+                    className="fixed z-[9999] transition-all duration-200 ease-out opacity-100 scale-100 pointer-events-none"
+                    style={{
+                        left: `${Math.min(Math.max(globalTooltip.position.x, 50), window.innerWidth - 50)}px`,
+                        top: `${globalTooltip.position.y < window.innerHeight / 2 
+                            ? globalTooltip.position.y + 8 
+                            : globalTooltip.position.y - 8}px`,
+                        transform: globalTooltip.position.y < window.innerHeight / 2 
+                            ? 'translate(-50%, 0)' 
+                            : 'translate(-50%, -100%)'
+                    }}
+                >
+                    <WhereaboutsTooltip 
+                        entry={globalTooltip.entry} 
+                        day={globalTooltip.day} 
+                        user={globalTooltip.user} 
+                        isEditable={globalTooltip.isEditable}
+                    />
+                    <div 
+                        className={cn(
+                            "absolute left-1/2 transform -translate-x-1/2",
+                            globalTooltip.position.y < window.innerHeight / 2 
+                                ? "top-full -mt-1 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200 dark:border-t-neutral-600"
+                                : "bottom-full mb-1 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-200 dark:border-b-neutral-600"
+                        )}
+                    ></div>
+                </div>
+            )}
         </AppLayout>
     );
 }

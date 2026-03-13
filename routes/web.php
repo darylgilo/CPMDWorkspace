@@ -101,6 +101,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Whereabouts Routes
     Route::get('/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'index'])->name('whereabouts.index');
     Route::post('/whereabouts', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'store'])->name('whereabouts.store');
+    Route::post('/whereabouts/bulk', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'bulkStore'])->name('whereabouts.bulk.store');
+    Route::post('/whereabouts/bulk-reset', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'bulkReset'])->name('whereabouts.bulk.reset');
     Route::post('/whereabouts/reorder', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'reorder'])->name('whereabouts.reorder');
     Route::delete('/whereabouts/{id}', [App\Http\Controllers\Whereabouts\WhereaboutsController::class, 'destroy'])->name('whereabouts.destroy');
 
