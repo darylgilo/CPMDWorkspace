@@ -341,6 +341,7 @@ export default function AIchatbot() {
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': getCsrfToken(),
+                        'X-XSRF-TOKEN': getCsrfToken(),
                         Accept: 'application/json',
                     },
                     body: JSON.stringify({ message: prompt }),
