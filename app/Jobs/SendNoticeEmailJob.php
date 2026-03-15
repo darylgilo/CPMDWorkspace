@@ -27,14 +27,38 @@ class SendNoticeEmailJob implements ShouldQueue
 
     public function handle()
     {
-        $cpmdEmployees = \App\Models\User::where('cpmd', 1)
-                            ->whereNotNull('email')
-                            ->whereNotNull('email_verified_at')
-                            ->where('status', 'active')
-                            ->get();
+        $recipients = collect();
+        $category = $this->notice->category;
         
-        foreach ($cpmdEmployees as $employee) {
-            Mail::to($employee->email)->send(new NoticeNotification($this->notice));
+        // Announcements and Events go to all active/verified CPMD users automatically
+        if ($category === 'Announcement' || $category === 'Notice of Event') {
+            $cpmdEmployees = \App\Models\User::where(function ($query) {
+                                    $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                                })
+                                ->whereNotNull('email')
+                                ->whereNotNull('email_verified_at')
+                                ->where('status', 'active')
+                                ->get();
+            
+            $recipients = $recipients->merge($cpmdEmployees);
+        }
+        
+        // For all types, always include specifically added assignees
+        if ($this->notice->assignees && is_array($this->notice->assignees)) {
+            $assignees = \App\Models\User::whereIn('id', $this->notice->assignees)
+                                ->whereNotNull('email')
+                                ->whereNotNull('email_verified_at')
+                                ->where('status', 'active')
+                                ->get();
+            
+            $recipients = $recipients->merge($assignees);
+        }
+        
+        // Remove duplicates and send emails
+        $uniqueRecipients = $recipients->unique('id');
+        
+        foreach ($uniqueRecipients as $recipient) {
+            Mail::to($recipient->email)->send(new NoticeNotification($this->notice));
         }
     }
 }

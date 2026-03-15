@@ -20,6 +20,16 @@ class NoticeController extends Controller
     // List notices for the Noticeboard page and shape the data for the frontend
     public function index()
     {
+        // Get all CPMD office users for assignee selection
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'email', 'profile_picture')
+            ->orderBy('name')
+            ->get();
+
         $notices = Notice::query()
             ->with('user')
             ->latest()
@@ -40,6 +50,7 @@ class NoticeController extends Controller
                     'file_url' => $notice->file_path ? route('noticeboard.download', $notice) : null,
                     'date' => $notice->date,
                     'time' => $notice->time,
+                    'assignees' => $notice->assignees ?? null,
                     // Array of attachments (for multiple files)
                     'files' => collect($notice->files ?? [])->map(function ($f) {
                         return [
@@ -60,6 +71,7 @@ class NoticeController extends Controller
 
         return Inertia::render('Noticeboard/index', [
             'notices' => $notices,
+            'users' => $users,
         ]);
     }
 
@@ -75,6 +87,8 @@ class NoticeController extends Controller
             'files.*' => ['file', 'max:10240'],
             'date' => ['nullable', 'date'],
             'time' => ['nullable', 'date_format:H:i'],
+            'assignees' => ['nullable', 'array'],
+            'assignees.*' => ['integer', 'exists:users,id'],
         ]);
 
         // Guard against accidental duplicate submissions (e.g., double-clicking submit)
@@ -143,6 +157,7 @@ class NoticeController extends Controller
             'files' => $filesMeta,
             'date' => $validated['date'] ?? null,
             'time' => $validated['time'] ?? null,
+            'assignees' => $validated['assignees'] ?? null,
         ]);
 
         // Send email asynchronously to all employees that are CPMD, verified, and active
@@ -167,6 +182,8 @@ class NoticeController extends Controller
             'files.*' => ['file', 'max:10240'],
             'date' => ['nullable', 'date'],
             'time' => ['nullable', 'date_format:H:i'],
+            'assignees' => ['nullable', 'array'],
+            'assignees.*' => ['integer', 'exists:users,id'],
         ]);
 
         // Update basic fields
@@ -175,6 +192,7 @@ class NoticeController extends Controller
         $notice->description = $validated['description'];
         $notice->date = $validated['date'] ?? null;
         $notice->time = $validated['time'] ?? null;
+        $notice->assignees = $validated['assignees'] ?? null;
 
         // Handle new file uploads if provided
         if ($request->hasFile('files')) {
@@ -454,8 +472,18 @@ class NoticeController extends Controller
                 ];
             });
 
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'email', 'profile_picture')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Noticeboard/announcement', [
             'notices' => $notices,
+            'users' => $users,
         ]);
     }
 
@@ -502,8 +530,18 @@ class NoticeController extends Controller
                 ];
             });
 
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'email', 'profile_picture')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Noticeboard/event', [
             'notices' => $notices,
+            'users' => $users,
         ]);
     }
 
@@ -547,8 +585,18 @@ class NoticeController extends Controller
                 ];
             });
 
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'email', 'profile_picture')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Noticeboard/meeting', [
             'notices' => $notices,
+            'users' => $users,
         ]);
     }
 
@@ -592,8 +640,18 @@ class NoticeController extends Controller
                 ];
             });
 
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'email', 'profile_picture')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Noticeboard/reminder', [
             'notices' => $notices,
+            'users' => $users,
         ]);
     }
 

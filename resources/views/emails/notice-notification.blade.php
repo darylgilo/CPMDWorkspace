@@ -1,7 +1,7 @@
 @component('mail::message')
 # {{ $notice->category }}
 
-Hello CPMD,
+Hello,
 
 A new {{ strtolower($notice->category) }} has been posted on the Noticeboard.
 
@@ -31,5 +31,6 @@ View Noticeboard
 @endcomponent
 
 Thanks,<br>
+
 {{ config('app.name') }}
 @endcomponent

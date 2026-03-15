@@ -15,6 +15,13 @@ interface Category {
   icon: ReactNode;
 }
 
+export interface NoticeUser {
+  id: number;
+  name: string;
+  avatar?: string;
+  profile_picture_url?: string;
+}
+
 interface CustomCardPinProps {
   id: string;
   title: string;
@@ -27,9 +34,67 @@ interface CustomCardPinProps {
   files?: FileType[];
   files_download_url?: string | null;
   isPinned?: boolean;
+  assignees?: number[] | null;
+  users?: NoticeUser[];
   onPinClick?: (id: string) => void;
   onViewClick?: () => void;
   className?: string;
+}
+
+function AvatarStack({
+    assignees,
+    users,
+    className = "mb-2",
+}: {
+    assignees: number[] | null | undefined;
+    users: NoticeUser[];
+    className?: string;
+}) {
+    const list = assignees ?? [];
+    if (list.length === 0) return null;
+    
+    const visible = list.slice(0, 6);
+    const overflow = list.length - visible.length;
+    const colors = ['#163832', '#1a4d3e', '#235347', '#2a6358', '#0f766e'];
+
+    const getUserData = (id: number | string) => users.find((u) => String(u.id) === String(id));
+
+    return (
+        <div className={`flex items-center gap-1 ${className}`}>
+            <div className="flex -space-x-1.5">
+                {visible.map((uid, i) => {
+                    const userData = getUserData(uid);
+                    const name = userData?.name ?? `#${uid}`;
+                    const avatar = userData?.profile_picture_url || userData?.avatar;
+                    const initial = name.charAt(0).toUpperCase();
+
+                    return (
+                        <div
+                            key={uid}
+                            title={name}
+                            className="inline-flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white text-[10px] font-bold text-white dark:border-neutral-900"
+                            style={{ background: colors[i % colors.length] }}
+                        >
+                            {avatar ? (
+                                <img
+                                    src={avatar}
+                                    alt={name}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <span>{initial}</span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            {overflow > 0 && (
+                <span className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-neutral-700 dark:text-gray-300">
+                    +{overflow}
+                </span>
+            )}
+        </div>
+    );
 }
 
 export function CustomCardPin({
@@ -44,6 +109,8 @@ export function CustomCardPin({
   files = [],
   files_download_url,
   isPinned = false,
+  assignees,
+  users = [],
   onPinClick,
   onViewClick,
   className = '',
@@ -89,6 +156,8 @@ export function CustomCardPin({
         {renderTextWithLinks(description)}
       </div>
 
+
+
       {/* Date and Time */}
       {(date || time) && (
         <div className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
@@ -127,9 +196,12 @@ export function CustomCardPin({
 
       {/* Footer */}
       <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-neutral-700 text-xs">
-        <span className="text-gray-500 dark:text-gray-400">
-          {new Date(createdAt).toLocaleDateString()} {new Date(createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-gray-500 dark:text-gray-400">
+            {new Date(createdAt).toLocaleDateString()} {new Date(createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </span>
+          <AvatarStack assignees={assignees} users={users} className="mb-0" />
+        </div>
         {onViewClick && (
           <button
             onClick={onViewClick}

@@ -8,7 +8,9 @@ import {
     ChevronRight,
     Clock,
     FileText,
+    Plus,
     User,
+    Users,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -17,6 +19,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+
+interface TaskUser {
+    id: number;
+    name: string;
+    email: string;
+    profile_picture_url?: string;
+}
 
 interface Notice {
     id: string;
@@ -35,6 +44,7 @@ interface Notice {
     } | null;
     files?: Array<{ name: string; url: string; type: string; size: number }>;
     category: string;
+    assignees?: number[] | null;
 }
 
 // Helper function to get days in a month
@@ -84,6 +94,72 @@ function getDaysUntilDeadline(date: Date): number {
     return diffDays;
 }
 
+/* ───── Avatar stack ───── */
+function AvatarStack({
+    assignees,
+    users,
+    onAdd,
+}: {
+    assignees: number[] | null;
+    users: TaskUser[];
+    onAdd?: () => void;
+}) {
+    const list = assignees ?? [];
+    if (list.length === 0 && !onAdd) return null;
+
+    const visible = list.slice(0, 6);
+    const overflow = list.length - visible.length;
+
+    const colors = ['#163832', '#1a4d3e', '#235347', '#2a6358', '#0f766e'];
+    const getUserData = (id: number | string) => users.find((u) => String(u.id) === String(id));
+
+    return (
+        <div className="flex items-center gap-1">
+            <div className="flex -space-x-2">
+                {visible.map((uid, i) => {
+                    const userData = getUserData(uid);
+                    const name = userData?.name ?? `#${uid}`;
+                    const avatar = userData?.profile_picture_url;
+                    const initial = name.charAt(0).toUpperCase();
+
+                    return (
+                        <div
+                            key={uid}
+                            title={name}
+                            className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white text-xs font-bold text-white dark:border-neutral-900"
+                            style={{ background: colors[i % colors.length] }}
+                        >
+                            {avatar ? (
+                                <img
+                                    src={avatar}
+                                    alt={name}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <span>{initial}</span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+            {overflow > 0 && (
+                <span className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-neutral-700 dark:text-gray-300">
+                    +{overflow}
+                </span>
+            )}
+            {onAdd && (
+                <button
+                    onClick={onAdd}
+                    className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 transition hover:bg-gray-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-400 dark:hover:bg-neutral-700"
+                    title="Assign member"
+                >
+                    <Plus className="h-3 w-3" />
+                </button>
+            )}
+        </div>
+    );
+}
+
 export default function AnnouncementPage() {
     interface PageProps {
         notices?: Array<{
@@ -103,11 +179,13 @@ export default function AnnouncementPage() {
             }>;
             [key: string]: unknown;
         }>;
+        users?: TaskUser[];
         [key: string]: unknown;
     }
 
     const { props } = usePage<PageProps>();
     const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
+    const users = useMemo(() => props.users ?? [], [props.users]);
 
     // Current date state for calendar navigation
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -162,6 +240,7 @@ export default function AnnouncementPage() {
                     : null,
                 files: filesArr,
                 category: n.category,
+                assignees: n.assignees ?? null,
             } as Notice;
         });
     }, [serverNotices]);
@@ -204,6 +283,7 @@ export default function AnnouncementPage() {
     const [editFiles, setEditFiles] = useState<Array<{name: string; url: string; type: string; size: number}>>([]);
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
+    const [editAssignees, setEditAssignees] = useState<number[]>([]);
 
     // Open edit dialog and populate with notice data
     function openEditDialog(notice: Notice) {
@@ -213,6 +293,7 @@ export default function AnnouncementPage() {
         setEditFiles(notice.files || []);
         setEditDate(notice.date || '');
         setEditTime(notice.time || '');
+        setEditAssignees(notice.assignees || []);
         setEditOpen(true);
     }
 
@@ -571,6 +652,18 @@ export default function AnnouncementPage() {
                                                     </button>
                                                 )}
 
+                                                {/* Assignees */}
+                                                {meeting.assignees && meeting.assignees.length > 0 && (
+                                                    <div className="mb-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                                        <Users className="h-3 w-3" />
+                                                        <span>Assigned to:</span>
+                                                        <AvatarStack 
+                                                            assignees={meeting.assignees} 
+                                                            users={users} 
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 {/* Footer */}
                                                 <div className="mt-auto flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700 text-xs">
                                                     <span className="text-gray-500 dark:text-gray-400">
@@ -790,6 +883,18 @@ export default function AnnouncementPage() {
                                     {editingNotice?.username}
                                 </div>
                             </div>
+
+                            {editAssignees && editAssignees.length > 0 && (
+                                <div className="md:col-span-2">
+                                    <label className="text-sm font-medium">Assignees</label>
+                                    <div className="mt-1 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:bg-neutral-950">
+                                        <AvatarStack 
+                                            assignees={editAssignees} 
+                                            users={users} 
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             {editFiles.length > 0 && (
                                 <div className="md:col-span-2">

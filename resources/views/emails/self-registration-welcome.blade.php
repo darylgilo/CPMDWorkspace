@@ -1,5 +1,5 @@
 @component('mail::message')
-# Welcome to CPMD System
+# Welcome to CPMD Workspace
 
 Dear **{{ $user->name }}**,
 

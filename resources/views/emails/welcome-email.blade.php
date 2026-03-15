@@ -1,9 +1,9 @@
 @component('mail::message')
-# Welcome to CPMDWorkspace
+# Welcome to CPMD Workspace
 
 Dear **{{ $user->name }}**,
 
-Welcome to CPMDWorkspace! Your account has been successfully created.
+Welcome to CPMD Workspace! Your account has been successfully created.
 
 ## Your Account Details
 

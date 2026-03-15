@@ -80,7 +80,12 @@ class TaskboardController extends Controller
         ];
 
         // Get all users for assignee picker
-        $users = User::select('id', 'name', 'profile_picture')
+        $users = User::where(function ($query) {
+                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+            })
+            ->where('status', 'active')
+            ->whereNotNull('email_verified_at')
+            ->select('id', 'name', 'profile_picture')
             ->orderBy('name')
             ->get()
             ->map(fn($u) => [
