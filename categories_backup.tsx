@@ -19,12 +19,12 @@ import {
 } from '@/components/ui/select';
 import { renderTextWithLinks } from '@/lib/text-utils';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import ReactSelect from 'react-select';
 import {
     AlertCircle,
     Bell,
     Calendar,
     Megaphone,
+    Plus,
     RotateCcw,
     Trash2,
 } from 'lucide-react';
@@ -45,7 +45,6 @@ interface Notice {
     createdAt: string;
     date?: string | null;
     time?: string | null;
-    assignees?: number[] | null;
     files_download_url?: string | null;
     file?: {
         name: string;
@@ -102,6 +101,61 @@ const generateTimeOptions = (): string[] => {
 
 const timeOptions = generateTimeOptions();
 
+/* ───── Avatar stack ───── */
+function AvatarStack({
+    assignees,
+    users,
+    onAdd,
+}: {
+    assignees: number[] | null;
+    users: TaskUser[];
+    onAdd?: () => void;
+}) {
+    const list = assignees ?? [];
+    const visible = list.slice(0, 6);
+    const overflow = list.length - visible.length;
+
+    const colors = ['#163832', '#1a4d3e', '#235347', '#2a6358', '#0f766e'];
+    const getUserData = (id: number) => users.find((u) => u.id === id);
+
+    return (
+        <div className="flex items-center gap-1">
+            <div className="flex -space-x-2">
+                {visible.map((uid, i) => {
+                    const userData = getUserData(uid);
+                    const name = userData?.name ?? `#${uid}`;
+                    const initial = name.charAt(0).toUpperCase();
+
+                    return (
+                        <div
+                            key={uid}
+                            title={name}
+                            className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border-2 border-white text-xs font-bold text-white dark:border-neutral-900"
+                            style={{ background: colors[i % colors.length] }}
+                        >
+                            <span>{initial}</span>
+                        </div>
+                    );
+                })}
+            </div>
+            {overflow > 0 && (
+                <span className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 dark:bg-neutral-700 dark:text-gray-300">
+                    +{overflow}
+                </span>
+            )}
+            {onAdd && (
+                <button
+                    onClick={onAdd}
+                    className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 transition hover:bg-gray-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-400 dark:hover:bg-neutral-700"
+                    title="Assign member"
+                >
+                    <Plus className="h-3 w-3" />
+                </button>
+            )}
+        </div>
+    );
+}
+
 // Convert 12-hour format (e.g., "2:30 PM") to 24-hour format (e.g., "14:30")
 function convertTo24Hour(time12h: string): string {
     if (!time12h) return '';
@@ -136,7 +190,6 @@ interface ServerNotice {
     created_at: string;
     date?: string | null;
     time?: string | null;
-    assignees?: number[] | null;
     files_download_url?: string | null;
     files?: Array<{
         name?: string;
@@ -152,9 +205,15 @@ interface ServerNotice {
     [key: string]: unknown;
 }
 
+interface TaskUser {
+    id: number;
+    name: string;
+    email: string;
+}
+
 interface PageProps {
     notices?: ServerNotice[];
-    users?: { id: number; name: string; email: string; profile_picture_url?: string }[];
+    users?: TaskUser[];
     [key: string]: unknown;
 }
 
@@ -162,10 +221,6 @@ export default function CategoriesPage() {
     const { props } = usePage<PageProps>();
     const serverNotices = useMemo(() => props.notices ?? [], [props.notices]);
     const users = useMemo(() => props.users ?? [], [props.users]);
-    const assigneeOptions = useMemo(
-        () => users.map((u) => ({ value: u.id, label: u.name })),
-        [users]
-    );
 
     // Initialize popup alert hook
     const { showSuccess, showError, showDeleted } = usePopupAlert();
@@ -190,7 +245,6 @@ export default function CategoriesPage() {
     const [editFiles, setEditFiles] = useState<File[]>([]);
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState(''); // Stores 12-hour format for display
-    const [editAssignees, setEditAssignees] = useState<number[]>([]);
     const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
     const [filterCategory, setFilterCategory] = useState<'All' | Category>(
@@ -238,19 +292,6 @@ export default function CategoriesPage() {
         };
     }, []);
 
-    // Clear assignees if category changes to Announcement or Notice of Event
-    useEffect(() => {
-        if (category !== 'Notice of Meeting' && category !== 'Reminder/Deadline') {
-            setAssignees([]);
-        }
-    }, [category]);
-
-    useEffect(() => {
-        if (editCategory !== 'Notice of Meeting' && editCategory !== 'Reminder/Deadline') {
-            setEditAssignees([]);
-        }
-    }, [editCategory]);
-
     // Open edit dialog and populate with notice data (starts in read-only mode)
     function openEditDialog(notice: Notice) {
         setEditingNotice(notice);
@@ -260,7 +301,6 @@ export default function CategoriesPage() {
         setEditFiles([]);
         setEditDate(notice.date || '');
         setEditTime(notice.time ? convertTo12Hour(notice.time) : '');
-        setEditAssignees(notice.assignees || []);
         if (editFileInputRef.current) editFileInputRef.current.value = '';
         setIsEditMode(false); // Start in read-only mode
         setEditOpen(true);
@@ -286,7 +326,6 @@ export default function CategoriesPage() {
                 createdAt: n.created_at,
                 date: n.date ?? null,
                 time: n.time ?? null,
-                assignees: (n.assignees as number[]) ?? null,
                 files_download_url: n.files_download_url ?? null,
                 file: n.file_url
                     ? {
@@ -430,7 +469,7 @@ export default function CategoriesPage() {
         files: [] as File[],
         date: '',
         time: '',
-        assignees: [] as number[],
+        assignees: [],
     });
 
     // Inertia form for updating a notice
@@ -441,7 +480,7 @@ export default function CategoriesPage() {
         files: [] as File[],
         date: '',
         time: '',
-        assignees: [] as number[],
+        assignees: [],
     });
 
     // Submit create-notice request with FormData (supports multi-file)
@@ -496,7 +535,6 @@ export default function CategoriesPage() {
         setEditFiles([]);
         setEditDate('');
         setEditTime('');
-        setEditAssignees([]);
         setIsEditMode(false);
         if (editFileInputRef.current) editFileInputRef.current.value = '';
     }
@@ -514,7 +552,6 @@ export default function CategoriesPage() {
             files: editFiles,
             date: editDate,
             time: convertTo24Hour(editTime), // Convert to 24-hour format for backend
-            assignees: editAssignees,
         }));
 
         // Submit the update (using POST with _method=PUT or PATCH)
@@ -679,69 +716,6 @@ export default function CategoriesPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-                                    {(category === 'Notice of Meeting' || category === 'Reminder/Deadline') && (
-                                        <div className="flex flex-col gap-2 md:col-span-2">
-                                            <label className="text-sm font-medium text-gray-900 dark:text-white">
-                                                Assignees
-                                            </label>
-                                            <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
-                                                <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                                    {users.length > 0 && (
-                                                        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={users.length > 0 && users.every((u) => assignees.some((id) => String(id) === String(u.id)))}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setAssignees(users.map((u) => u.id));
-                                                                    } else {
-                                                                        setAssignees([]);
-                                                                    }
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <span>Select All</span>
-                                                        </label>
-                                                    )}
-                                                    {users.map((u) => (
-                                                        <label
-                                                            key={u.id}
-                                                            className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={assignees.some((id) => String(id) === String(u.id))}
-                                                                onChange={(e) => {
-                                                                    const next = e.target.checked
-                                                                        ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
-                                                                        : assignees.filter((id) => String(id) !== String(u.id));
-                                                                    setAssignees(next);
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <div 
-                                                                className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                                title={u.name}
-                                                            >
-                                                                {u.profile_picture_url ? (
-                                                                    <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    <span>{u.name.charAt(0).toUpperCase()}</span>
-                                                                )}
-                                                            </div>
-                                                            <span>{u.name}</span>
-                                                        </label>
-                                                    ))}
-                                                    {users.length === 0 && (
-                                                        <span className="text-xs text-gray-400">
-                                                            No users available.
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     <div className="flex flex-col gap-2 md:col-span-2">
                                         <label className="text-sm font-medium text-gray-900 dark:text-white">
@@ -971,69 +945,6 @@ export default function CategoriesPage() {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-                                    {(category === 'Notice of Meeting' || category === 'Reminder/Deadline') && (
-                                        <div className="flex flex-col gap-2 md:col-span-2">
-                                            <label className="text-sm font-medium text-gray-900 dark:text-white">
-                                                Assignees
-                                            </label>
-                                            <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
-                                                <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                                    {users.length > 0 && (
-                                                        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={users.length > 0 && users.every((u) => assignees.some((id) => String(id) === String(u.id)))}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setAssignees(users.map((u) => u.id));
-                                                                    } else {
-                                                                        setAssignees([]);
-                                                                    }
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <span>Select All</span>
-                                                        </label>
-                                                    )}
-                                                    {users.map((u) => (
-                                                        <label
-                                                            key={u.id}
-                                                            className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={assignees.some((id) => String(id) === String(u.id))}
-                                                                onChange={(e) => {
-                                                                    const next = e.target.checked
-                                                                        ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
-                                                                        : assignees.filter((id) => String(id) !== String(u.id));
-                                                                    setAssignees(next);
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <div 
-                                                                className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                                title={u.name}
-                                                            >
-                                                                {u.profile_picture_url ? (
-                                                                    <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    <span>{u.name.charAt(0).toUpperCase()}</span>
-                                                                )}
-                                                            </div>
-                                                            <span>{u.name}</span>
-                                                        </label>
-                                                    ))}
-                                                    {users.length === 0 && (
-                                                        <span className="text-xs text-gray-400">
-                                                            No users available.
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     <div className="flex flex-col gap-2 md:col-span-2">
                                         <label className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1315,71 +1226,6 @@ export default function CategoriesPage() {
                                 </Select>
                             </div>
 
-                            {(editCategory === 'Notice of Meeting' || editCategory === 'Reminder/Deadline') && (
-                                <div className="flex flex-col gap-2 md:col-span-2">
-                                    <label className="text-sm font-medium">
-                                        Assignees
-                                    </label>
-                                    <div className={`flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700 bg-white dark:bg-neutral-950 ${!isEditMode ? 'opacity-50 pointer-events-none' : ''}`}>
-                                        <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                            {users.length > 0 && (
-                                                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                    <input
-                                                        type="checkbox"
-                                                        disabled={!isEditMode}
-                                                        checked={users.length > 0 && users.every((u) => editAssignees.some((id) => String(id) === String(u.id)))}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setEditAssignees(users.map((u) => u.id));
-                                                            } else {
-                                                                setEditAssignees([]);
-                                                            }
-                                                        }}
-                                                        className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                    />
-                                                    <span>Select All</span>
-                                                </label>
-                                            )}
-                                            {users.map((u) => (
-                                                <label
-                                                    key={u.id}
-                                                    className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        disabled={!isEditMode}
-                                                        checked={editAssignees.some((id) => String(id) === String(u.id))}
-                                                        onChange={(e) => {
-                                                            const next = e.target.checked
-                                                                ? (editAssignees.some((id) => String(id) === String(u.id)) ? editAssignees : [...editAssignees, u.id])
-                                                                : editAssignees.filter((id) => String(id) !== String(u.id));
-                                                            setEditAssignees(next);
-                                                        }}
-                                                        className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                    />
-                                                    <div 
-                                                        className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                        title={u.name}
-                                                    >
-                                                        {u.profile_picture_url ? (
-                                                            <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                        ) : (
-                                                            <span>{u.name.charAt(0).toUpperCase()}</span>
-                                                        )}
-                                                    </div>
-                                                    <span>{u.name}</span>
-                                                </label>
-                                            ))}
-                                            {users.length === 0 && (
-                                                <span className="text-xs text-gray-400">
-                                                    No users available.
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Show existing files if any */}
                             {editingNotice && (
                                 <div className="flex flex-col gap-2 md:col-span-2">
@@ -1535,8 +1381,6 @@ export default function CategoriesPage() {
                                 createdAt={n.createdAt}
                                 date={n.date}
                                 time={n.time}
-                                assignees={n.assignees}
-                                users={users}
                                 files={n.files || (n.file ? [n.file] : [])}
                                 files_download_url={n.files_download_url}
                                 isPinned={pinnedNotices.has(n.id)}

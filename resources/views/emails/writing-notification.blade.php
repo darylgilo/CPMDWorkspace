@@ -1,7 +1,7 @@
 @component('mail::message')
 # Writeup Ready for Review
 
-Hello CPMD,
+Hello,
 
 A new writeup has been submitted for review.
 
@@ -18,5 +18,6 @@ Review Document
 @endcomponent
 
 Thanks,<br>
+
 {{ config('app.name') }}
 @endcomponent

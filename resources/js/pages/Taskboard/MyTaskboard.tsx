@@ -185,7 +185,7 @@ function AvatarStack({
     const overflow = (assignees?.length ?? 0) - list.length;
     const colors = ['#163832', '#1a4d3e', '#235347', '#2a6358'];
 
-    const getUserData = (id: number) => users.find((u) => u.id === id);
+    const getUserData = (id: number | string) => users.find((u) => String(u.id) === String(id));
 
     return (
         <div className="flex items-center gap-1">
@@ -422,6 +422,23 @@ export default function MyTaskboard() {
                         </label>
                         <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
                             <div className="max-h-[160px] space-y-2 overflow-y-auto">
+                                {users.length > 0 && (
+                                    <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
+                                        <input
+                                            type="checkbox"
+                                            checked={users.length > 0 && users.every((u) => selected.some((id) => String(id) === String(u.id)))}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    onChange?.(users.map((u) => u.id).join(','));
+                                                } else {
+                                                    onChange?.('');
+                                                }
+                                            }}
+                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                        />
+                                        <span>Select All</span>
+                                    </label>
+                                )}
                                 {users.map((u) => (
                                     <label
                                         key={u.id}
@@ -429,20 +446,31 @@ export default function MyTaskboard() {
                                     >
                                         <input
                                             type="checkbox"
-                                            checked={selected.includes(
-                                                u.id.toString(),
-                                            )}
+                                            checked={selected.some((id) => String(id) === String(u.id))}
                                             onChange={(e) => {
                                                 const idStr = u.id.toString();
+                                                const alreadyExists = selected.some((id) => String(id) === idStr);
                                                 const next = e.target.checked
-                                                    ? [...selected, idStr]
-                                                    : selected.filter(
-                                                          (id) => id !== idStr,
-                                                      );
+                                                    ? (alreadyExists ? selected : [...selected, idStr])
+                                                    : selected.filter((id) => String(id) !== idStr);
                                                 onChange?.(next.join(','));
                                             }}
                                             className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
                                         />
+                                        <div 
+                                            className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
+                                            title={u.name}
+                                        >
+                                            {u.profile_picture_url || u.avatar ? (
+                                                <img 
+                                                    src={(u.profile_picture_url || u.avatar) as string} 
+                                                    alt={u.name} 
+                                                    className="h-full w-full object-cover" 
+                                                />
+                                            ) : (
+                                                <span>{u.name.charAt(0).toUpperCase()}</span>
+                                            )}
+                                        </div>
                                         <span>{u.name}</span>
                                     </label>
                                 ))}

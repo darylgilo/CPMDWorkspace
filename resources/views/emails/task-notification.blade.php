@@ -26,5 +26,6 @@ View Taskboard
 @endcomponent
 
 Thanks,<br>
+
 {{ config('app.name') }}
 @endcomponent

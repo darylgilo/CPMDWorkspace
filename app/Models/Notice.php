@@ -21,14 +21,21 @@ class Notice extends Model
         'files',
         'date',
         'time',
+        'assignees',
     ];
 
     protected $casts = [
         'files' => 'array',
+        'assignees' => 'array',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assigneeUsers()
+    {
+        return $this->belongsToMany(User::class, 'notice_assignees', 'notice_id', 'user_id');
     }
 }
