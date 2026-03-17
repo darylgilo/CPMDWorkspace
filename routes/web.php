@@ -21,6 +21,9 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// Public Share Route for Posted Documents
+Route::get('/share/document/{document}', [WritingController::class, 'postedView'])->name('documents.share');
+
 
 // Dashboard route for all authenticated and verified users
 Route::middleware(['auth', 'verified'])->group(function () {
