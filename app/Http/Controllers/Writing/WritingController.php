@@ -342,6 +342,13 @@ class WritingController extends Controller
      */
     public function postedView(Document $document)
     {
+        // For security, only documents with 'posted' status can be viewed through this route
+        if ($document->status !== 'posted') {
+            abort(403, 'This document is not available for public viewing.');
+        }
+
+        $document->load(['user', 'images']);
+        
         return Inertia::render('Writing/PostedView', [
             'document' => [
                 'id' => $document->id,
@@ -355,7 +362,20 @@ class WritingController extends Controller
                     'id' => $document->user->id,
                     'name' => $document->user->name,
                     'email' => $document->user->email,
+                    'profile_picture' => $document->user->profile_picture,
                 ],
+                'images' => $document->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image_path' => $image->image_path,
+                        'image_name' => $image->image_name,
+                        'file_size' => $image->file_size,
+                        'mime_type' => $image->mime_type,
+                        'sort_order' => $image->sort_order,
+                        'url' => $image->url,
+                        'thumbnail_url' => $image->thumbnail_url,
+                    ];
+                }),
             ],
         ]);
     }

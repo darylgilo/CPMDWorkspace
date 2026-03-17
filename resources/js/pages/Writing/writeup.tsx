@@ -504,12 +504,12 @@ export default function Writeup() {
     const sortedDocuments = useMemo(() => {
         if (!documents?.data) return [];
 
-        // Filter out draft and posted documents
-        const nonDraftDocuments = documents.data.filter(
-            (doc) => doc.status !== 'draft' && doc.status !== 'posted',
+        // Only show documents that are in review
+        const inReviewDocuments = documents.data.filter(
+            (doc) => doc.status === 'for review',
         );
 
-        return [...nonDraftDocuments].sort((a, b) => {
+        return [...inReviewDocuments].sort((a, b) => {
             let aValue = a[sortField as keyof Document];
             let bValue = b[sortField as keyof Document];
 

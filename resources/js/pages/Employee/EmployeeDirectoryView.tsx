@@ -1,7 +1,9 @@
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { type PageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
 
 interface User {
     id: number;
@@ -73,6 +75,17 @@ export default function EmployeeDirectoryView() {
             <Head title={user?.name ? `${user.name} • Employee` : 'Employee'} />
 
             <div className="p-4">
+                {/* Back Button */}
+                <div className="mb-4 text-left">
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.get('/directory')}
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back
+                    </Button>
+                </div>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
                     {/* Left: profile summary card */}
                     <div className="rounded-xl border border-gray-200 bg-white p-6 lg:col-span-1 dark:border-neutral-800 dark:bg-neutral-900">
@@ -262,17 +275,6 @@ export default function EmployeeDirectoryView() {
                                     {user?.contact_number || '—'}
                                 </div>
                             </div>
-                        </div>
-                        <div className="py-6">
-                            <Separator className="bg-gray-200 dark:bg-neutral-700" />
-                        </div>
-                        <div className="pt-2">
-                            <button
-                                onClick={() => router.get('/directory')}
-                                className="inline-flex w-fit max-w-fit shrink-0 items-center gap-2 rounded-md bg-[#163832] px-3 py-2 whitespace-nowrap text-white hover:bg-[#163832]/90 sm:self-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
-                            >
-                                Back to directory
-                            </button>
                         </div>
                     </div>
                 </div>
