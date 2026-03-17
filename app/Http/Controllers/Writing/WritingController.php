@@ -4,12 +4,18 @@ namespace App\Http\Controllers\Writing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\DocumentImage;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WritingNotification;
 use App\Jobs\SendWritingEmailJob;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class WritingController extends Controller
 {
@@ -98,7 +104,7 @@ class WritingController extends Controller
         }
 
         // Build query for writeup tab
-        $query = Document::with(['user', 'histories.user', 'comments.user', 'approvedBy', 'approvals', 'likes', 'bookmarks']);
+        $query = Document::with(['user', 'histories.user', 'comments.user', 'approvedBy', 'approvals', 'likes', 'bookmarks', 'images']);
 
         // Apply search
         if ($search) {
@@ -171,6 +177,18 @@ class WritingController extends Controller
                             'profile_picture' => $comment->user->profile_picture,
                         ],
                         'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
+                    ];
+                }),
+                'images' => $document->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image_path' => $image->image_path,
+                        'image_name' => $image->image_name,
+                        'file_size' => $image->file_size,
+                        'mime_type' => $image->mime_type,
+                        'sort_order' => $image->sort_order,
+                        'url' => $image->url,
+                        'thumbnail_url' => $image->thumbnail_url,
                     ];
                 }),
             ];
@@ -266,7 +284,7 @@ class WritingController extends Controller
      */
     public function edit(Request $request, $id)
     {
-        $document = Document::with(['user', 'histories.user'])->find($id);
+        $document = Document::with(['user', 'histories.user', 'images'])->find($id);
         
         if (!$document) {
             abort(404, 'Document not found');
@@ -302,6 +320,18 @@ class WritingController extends Controller
                         'created_at' => $history->created_at->format('Y-m-d H:i:s'),
                     ];
                 }),
+                'images' => $document->images->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image_path' => $image->image_path,
+                        'image_name' => $image->image_name,
+                        'file_size' => $image->file_size,
+                        'mime_type' => $image->mime_type,
+                        'sort_order' => $image->sort_order,
+                        'url' => $image->url,
+                        'thumbnail_url' => $image->thumbnail_url,
+                    ];
+                }),
             ],
             'tab' => $tab,
         ]);
@@ -335,12 +365,20 @@ class WritingController extends Controller
      */
     public function store(Request $request)
     {
+        \Log::info('Document store method called');
+        \Log::info('Request data: ' . json_encode($request->all()));
+        \Log::info('Request files: ' . json_encode($request->allFiles()));
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => 'required|in:posting,travel_report',
             'status' => 'required|in:draft,for review,approved,rejected,posted',
+            'images' => 'array|max:15', // Max 15 images
+            'images.*' => 'file|image|max:30720', // Max 30MB per image
         ]);
+
+        \Log::info('Validation passed');
 
         $document = Document::create([
             'user_id' => auth()->id(),
@@ -350,10 +388,37 @@ class WritingController extends Controller
             'status' => $validated['status'],
         ]);
 
+        \Log::info('Document created with ID: ' . $document->id);
+
+        // Handle image uploads
+        if ($request->hasFile('images')) {
+            \Log::info('Images found in request');
+            \Log::info('Image count: ' . count($request->file('images')));
+            
+            foreach ($request->file('images') as $index => $image) {
+                \Log::info('Processing image ' . $index . ': ' . $image->getClientOriginalName());
+                $path = $image->store('document-images', 'public');
+                
+                DocumentImage::create([
+                    'document_id' => $document->id,
+                    'image_path' => $path,
+                    'image_name' => $image->getClientOriginalName(),
+                    'file_size' => $image->getSize(),
+                    'mime_type' => $image->getMimeType(),
+                    'sort_order' => $index,
+                ]);
+                
+                \Log::info('Image ' . $index . ' saved at: ' . $path);
+            }
+        } else {
+            \Log::info('No images found in request');
+        }
+
         if ($document->status === 'for review') {
             SendWritingEmailJob::dispatch($document);
         }
 
+        \Log::info('Document store method completed successfully');
         return redirect('/writing')->with('success', 'Document created successfully!');
     }
 
@@ -366,11 +431,18 @@ class WritingController extends Controller
         if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
             abort(403, 'Unauthorized action.');
         }
+        
+        // Get existing image count
+        $existingImageCount = $document->images()->count();
+        $maxNewImages = max(0, 15 - $existingImageCount);
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => 'required|in:posting,travel_report',
             'status' => 'required|in:draft,for review,approved,rejected,posted',
+            'images' => $maxNewImages > 0 ? "array|max:{$maxNewImages}" : 'array|max:0', // Dynamic max based on existing images
+            'images.*' => 'file|image|max:30720', // Max 30MB per image
         ]);
 
         $document->update([
@@ -380,6 +452,32 @@ class WritingController extends Controller
             'status' => $validated['status'],
         ]);
 
+        // Handle new image uploads
+        if ($request->hasFile('images')) {
+            \Log::info('Images received in update method');
+            \Log::info('Image count: ' . count($request->file('images')));
+            
+            // Get current max sort order
+            $maxSortOrder = $document->images()->max('sort_order') ?? 0;
+            
+            foreach ($request->file('images') as $index => $image) {
+                \Log::info('Processing image: ' . $index);
+                $path = $image->store('document-images', 'public');
+                
+                DocumentImage::create([
+                    'document_id' => $document->id,
+                    'image_path' => $path,
+                    'image_name' => $image->getClientOriginalName(),
+                    'file_size' => $image->getSize(),
+                    'mime_type' => $image->getMimeType(),
+                    'sort_order' => $maxSortOrder + $index + 1,
+                ]);
+            }
+        } else {
+            \Log::info('No images received in update method');
+            \Log::info('Request data: ' . json_encode($request->all()));
+        }
+
         if ($document->wasChanged('status') && $document->status === 'for review') {
             SendWritingEmailJob::dispatch($document);
         }
@@ -388,6 +486,34 @@ class WritingController extends Controller
         $tab = $request->input('tab', 'writeup');
         
         return redirect("/writing?tab={$tab}")->with('success', 'Document updated successfully!');
+    }
+
+    /**
+     * Delete an image from a document.
+     */
+    public function deleteImage(Request $request, Document $document, DocumentImage $image)
+    {
+        // Check if user owns the document or is an admin/superadmin
+        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Check if the image belongs to the document
+        if ($image->document_id !== $document->id) {
+            abort(404, 'Image not found.');
+        }
+
+        // Delete the file from storage
+        Storage::disk('public')->delete($image->image_path);
+
+        // Delete the database record
+        $image->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Image deleted successfully']);
+        }
+
+        return redirect()->back()->with('success', 'Image deleted successfully');
     }
 
     /**

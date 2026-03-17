@@ -77,6 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/documents/{document}/like', [WritingController::class, 'like'])->name('documents.like');
         Route::post('/documents/{document}/bookmark', [WritingController::class, 'bookmark'])->name('documents.bookmark');
         Route::put('/documents/{document}/status', [WritingController::class, 'updateStatus'])->name('documents.updateStatus');
+        Route::delete('/documents/{document}/images/{image}', [WritingController::class, 'deleteImage'])->name('documents.images.delete');
         
         // Comments
         Route::get('/documents/{document}/comments', [CommentController::class, 'index'])->name('comments.index');
