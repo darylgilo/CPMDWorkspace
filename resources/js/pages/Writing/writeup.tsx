@@ -1,5 +1,6 @@
 import CustomPagination from '@/components/CustomPagination';
 import FormDialog, { type FormField } from '@/components/FormDialog';
+import ImageModal from '@/components/ImageModal';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,7 @@ import {
     Share2,
     Trash2,
     User,
+    X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -46,6 +48,17 @@ interface Comment {
         profile_picture?: string;
     };
     created_at: string;
+}
+
+interface DocumentImage {
+    id: number;
+    image_path: string;
+    image_name: string;
+    file_size: number;
+    mime_type: string;
+    sort_order: number;
+    url: string;
+    thumbnail_url: string;
 }
 
 interface Document {
@@ -78,6 +91,7 @@ interface Document {
         created_at: string;
     }>;
     comments?: Comment[];
+    images?: DocumentImage[];
     is_bookmarked?: boolean;
 }
 
@@ -153,6 +167,16 @@ export default function Writeup() {
         Record<number, string>
     >({});
 
+    // Image handling state
+    const [selectedImages, setSelectedImages] = useState<FileList | null>(null);
+    const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+    const [likedImages, setLikedImages] = useState<Set<number>>(new Set());
+
+    // Image modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalImages, setModalImages] = useState<DocumentImage[]>([]);
+    const [modalInitialIndex, setModalInitialIndex] = useState(0);
+
     // Profile picture helper functions
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
 
@@ -172,6 +196,131 @@ export default function Writeup() {
         setBrokenImages((prev) => new Set(prev).add(key));
     };
 
+    // Image handling functions
+    const handleImageChange = (name: string, files: FileList) => {
+        // Create a new FileList that combines existing and new files
+        const existingFiles = Array.from(selectedImages || []);
+        const newFiles = Array.from(files);
+        
+        // Check for duplicates based on file name and size
+        const duplicateFiles = newFiles.filter(newFile => 
+            existingFiles.some(existingFile => 
+                existingFile.name === newFile.name && existingFile.size === newFile.size
+            )
+        );
+        
+        if (duplicateFiles.length > 0) {
+            showError(
+                'Duplicate Files',
+                `${duplicateFiles.length} file(s) already selected. Duplicates will be skipped.`
+            );
+            // Filter out duplicates
+            const uniqueNewFiles = newFiles.filter(newFile => 
+                !existingFiles.some(existingFile => 
+                    existingFile.name === newFile.name && existingFile.size === newFile.size
+                )
+            );
+            
+            if (uniqueNewFiles.length === 0) {
+                return; // No new unique files to add
+            }
+            
+            const allFiles = [...existingFiles, ...uniqueNewFiles];
+            
+            // Create a new FileList object
+            const dt = new DataTransfer();
+            allFiles.forEach(file => dt.items.add(file));
+            setSelectedImages(dt.files);
+            
+            // Create preview URLs for all files
+            const urls: string[] = [];
+            for (let i = 0; i < dt.files.length; i++) {
+                urls.push(URL.createObjectURL(dt.files[i]));
+            }
+            setImagePreviewUrls(urls);
+            
+            return;
+        }
+        
+        const allFiles = [...existingFiles, ...newFiles];
+        
+        // Check max files limit
+        if (allFiles.length > 15) {
+            showError(
+                'Too Many Files',
+                `Maximum 15 files allowed. You have ${allFiles.length} files selected.`
+            );
+            return;
+        }
+        
+        // Create a new FileList object
+        const dt = new DataTransfer();
+        allFiles.forEach(file => dt.items.add(file));
+        setSelectedImages(dt.files);
+        
+        // Create preview URLs for all files
+        const urls: string[] = [];
+        for (let i = 0; i < dt.files.length; i++) {
+            urls.push(URL.createObjectURL(dt.files[i]));
+        }
+        setImagePreviewUrls(urls);
+    };
+
+    const clearImagePreviews = () => {
+        setSelectedImages(null);
+        setImagePreviewUrls([]);
+        setLikedImages(new Set());
+    };
+
+    const handleRemoveImage = (index: number) => {
+        const newUrls = imagePreviewUrls.filter((_, i) => i !== index);
+        const newFiles = Array.from(selectedImages || []).filter((_, i) => i !== index);
+        
+        setImagePreviewUrls(newUrls);
+        
+        // Update liked images set
+        const newLikedImages = new Set<number>();
+        likedImages.forEach((likedIndex) => {
+            if (likedIndex < index) {
+                newLikedImages.add(likedIndex);
+            } else if (likedIndex > index) {
+                newLikedImages.add(likedIndex - 1);
+            }
+        });
+        setLikedImages(newLikedImages);
+        
+        if (newFiles.length > 0) {
+            const dt = new DataTransfer();
+            newFiles.forEach(file => dt.items.add(file));
+            setSelectedImages(dt.files);
+        } else {
+            setSelectedImages(null);
+        }
+    };
+
+    const handleToggleImageLike = (index: number) => {
+        const newLikedImages = new Set(likedImages);
+        if (newLikedImages.has(index)) {
+            newLikedImages.delete(index);
+        } else {
+            newLikedImages.add(index);
+        }
+        setLikedImages(newLikedImages);
+    };
+
+    const handleOpenImageModal = (images: DocumentImage[], index: number) => {
+        setModalImages(images);
+        setModalInitialIndex(index);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setModalImages([]);
+        setModalInitialIndex(0);
+    };
+
+    
     // Form field configuration for documents
     const documentFormFields: FormField[] = [
         {
@@ -194,6 +343,15 @@ export default function Writeup() {
                     placeholder="Enter document content"
                 />
             ),
+        },
+        {
+            name: 'images',
+            label: 'Images',
+            type: 'file',
+            multiple: true,
+            accept: 'image/*',
+            maxFiles: 15,
+            required: false,
         },
         {
             name: 'category',
@@ -234,6 +392,7 @@ export default function Writeup() {
             category: 'posting',
             status: 'draft',
         });
+        clearImagePreviews();
     };
 
     const handleAdd = () => {
@@ -254,7 +413,7 @@ export default function Writeup() {
                         'Document has been successfully removed.',
                     );
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Delete Failed',
                         'Unable to delete document. Please try again.',
@@ -267,7 +426,31 @@ export default function Writeup() {
     const handleSubmitAdd = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        router.post('/documents', formData, {
+        
+        // Create FormData for file upload
+        const data = new FormData();
+        data.append('title', formData.title);
+        data.append('content', formData.content);
+        data.append('category', formData.category);
+        data.append('status', formData.status);
+        
+        // Add images if selected
+        if (selectedImages) {
+            console.log('Selected images count:', selectedImages.length);
+            console.log('Selected images:', selectedImages);
+            for (let i = 0; i < selectedImages.length; i++) {
+                console.log(`Appending image ${i}:`, selectedImages[i].name);
+                data.append('images[]', selectedImages[i]);
+            }
+            
+            // Debug FormData contents
+            console.log('FormData entries:');
+            for (let [key, value] of data.entries()) {
+                console.log(key, value);
+            }
+        }
+        
+        router.post('/documents', data, {
             onSuccess: () => {
                 showSuccess(
                     'Document Added',
@@ -289,6 +472,7 @@ export default function Writeup() {
                 );
             },
             onError: (errors) => {
+                console.error('Form submission errors:', errors);
                 showError(
                     'Add Failed',
                     'Unable to create document. Please try again.',
@@ -411,12 +595,12 @@ export default function Writeup() {
                     // The page props will be automatically updated by Inertia
                     // No need for manual state updates or page reload
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Comment Failed',
                         'Unable to post comment. Please try again.',
                     );
-                    console.error('Error adding comment:', errors);
+                    console.error('Error adding comment');
                 },
                 preserveScroll: true,
             },
@@ -436,12 +620,12 @@ export default function Writeup() {
                     // The page props will be automatically updated by Inertia
                     // No need for manual state updates or page reload
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Like Failed',
                         'Unable to toggle like. Please try again.',
                     );
-                    console.error('Error toggling like:', errors);
+                    console.error('Error toggling like');
                 },
                 preserveScroll: true,
             },
@@ -460,12 +644,12 @@ export default function Writeup() {
                     );
                     console.log('Bookmark toggled successfully');
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Bookmark Failed',
                         'Unable to toggle bookmark. Please try again.',
                     );
-                    console.error('Error toggling bookmark:', errors);
+                    console.error('Error toggling bookmark');
                 },
                 preserveScroll: true,
             },
@@ -549,11 +733,8 @@ export default function Writeup() {
                                     onSuccess: () => {
                                         // Status updated successfully
                                     },
-                                    onError: (errors) => {
-                                        console.error(
-                                            'Error updating document status to approved:',
-                                            errors,
-                                        );
+                                    onError: () => {
+                                        console.error('Error updating document status to approved');
                                     },
                                     preserveScroll: true,
                                 },
@@ -570,11 +751,8 @@ export default function Writeup() {
                                     onSuccess: () => {
                                         // Status reverted successfully
                                     },
-                                    onError: (errors) => {
-                                        console.error(
-                                            'Error reverting document status to for review:',
-                                            errors,
-                                        );
+                                    onError: () => {
+                                        console.error('Error reverting document status to for review');
                                     },
                                     preserveScroll: true,
                                 },
@@ -582,12 +760,12 @@ export default function Writeup() {
                         }
                     }
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Approval Failed',
                         'Unable to toggle approval. Please try again.',
                     );
-                    console.error('Error toggling approval:', errors);
+                    console.error('Error toggling approval');
                 },
                 preserveScroll: true,
             },
@@ -628,12 +806,12 @@ export default function Writeup() {
                         [commentId]: '',
                     }));
                 },
-                onError: (errors) => {
+                onError: () => {
                     showError(
                         'Update Failed',
                         'Unable to update comment. Please try again.',
                     );
-                    console.error('Error updating comment:', errors);
+                    console.error('Error updating comment');
                 },
                 preserveScroll: true,
             },
@@ -928,6 +1106,125 @@ export default function Writeup() {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Images Section - Facebook Style */}
+                                {document.images && document.images.length > 0 && (
+                                    <div className="mb-4">
+                                        {(() => {
+                                            const images = document.images;
+                                            const isOwner = current_user?.id === document.author.id;
+                                            
+                                            if (images.length === 1) {
+                                                return (
+                                                    <div className="rounded-lg overflow-hidden relative group">
+                                                        <img
+                                                            src={images[0].url}
+                                                            alt={images[0].image_name}
+                                                            className="w-full max-h-96 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                            onClick={() => {
+                                                                // Open image in modal
+                                                                handleOpenImageModal(images, 0);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                            if (images.length === 2) {
+                                                return (
+                                                    <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden">
+                                                        {images.map((image) => (
+                                                            <div key={image.id} className="relative group">
+                                                                <img
+                                                                    src={image.url}
+                                                                    alt={image.image_name}
+                                                                    className="w-full h-48 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                                    onClick={() => {
+                                                                        const imageIndex = images.findIndex(img => img.id === image.id);
+                                                                        handleOpenImageModal(images, imageIndex);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            }
+                                            if (images.length === 3) {
+                                                return (
+                                                    <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden">
+                                                        <div className="relative group">
+                                                            <img
+                                                                src={images[0].url}
+                                                                alt={images[0].image_name}
+                                                                className="w-full h-48 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                                onClick={() => {
+                                                                    handleOpenImageModal(images, 0);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="grid grid-rows-2 gap-1">
+                                                            {images.slice(1).map((image) => (
+                                                                <div key={image.id} className="relative group">
+                                                                    <img
+                                                                        src={image.url}
+                                                                        alt={image.image_name}
+                                                                        className="w-full h-24 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                                        onClick={() => {
+                                                                            const imageIndex = images.findIndex(img => img.id === image.id);
+                                                                            handleOpenImageModal(images, imageIndex);
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            if (images.length >= 4) {
+                                                return (
+                                                    <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden">
+                                                        {images.slice(0, 3).map((image) => (
+                                                            <div key={image.id} className="relative group">
+                                                                <img
+                                                                    src={image.url}
+                                                                    alt={image.image_name}
+                                                                    className="w-full h-32 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                                    onClick={() => {
+                                                                        const imageIndex = images.findIndex(img => img.id === image.id);
+                                                                        handleOpenImageModal(images, imageIndex);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                        <div className="relative group">
+                                                            <img
+                                                                src={images[3].url}
+                                                                alt={images[3].image_name}
+                                                                className="w-full h-32 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                                                onClick={() => {
+                                                                    handleOpenImageModal(images, 3);
+                                                                }}
+                                                            />
+                                                            {images.length > 4 && (
+                                                                <div 
+                                                                    className="absolute inset-0 bg-black/60 flex items-center justify-center cursor-pointer transition-colors hover:bg-black/50"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleOpenImageModal(images, 3);
+                                                                    }}
+                                                                >
+                                                                    <span className="text-white text-2xl font-bold">
+                                                                        +{images.length - 4}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
+                                    </div>
+                                )}
 
                                 {/* Facebook-style Actions */}
                                 <div className="flex items-center justify-between border-t border-gray-200 pt-3 dark:border-neutral-700">
@@ -1367,12 +1664,26 @@ export default function Writeup() {
                 onSelectChange={(name, value) =>
                     setFormData((prev) => ({ ...prev, [name]: value }))
                 }
+                onFileChange={handleImageChange}
+                imagePreviewUrls={imagePreviewUrls}
+                onClearImagePreviews={clearImagePreviews}
+                onRemoveImage={handleRemoveImage}
+                onToggleImageLike={handleToggleImageLike}
+                likedImages={likedImages}
                 fields={documentFormFields}
                 title="Add New Document"
                 description="Fill in the details to add a new document."
                 submitButtonText="Add Document"
                 isLoading={isSubmitting}
                 loadingText="Adding..."
+            />
+
+            {/* Image Modal */}
+            <ImageModal
+                images={modalImages}
+                initialIndex={modalInitialIndex}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
             />
         </div>
     );

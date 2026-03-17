@@ -99,6 +99,14 @@ class Document extends Model
     }
 
     /**
+     * Get the images for this document.
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(DocumentImage::class)->orderBy('sort_order');
+    }
+
+    /**
      * Get the user who approved this document.
      */
     public function approvedBy(): BelongsTo
