@@ -15,7 +15,13 @@ use App\Http\Controllers\Writing\WritingController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\WeatherController;
 use App\Http\Controllers\Taskboard\TaskboardController;
+use App\Http\Controllers\FormHubController;
+use App\Http\Controllers\FormSubmissionController;
+use App\Http\Controllers\HelpdeskController;
 use App\Http\Middleware\RoleMiddleware;
+
+// Include form routes
+require __DIR__.'/forms.php';
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -122,6 +128,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/user-stats', [UserController::class, 'getStats'])->name('api.user-stats');
     Route::get('/api/weather', [WeatherController::class, 'getWeather'])->name('weather.get');
     Route::get('/api/my-tasks', [TaskboardController::class, 'getMyTasks'])->name('api.my-tasks');
+
+    // Request and Forms (User Side)
+    Route::get('/forms', [FormHubController::class, 'userForms'])->name('forms.index');
+    Route::get('/requests', [FormSubmissionController::class, 'index'])->name('requests.index');
+    Route::get('/requests/{submission}', [FormSubmissionController::class, 'viewSubmission'])->name('requests.show');
+
+    Route::get('/forms/{id}', [FormSubmissionController::class, 'show'])->name('forms.show');
 });
 
 // Biocon user management route, accessible to admin, superadmin, and biocon roles
@@ -191,6 +204,13 @@ Route::middleware(['auth', 'verified','role:superadmin'])->group(function () {
     Route::put('/superadmin/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::patch('/superadmin/users/{id}/status', [UserController::class, 'updateStatus'])->name('users.updateStatus');
     Route::delete('/superadmin/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+
+    // Helpdesk (Admin Side)
+    Route::get('/helpdesk', [HelpdeskController::class, 'index'])->name('helpdesk.index');
+    Route::get('/helpdesk/all-requests', [HelpdeskController::class, 'assignments'])->name('helpdesk.all-requests');
+    Route::get('/helpdesk/submission/{submission}', [FormSubmissionController::class, 'view'])->name('helpdesk.submission.show');
+    Route::patch('/helpdesk/submission/{submission}/status', [FormSubmissionController::class, 'updateStatus'])->name('helpdesk.submission.updateStatus');
+    Route::patch('/helpdesk/submission/{submission}/assignment', [HelpdeskController::class, 'updateAssignment'])->name('helpdesk.submission.updateAssignment');
 });
 
 require __DIR__.'/settings.php';

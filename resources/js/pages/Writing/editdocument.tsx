@@ -247,7 +247,7 @@ export default function EditDocument() {
             
             // Debug FormData contents
             console.log('FormData entries:');
-            for (let [key, value] of data.entries()) {
+            for (const [key, value] of data.entries()) {
                 console.log(key, value);
             }
             
