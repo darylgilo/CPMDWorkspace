@@ -125,13 +125,13 @@ const data = {
 
     navSecondary: [
         {
-            title: 'Forms and Request',
-            url: '#',
+            title: 'Request and Forms',
+            url: '/forms',
             icon: FolderSymlink,
         },
         {
             title: 'Help Desk',
-            url: '#',
+            url: '/helpdesk',
             icon: Send,
         },
     ],
@@ -194,6 +194,17 @@ export function AppSidebar(componentProps: AppSidebarProps) {
             );
     }, [auth?.user?.role]);
 
+    const filteredNavSecondary = React.useMemo(() => {
+        return data.navSecondary
+            .map((item) => {
+                if (item.title === 'Help Desk' && auth?.user?.role !== 'superadmin') {
+                    return null;
+                }
+                return item;
+            })
+            .filter(Boolean) as typeof data.navSecondary;
+    }, [auth?.user?.role]);
+
     return (
         <Sidebar variant="inset" {...componentProps}>
             <SidebarHeader>
@@ -214,8 +225,7 @@ export function AppSidebar(componentProps: AppSidebarProps) {
             <SidebarContent className="hide-scrollbar">
                 <NavMain items={data.navMain} />
                 <NavMain2 items={filteredNavMain2} />
-                {/* <NavProjects projects={data.projects} /> */}
-                <NavSecondary items={data.navSecondary} className="mt-auto" />
+                <NavSecondary items={filteredNavSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
                 <div className="block rounded-md bg-sidebar-accent md:hidden">

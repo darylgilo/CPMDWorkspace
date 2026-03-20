@@ -314,6 +314,7 @@ export default function Taskboard() {
     const [currentAllTasks, setCurrentAllTasks] = useState<Task[]>(allTasks || []);
     const [formData, setFormData] =
         useState<Record<string, string>>(defaultForm);
+    const [assigneeSearch, setAssigneeSearch] = useState('');
 
     const handleTasksUpdate = (updatedTasks: Task[]) => {
         setCurrentAllTasks(updatedTasks);
@@ -381,31 +382,46 @@ export default function Taskboard() {
             required: false,
             customRender: (v, onChange) => {
                 const selected = v ? v.split(',') : [];
+
+                // Filter users based on search
+                const filteredUsers = users.filter(user => 
+                    user.name.toLowerCase().includes(assigneeSearch.toLowerCase())
+                );
+
                 return (
                     <div className="space-y-2">
                         <label className="text-sm leading-none font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-100">
-                            Assignees
+                            Assign to
                         </label>
                         <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
+                            <div className="mb-2">
+                                <input
+                                    type="text"
+                                    placeholder="Search users..."
+                                    value={assigneeSearch}
+                                    onChange={(e) => setAssigneeSearch(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                />
+                            </div>
                             <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                {users.length > 0 && (
+                                {filteredUsers.length > 0 && (
                                     <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
                                         <input
                                             type="checkbox"
-                                            checked={users.length > 0 && users.every((u) => selected.some((id) => String(id) === String(u.id)))}
+                                            checked={filteredUsers.length > 0 && filteredUsers.every((u) => selected.some((id) => String(id) === String(u.id)))}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
-                                                    onChange?.(users.map((u) => u.id).join(','));
+                                                    onChange?.(filteredUsers.map((u) => u.id).join(','));
                                                 } else {
                                                     onChange?.('');
                                                 }
                                             }}
                                             className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
                                         />
-                                        <span>Select All</span>
+                                        <span>Select All ({filteredUsers.length})</span>
                                     </label>
                                 )}
-                                {users.map((u) => (
+                                {filteredUsers.map((u) => (
                                     <label
                                         key={u.id}
                                         className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
@@ -440,9 +456,9 @@ export default function Taskboard() {
                                         <span>{u.name}</span>
                                     </label>
                                 ))}
-                                {users.length === 0 && (
+                                {filteredUsers.length === 0 && (
                                     <span className="text-xs text-gray-400">
-                                        No users available.
+                                        No users found matching "{assigneeSearch}"
                                     </span>
                                 )}
                             </div>

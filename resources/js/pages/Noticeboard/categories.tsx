@@ -179,6 +179,7 @@ export default function CategoriesPage() {
     const [time, setTime] = useState(''); // Stores 12-hour format for display
     const [assignees, setAssignees] = useState<number[]>([]);
     const [open, setOpen] = useState(false);
+    const [assigneeSearch, setAssigneeSearch] = useState('');
 
     // Edit dialog state
     const [editOpen, setEditOpen] = useState(false);
@@ -191,6 +192,7 @@ export default function CategoriesPage() {
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState(''); // Stores 12-hour format for display
     const [editAssignees, setEditAssignees] = useState<number[]>([]);
+    const [editAssigneeSearch, setEditAssigneeSearch] = useState('');
     const editFileInputRef = useRef<HTMLInputElement | null>(null);
 
     const [filterCategory, setFilterCategory] = useState<'All' | Category>(
@@ -232,6 +234,19 @@ export default function CategoriesPage() {
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    // Reset form
+    function resetForm() {
+        setTitle('');
+        setCategory('Announcement');
+        setDescription('');
+        setFiles([]);
+        setDate('');
+        setTime('');
+        setAssignees([]);
+        setAssigneeSearch('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+
     useEffect(() => {
         return () => {
             // cleanup any object URLs created in this component (none after backend refactor)
@@ -261,6 +276,7 @@ export default function CategoriesPage() {
         setEditDate(notice.date || '');
         setEditTime(notice.time ? convertTo12Hour(notice.time) : '');
         setEditAssignees(notice.assignees || []);
+        setEditAssigneeSearch('');
         if (editFileInputRef.current) editFileInputRef.current.value = '';
         setIsEditMode(false); // Start in read-only mode
         setEditOpen(true);
@@ -399,24 +415,23 @@ export default function CategoriesPage() {
             document.body.removeChild(a);
         } catch (e) {
             console.error('Download error:', e);
-            // Final fallback - open in new tab
-            window.open(url, '_blank');
         }
     }
 
-    // Reset the create-notice form
-    function resetForm() {
-        setTitle('');
-        setCategory('Announcement');
-        setDescription('');
-        setFiles([]);
-        setDate('');
-        setTime('');
-        setAssignees([]);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    // Clear assignees if category changes to Announcement or Notice of Event
+    useEffect(() => {
+        if (category !== 'Notice of Meeting' && category !== 'Reminder/Deadline') {
+            setAssignees([]);
+        }
+    }, [category]);
 
-    // Capture multi-file input selection
+    useEffect(() => {
+        if (editCategory !== 'Notice of Meeting' && editCategory !== 'Reminder/Deadline') {
+            setEditAssignees([]);
+        }
+    }, [editCategory]);
+
+    // Handle file input change
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const list = e.target.files ? Array.from(e.target.files) : [];
         setFiles(list);
@@ -497,6 +512,7 @@ export default function CategoriesPage() {
         setEditDate('');
         setEditTime('');
         setEditAssignees([]);
+        setEditAssigneeSearch('');
         setIsEditMode(false);
         if (editFileInputRef.current) editFileInputRef.current.value = '';
     }
@@ -683,56 +699,79 @@ export default function CategoriesPage() {
                                     {(category === 'Notice of Meeting' || category === 'Reminder/Deadline') && (
                                         <div className="flex flex-col gap-2 md:col-span-2">
                                             <label className="text-sm font-medium text-gray-900 dark:text-white">
-                                                Assignees
+                                                Assign to
                                             </label>
                                             <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
+                                                <div className="mb-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search users..."
+                                                        value={assigneeSearch}
+                                                        onChange={(e) => setAssigneeSearch(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                                    />
+                                                </div>
                                                 <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                                    {users.length > 0 && (
-                                                        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={users.length > 0 && users.every((u) => assignees.some((id) => String(id) === String(u.id)))}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setAssignees(users.map((u) => u.id));
-                                                                    } else {
-                                                                        setAssignees([]);
-                                                                    }
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <span>Select All</span>
-                                                        </label>
-                                                    )}
-                                                    {users.map((u) => (
-                                                        <label
-                                                            key={u.id}
-                                                            className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={assignees.some((id) => String(id) === String(u.id))}
-                                                                onChange={(e) => {
-                                                                    const next = e.target.checked
-                                                                        ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
-                                                                        : assignees.filter((id) => String(id) !== String(u.id));
-                                                                    setAssignees(next);
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <div 
-                                                                className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                                title={u.name}
-                                                            >
-                                                                {u.profile_picture_url ? (
-                                                                    <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    <span>{u.name.charAt(0).toUpperCase()}</span>
+                                                    {(() => {
+                                                        const filteredUsers = users.filter(user => 
+                                                            user.name.toLowerCase().includes(assigneeSearch.toLowerCase())
+                                                        );
+                                                        return (
+                                                            <>
+                                                                {filteredUsers.length > 0 && (
+                                                                    <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={filteredUsers.length > 0 && filteredUsers.every((u) => assignees.some((id) => String(id) === String(u.id)))}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) {
+                                                                                    setAssignees(filteredUsers.map((u) => u.id));
+                                                                                } else {
+                                                                                    setAssignees([]);
+                                                                                }
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <span>Select All ({filteredUsers.length})</span>
+                                                                    </label>
                                                                 )}
-                                                            </div>
-                                                            <span>{u.name}</span>
-                                                        </label>
-                                                    ))}
+                                                                {filteredUsers.map((u) => (
+                                                                    <label
+                                                                        key={u.id}
+                                                                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={assignees.some((id) => String(id) === String(u.id))}
+                                                                            onChange={(e) => {
+                                                                                const next = e.target.checked
+                                                                                    ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
+                                                                                    : assignees.filter((id) => String(id) !== String(u.id));
+                                                                                setAssignees(next);
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <div 
+                                                                            className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
+                                                                            title={u.name}
+                                                                        >
+                                                                            {u.profile_picture_url ? (
+                                                                                <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
+                                                                            ) : (
+                                                                                <span>{u.name.charAt(0).toUpperCase()}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span>{u.name}</span>
+                                                                    </label>
+                                                                ))}
+                                                                {filteredUsers.length === 0 && (
+                                                                    <span className="text-xs text-gray-400">
+                                                                        No users found matching "{assigneeSearch}"
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
                                                     {users.length === 0 && (
                                                         <span className="text-xs text-gray-400">
                                                             No users available.
@@ -975,56 +1014,79 @@ export default function CategoriesPage() {
                                     {(category === 'Notice of Meeting' || category === 'Reminder/Deadline') && (
                                         <div className="flex flex-col gap-2 md:col-span-2">
                                             <label className="text-sm font-medium text-gray-900 dark:text-white">
-                                                Assignees
+                                                Assign to
                                             </label>
                                             <div className="flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700">
+                                                <div className="mb-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search users..."
+                                                        value={assigneeSearch}
+                                                        onChange={(e) => setAssigneeSearch(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                                    />
+                                                </div>
                                                 <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                                    {users.length > 0 && (
-                                                        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={users.length > 0 && users.every((u) => assignees.some((id) => String(id) === String(u.id)))}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setAssignees(users.map((u) => u.id));
-                                                                    } else {
-                                                                        setAssignees([]);
-                                                                    }
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <span>Select All</span>
-                                                        </label>
-                                                    )}
-                                                    {users.map((u) => (
-                                                        <label
-                                                            key={u.id}
-                                                            className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={assignees.some((id) => String(id) === String(u.id))}
-                                                                onChange={(e) => {
-                                                                    const next = e.target.checked
-                                                                        ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
-                                                                        : assignees.filter((id) => String(id) !== String(u.id));
-                                                                    setAssignees(next);
-                                                                }}
-                                                                className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                            />
-                                                            <div 
-                                                                className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                                title={u.name}
-                                                            >
-                                                                {u.profile_picture_url ? (
-                                                                    <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                                ) : (
-                                                                    <span>{u.name.charAt(0).toUpperCase()}</span>
+                                                    {(() => {
+                                                        const filteredUsers = users.filter(user => 
+                                                            user.name.toLowerCase().includes(assigneeSearch.toLowerCase())
+                                                        );
+                                                        return (
+                                                            <>
+                                                                {filteredUsers.length > 0 && (
+                                                                    <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={filteredUsers.length > 0 && filteredUsers.every((u) => assignees.some((id) => String(id) === String(u.id)))}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) {
+                                                                                    setAssignees(filteredUsers.map((u) => u.id));
+                                                                                } else {
+                                                                                    setAssignees([]);
+                                                                                }
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <span>Select All ({filteredUsers.length})</span>
+                                                                    </label>
                                                                 )}
-                                                            </div>
-                                                            <span>{u.name}</span>
-                                                        </label>
-                                                    ))}
+                                                                {filteredUsers.map((u) => (
+                                                                    <label
+                                                                        key={u.id}
+                                                                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={assignees.some((id) => String(id) === String(u.id))}
+                                                                            onChange={(e) => {
+                                                                                const next = e.target.checked
+                                                                                    ? (assignees.some((id) => String(id) === String(u.id)) ? assignees : [...assignees, u.id])
+                                                                                    : assignees.filter((id) => String(id) !== String(u.id));
+                                                                                setAssignees(next);
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <div 
+                                                                            className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
+                                                                            title={u.name}
+                                                                        >
+                                                                            {u.profile_picture_url ? (
+                                                                                <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
+                                                                            ) : (
+                                                                                <span>{u.name.charAt(0).toUpperCase()}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span>{u.name}</span>
+                                                                    </label>
+                                                                ))}
+                                                                {filteredUsers.length === 0 && (
+                                                                    <span className="text-xs text-gray-400">
+                                                                        No users found matching "{assigneeSearch}"
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
                                                     {users.length === 0 && (
                                                         <span className="text-xs text-gray-400">
                                                             No users available.
@@ -1321,55 +1383,79 @@ export default function CategoriesPage() {
                                         Assignees
                                     </label>
                                     <div className={`flex flex-col gap-2 rounded-md border border-gray-200 p-3 dark:border-neutral-700 bg-white dark:bg-neutral-950 ${!isEditMode ? 'opacity-50 pointer-events-none' : ''}`}>
+                                        <div className="mb-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Search users..."
+                                                value={editAssigneeSearch}
+                                                onChange={(e) => setEditAssigneeSearch(e.target.value)}
+                                                disabled={!isEditMode}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                            />
+                                        </div>
                                         <div className="max-h-[160px] space-y-2 overflow-y-auto">
-                                            {users.length > 0 && (
-                                                <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
-                                                    <input
-                                                        type="checkbox"
-                                                        disabled={!isEditMode}
-                                                        checked={users.length > 0 && users.every((u) => editAssignees.some((id) => String(id) === String(u.id)))}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setEditAssignees(users.map((u) => u.id));
-                                                            } else {
-                                                                setEditAssignees([]);
-                                                            }
-                                                        }}
-                                                        className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                    />
-                                                    <span>Select All</span>
-                                                </label>
-                                            )}
-                                            {users.map((u) => (
-                                                <label
-                                                    key={u.id}
-                                                    className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        disabled={!isEditMode}
-                                                        checked={editAssignees.some((id) => String(id) === String(u.id))}
-                                                        onChange={(e) => {
-                                                            const next = e.target.checked
-                                                                ? (editAssignees.some((id) => String(id) === String(u.id)) ? editAssignees : [...editAssignees, u.id])
-                                                                : editAssignees.filter((id) => String(id) !== String(u.id));
-                                                            setEditAssignees(next);
-                                                        }}
-                                                        className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
-                                                    />
-                                                    <div 
-                                                        className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
-                                                        title={u.name}
-                                                    >
-                                                        {u.profile_picture_url ? (
-                                                            <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
-                                                        ) : (
-                                                            <span>{u.name.charAt(0).toUpperCase()}</span>
-                                                        )}
-                                                    </div>
-                                                    <span>{u.name}</span>
-                                                </label>
-                                            ))}
+                                            {(() => {
+                                                        const filteredUsers = users.filter(user => 
+                                                            user.name.toLowerCase().includes(editAssigneeSearch.toLowerCase())
+                                                        );
+                                                        return (
+                                                            <>
+                                                                {filteredUsers.length > 0 && (
+                                                                    <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 border-b border-gray-100 pb-2 mb-2 dark:text-gray-300 dark:hover:text-gray-100 dark:border-neutral-800">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            disabled={!isEditMode}
+                                                                            checked={filteredUsers.length > 0 && filteredUsers.every((u) => editAssignees.some((id) => String(id) === String(u.id)))}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) {
+                                                                                    setEditAssignees(filteredUsers.map((u) => u.id));
+                                                                                } else {
+                                                                                    setEditAssignees([]);
+                                                                                }
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <span>Select All ({filteredUsers.length})</span>
+                                                                    </label>
+                                                                )}
+                                                                {filteredUsers.map((u) => (
+                                                                    <label
+                                                                        key={u.id}
+                                                                        className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            disabled={!isEditMode}
+                                                                            checked={editAssignees.some((id) => String(id) === String(u.id))}
+                                                                            onChange={(e) => {
+                                                                                const next = e.target.checked
+                                                                                    ? (editAssignees.some((id) => String(id) === String(u.id)) ? editAssignees : [...editAssignees, u.id])
+                                                                                    : editAssignees.filter((id) => String(id) !== String(u.id));
+                                                                                setEditAssignees(next);
+                                                                            }}
+                                                                            className="rounded border-gray-300 text-[#163832] dark:border-neutral-700 dark:bg-neutral-900"
+                                                                        />
+                                                                        <div 
+                                                                            className="h-6 w-6 rounded-full overflow-hidden flex items-center justify-center bg-[#163832] text-[10px] font-bold text-white shrink-0"
+                                                                            title={u.name}
+                                                                        >
+                                                                            {u.profile_picture_url ? (
+                                                                                <img src={u.profile_picture_url} alt={u.name} className="h-full w-full object-cover" />
+                                                                            ) : (
+                                                                                <span>{u.name.charAt(0).toUpperCase()}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span>{u.name}</span>
+                                                                    </label>
+                                                                ))}
+                                                                {filteredUsers.length === 0 && (
+                                                                    <span className="text-xs text-gray-400">
+                                                                        No users found matching "{editAssigneeSearch}"
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
                                             {users.length === 0 && (
                                                 <span className="text-xs text-gray-400">
                                                     No users available.
