@@ -27,6 +27,10 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+Route::get('/about', function () {
+    return Inertia::render('about');
+})->name('about');
+
 // Public Share Route for Posted Documents
 Route::get('/share/document/{document}', [WritingController::class, 'postedView'])->name('documents.share');
 

@@ -59,7 +59,7 @@ export default function Welcome() {
                             </div>
 
                             {/* Navigation */}
-                            <nav className="flex items-center gap-1.5 sm:gap-2">
+                            <nav className="flex items-center gap-1 sm:gap-1.5">
                                 {/* Dark Mode Toggle */}
                                 <button
                                     onClick={toggleDarkMode}
@@ -145,6 +145,25 @@ export default function Welcome() {
                             </div>
 
                             <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                                <Link
+                                    href="/about"
+                                    className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 shadow-md transition-all hover:bg-gray-100 hover:text-gray-900 hover:shadow-lg sm:px-6 sm:py-2.5 sm:text-sm dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                                >
+                                    <svg
+                                        className="h-4 w-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    About Us
+                                </Link>
                                 <a
                                     href="https://www.cpmd.buplant.da.gov.ph"
                                     target="_blank"
