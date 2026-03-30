@@ -43,6 +43,8 @@ interface Comment {
         id: number;
         name: string;
         email: string;
+        role: string;
+        office: string;
         profile_picture?: string;
     };
     created_at: string;
@@ -76,6 +78,8 @@ interface Document {
         id: number;
         name: string;
         email: string;
+        role: string;
+        office: string;
         profile_picture?: string;
     };
     comments?: Comment[];
@@ -637,16 +641,24 @@ export default function Posted() {
                                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                                                 {document.author.name}
                                             </h3>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
-                                                {formatDateForBlog(document.created_at)}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-1">
+                                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                                                {/* Office badge */}
+                                                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                    {document.author.office}
+                                                </span>
+                                                {/* Status badge */}
                                                 <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(document.status)}`}>
                                                     {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
                                                 </span>
+                                                {/* Category badge */}
                                                 <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-gray-300">
                                                     {document.category === 'posting' ? 'Posting' : 'Travel Report'}
                                                 </span>
+                                                {/* Date - mobile inline, desktop with bullet */}
+                                                <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                                                    {formatDateForBlog(document.created_at)}
+                                                </span>
+                                                {/* Desktop date */}
                                                 <span className="hidden sm:flex items-center text-xs text-gray-500 dark:text-gray-400">
                                                     <span className="mx-1">•</span>
                                                     {formatDateForBlog(document.created_at)}
@@ -669,7 +681,7 @@ export default function Posted() {
                                                 <Edit3 className="mr-2 h-4 w-4" />
                                                 <span>Edit</span>
                                             </DropdownMenuItem>
-                                            {(current_user?.id === document.author.id || auth?.user?.role === 'superadmin') && (
+                                            {(current_user?.id === document.author.id || auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin' || auth?.user?.role === 'ICS' || auth?.user?.role === document.author.office) && (
                                                 <DropdownMenuItem onClick={() => handleDelete(document.id)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400">
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     <span>Delete</span>
@@ -936,11 +948,15 @@ export default function Posted() {
                                                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                                     {comment.author.name}
                                                                 </span>
+                                                                {/* Comment author office badge */}
+                                                                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                                    {comment.author.office}
+                                                                </span>
                                                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                     {formatDate(comment.created_at)}
                                                                 </span>
                                                             </div>
-                                                            {current_user && (current_user.id === comment.author.id || auth?.user?.role === 'superadmin') && (
+                                                            {current_user && current_user.id === comment.author.id && (
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild>
                                                                         <Button variant="ghost" className="h-6 w-6 p-0">

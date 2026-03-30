@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -44,12 +45,19 @@ class EmployeeDirectoryController extends Controller
 
         $users = $query->paginate($perPage)->withQueryString();
 
+        // Get all sections for frontend filtering
+        $sections = Section::where('is_active', true)
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Employee/EmployeeDirectory', [
             'users' => $users,
             'search' => $search,
             'perPage' => $perPage,
             'office' => $office,
             'cpmd' => $cpmd,
+            'sections' => $sections,
         ]);
     }
 
@@ -57,8 +65,15 @@ class EmployeeDirectoryController extends Controller
     {
         $user = User::findOrFail($id);
 
+        // Get all sections for frontend filtering
+        $sections = Section::where('is_active', true)
+            ->orderBy('display_order')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Employee/EmployeeDirectoryView', [
             'user' => $user,
+            'sections' => $sections,
         ]);
     }
 }

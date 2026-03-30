@@ -50,12 +50,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/directory', [EmployeeDirectoryController::class, 'index'])->name('directory.index');
     Route::get('/directory/{id}', [EmployeeDirectoryController::class, 'show'])->name('directory.show');
 
-    // AI Chatbot
-    Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
-    Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+    // AI Chatbot - CPMD office AND (CPMD, admin, or superadmin) role required
+    Route::middleware(['office:CPMD', 'role:CPMD,admin,superadmin'])->group(function () {
+        Route::get('/chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
+        Route::post('/chatbot/message', [ChatbotController::class, 'message'])->name('chatbot.message');
+    });
 
-    // Pesticide Inventory Management
-    Route::middleware(['page_access:inventory'])->group(function () {
+    // Pesticide Inventory Management - CPMD office AND (CPMD, admin, or superadmin) role required
+    Route::middleware(['office:CPMD', 'role:CPMD,admin,superadmin', 'page_access:inventory'])->group(function () {
         // Pesticide Stock (Parent page with tabs)
         Route::get('/pesticidesindex', [PesticideIndexController::class, 'index'])->name('pesticidesindex.index');
         
@@ -141,23 +143,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/forms/{id}', [FormSubmissionController::class, 'show'])->name('forms.show');
 });
 
-// Biocon user management route, accessible to admin, superadmin, and biocon roles
-Route::middleware(['auth', 'verified','role:admin,superadmin,biocon'])->group(function () {
-    // Route::get('/biocon/testpage',[UserRoleController::class,'biocon'])->name('biocon');
-});
-
-// PSF user management route, accessible to admin, superadmin, and pfs roles
-Route::middleware(['auth', 'verified','role:admin,superadmin,psf'])->group(function () {
-    // Add PSF-specific routes here
-});
-
-// PHPS user management route, accessible to admin, superadmin, and phps roles
-Route::middleware(['auth', 'verified','role:admin,superadmin,phps'])->group(function () {
-    // Add PHPS-specific routes here
-});
-
-// accessible to admin and superadmin roles
-Route::middleware(['auth', 'verified','role:admin,superadmin'])->group(function () {
+// accessible to admin, superadmin, and HR roles
+Route::middleware(['auth', 'verified','role:admin,superadmin,HR'])->group(function () {
     // Make the sidebar link work by serving new page here as well
     Route::get('/admin/employeemanagement', [EmployeeManagementController::class, 'index'])->name('admin');
     // Employee Management (Users as Employees)
@@ -167,8 +154,8 @@ Route::middleware(['auth', 'verified','role:admin,superadmin'])->group(function 
     Route::put('/employees/{id}', [EmployeeManagementController::class, 'update'])->name('employees.update');
     Route::get('/employees/{id}', [EmployeeManagementController::class, 'show'])->name('employees.show');
     
-    // Budget Management
-    Route::middleware(['page_access:management'])->group(function () {
+    // Budget Management - CPMD office AND (CPMD, admin, or superadmin) role required
+    Route::middleware(['office:CPMD', 'role:CPMD,admin,superadmin', 'page_access:management'])->group(function () {
         Route::get('/budgetmanagement', [BudgetManagementController::class, 'index'])->name('budgetmanagement.index');
         Route::post('/funds', [BudgetManagementController::class, 'storeFund'])->name('funds.store');
         Route::put('/funds/{fund}', [BudgetManagementController::class, 'updateFund'])->name('funds.update');

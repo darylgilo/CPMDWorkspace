@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\User;
+use App\Models\Section;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use App\Mail\WelcomeEmail;
@@ -137,7 +138,19 @@ class UserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('SuperAdmin/Addusermanagement');
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
+        return Inertia::render('SuperAdmin/Addusermanagement', [
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
+        ]);
     }
 
     /**
@@ -146,8 +159,20 @@ class UserController extends Controller
     public function edit($id): Response
     {
         $user = User::findOrFail($id);
+
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
         return Inertia::render('SuperAdmin/Editusermanagement', [
             'user' => $user,
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
         ]);
     }
 
@@ -166,13 +191,13 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => ['required', Rule::in(['user','admin','superadmin','BIOCON','PFS','PHPS'])],
+            'role' => ['required', Rule::in(['user','admin','superadmin','DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','ICS','HR','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
             'status' => ['required', Rule::in(['active', 'inactive'])], // Admin can set initial status
             'employee_id' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
             'employment_status' => ['sometimes','required', Rule::in(['Regular', 'COS', 'Job Order', 'Others'])],
-            'office' => ['sometimes','required', Rule::in(['CPMD','Others'])],
-            'cpmd' => ['nullable', Rule::in(['Office of the Chief','OC-Admin Support Unit','OC-Special Project Unit','OC-ICT Unit','BIOCON Section','PFS Section','PHPS Section','Others'])],
+            'office' => ['sometimes','required', Rule::in(['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
+            'section_id' => 'nullable|exists:sections,id',
             'tin_number' => 'nullable|string|max:255',
             'landbank_number' => 'nullable|string|max:255',
             'gsis_number' => 'nullable|string|max:255',
@@ -191,18 +216,17 @@ class UserController extends Controller
             'can_access_inventory' => 'required|boolean',
         ]);
         
-        // Custom validation: cpmd is required only when office is CPMD
-        if ($validated['office'] === 'CPMD' && empty($validated['cpmd'])) {
+        // Custom validation: section_id is required only when office is CPMD
+        if ($validated['office'] === 'CPMD' && empty($validated['section_id'])) {
             throw new \Illuminate\Validation\ValidationException(
                 validator([], []),
-                response()->json(['cpmd' => 'The CPMD section/unit field is required when office is CPMD.'], 422)
+                response()->json(['section_id' => 'The section field is required when office is CPMD.'], 422)
             );
         }
         
         // Set default values for required fields if not provided
         $validated['employment_status'] = $validated['employment_status'] ?? 'Regular';
         $validated['office'] = $validated['office'] ?? 'Others';
-        $validated['cpmd'] = $validated['cpmd'] ?? 'Others';
         $validated['gender'] = $validated['gender'] ?? 'Male';
         
         // Ensure admin and superadmin users always have full access
@@ -282,13 +306,13 @@ class UserController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => ['required','string','email','max:255',Rule::unique('users')->ignore($user->id)],
                 'password' => 'nullable|string|min:8',
-                'role' => ['required', Rule::in(['user','admin','superadmin','BIOCON','PFS','PHPS'])],
+                'role' => ['required', Rule::in(['user','admin','superadmin','DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','ICS','HR','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
                 'status' => ['required', Rule::in(['active', 'inactive'])], // Admin can activate/deactivate user
                 'employee_id' => 'nullable|string|max:255',
                 'position' => 'nullable|string|max:255',
                 'employment_status' => ['required', Rule::in(['Regular', 'COS', 'Job Order', 'Others'])],
-                'office' => ['required', Rule::in(['CPMD','Others'])],
-                'cpmd' => ['nullable', Rule::in(['Office of the Chief','OC-Admin Support Unit','OC-Special Project Unit','OC-ICT Unit','BIOCON Section','PFS Section','PHPS Section','Others'])],
+                'office' => ['required', Rule::in(['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
+                'section_id' => 'nullable|exists:sections,id',
                 'tin_number' => 'nullable|string|max:255',
                 'landbank_number' => 'nullable|string|max:255',
                 'gsis_number' => 'nullable|string|max:255',
@@ -308,11 +332,11 @@ class UserController extends Controller
                 'can_access_inventory' => 'required|boolean',
             ]);
             
-            // Custom validation: cpmd is required only when office is CPMD
-            if ($validated['office'] === 'CPMD' && empty($validated['cpmd'])) {
+            // Custom validation: section_id is required only when office is CPMD
+            if ($validated['office'] === 'CPMD' && empty($validated['section_id'])) {
                 throw new \Illuminate\Validation\ValidationException(
                     validator([], []),
-                    response()->json(['cpmd' => 'The CPMD section/unit field is required when office is CPMD.'], 422)
+                    response()->json(['section_id' => 'The section field is required when office is CPMD.'], 422)
                 );
             }
             

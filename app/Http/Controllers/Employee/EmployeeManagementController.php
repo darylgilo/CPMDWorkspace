@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +26,8 @@ class EmployeeManagementController extends Controller
         $cpmd = (string) $request->input('cpmd', '');
 
         $query = User::query();
+        $currentUser = auth()->user();
+        $currentUserRole = $currentUser->role;
 
         // Optionally filter to only role 'user' as employees (default: include all roles)
         if ($request->boolean('onlyEmployees', false)) {
@@ -40,11 +43,24 @@ class EmployeeManagementController extends Controller
             });
         }
 
-        // Office and Section (CPMD) filters
-        if ($office !== '') {
-            $query->where('office', $office);
-            if ($office === 'CPMD' && $cpmd !== '') {
-                $query->where('cpmd', $cpmd);
+        // Office and Section filters - HR can see all, others are filtered by their office
+        if ($currentUserRole !== 'HR') {
+            if ($office !== '') {
+                $query->where('office', $office);
+            }
+        } else {
+            // HR users can filter by office if they choose, but see all by default
+            if ($office !== '') {
+                $query->where('office', $office);
+            }
+        }
+        
+        // Section filter (using section_id)
+        if ($cpmd !== '') {
+            // Find section by name and get its ID
+            $section = Section::where('name', $cpmd)->first();
+            if ($section) {
+                $query->where('section_id', $section->id);
             }
         }
 
@@ -67,15 +83,33 @@ class EmployeeManagementController extends Controller
               ->limit(1);
         }]);
 
-        // Calculate statistics for CPMD employees
-        $stats = [
-            'total' => (clone $query)->where('office', 'CPMD')->count(),
-            'regular' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Regular')->count(),
-            'cos' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'COS')->count(),
-            'jobOrder' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Job Order')->count(),
-        ];
+        // Calculate statistics - HR sees all offices, others see CPMD only
+        if ($currentUserRole === 'HR') {
+            $stats = [
+                'total' => (clone $query)->count(),
+                'regular' => (clone $query)->where('employment_status', 'Regular')->count(),
+                'cos' => (clone $query)->where('employment_status', 'COS')->count(),
+                'jobOrder' => (clone $query)->where('employment_status', 'Job Order')->count(),
+            ];
+        } else {
+            $stats = [
+                'total' => (clone $query)->where('office', 'CPMD')->count(),
+                'regular' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Regular')->count(),
+                'cos' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'COS')->count(),
+                'jobOrder' => (clone $query)->where('office', 'CPMD')->where('employment_status', 'Job Order')->count(),
+            ];
+        }
 
         $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
+
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
 
         return Inertia::render('Employee/EmployeeManagement', [
             'users' => $users,
@@ -84,6 +118,8 @@ class EmployeeManagementController extends Controller
             'office' => $office,
             'cpmd' => $cpmd,
             'stats' => $stats,
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
         ]);
     }
 
@@ -92,7 +128,19 @@ class EmployeeManagementController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Employee/AddEmployee');
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
+        return Inertia::render('Employee/AddEmployee', [
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
+        ]);
     }
 
     /**
@@ -109,8 +157,8 @@ class EmployeeManagementController extends Controller
             'employee_id' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
             'employment_status' => ['sometimes','required', Rule::in(['Regular', 'COS', 'Job Order', 'Others'])],
-            'office' => ['sometimes','required', Rule::in(['CPMD','Others'])],
-            'cpmd' => ['nullable', Rule::in(['Office of the Chief','OC-Admin Support Unit','OC-Special Project Unit','OC-ICT Unit','BIOCON Section','PFS Section','PHPS Section','Others'])],
+            'office' => ['sometimes','required', Rule::in(['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
+            'section_id' => 'nullable|exists:sections,id',
             'tin_number' => 'nullable|string|max:255',
             'landbank_number' => 'nullable|string|max:255',
             'gsis_number' => 'nullable|string|max:255',
@@ -125,18 +173,17 @@ class EmployeeManagementController extends Controller
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Conditional validation: cpmd required when office is CPMD
-        if (($validated['office'] ?? null) === 'CPMD' && empty($validated['cpmd'])) {
+        // Conditional validation: section_id required when office is CPMD
+        if (($validated['office'] ?? null) === 'CPMD' && empty($validated['section_id'])) {
             throw new \Illuminate\Validation\ValidationException(
                 validator([], []),
-                response()->json(['cpmd' => 'The CPMD section/unit field is required when office is CPMD.'], 422)
+                response()->json(['section_id' => 'The section field is required when office is CPMD.'], 422)
             );
         }
 
         // Defaults
         $validated['employment_status'] = $validated['employment_status'] ?? 'Regular';
         $validated['office'] = $validated['office'] ?? 'Others';
-        $validated['cpmd'] = $validated['cpmd'] ?? 'Others';
         $validated['gender'] = $validated['gender'] ?? 'Male';
 
         // Force new employees to be inactive regardless of client input
@@ -180,8 +227,19 @@ class EmployeeManagementController extends Controller
     {
         $user = User::findOrFail($id);
 
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
         return Inertia::render('Employee/EmployeeView', [
             'user' => $user,
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
         ]);
     }
 
@@ -206,8 +264,8 @@ class EmployeeManagementController extends Controller
             'employee_id' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
             'employment_status' => ['sometimes','required', Rule::in(['Regular', 'COS', 'Job Order', 'Others'])],
-            'office' => ['sometimes','required', Rule::in(['CPMD','Others'])],
-            'cpmd' => ['nullable', Rule::in(['Office of the Chief','OC-Admin Support Unit','OC-Special Project Unit','OC-ICT Unit','BIOCON Section','PFS Section','PHPS Section','Others'])],
+            'office' => ['sometimes','required', Rule::in(['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
+            'section_id' => 'nullable|exists:sections,id',
             'tin_number' => 'nullable|string|max:255',
             'landbank_number' => 'nullable|string|max:255',
             'gsis_number' => 'nullable|string|max:255',
@@ -223,10 +281,10 @@ class EmployeeManagementController extends Controller
             'remove_profile_picture' => 'nullable|string',
         ]);
 
-        if (($validated['office'] ?? $user->office) === 'CPMD' && empty($validated['cpmd'])) {
+        if (($validated['office'] ?? $user->office) === 'CPMD' && empty($validated['section_id'])) {
             throw new \Illuminate\Validation\ValidationException(
                 validator([], []),
-                response()->json(['cpmd' => 'The CPMD section/unit field is required when office is CPMD.'], 422)
+                response()->json(['section_id' => 'The section field is required when office is CPMD.'], 422)
             );
         }
 
@@ -236,12 +294,6 @@ class EmployeeManagementController extends Controller
         // Apply defaults when not provided
         $validated['employment_status'] = $validated['employment_status'] ?? $user->employment_status ?? 'Regular';
         $validated['office'] = $validated['office'] ?? $user->office ?? 'Others';
-        if (($validated['office'] ?? $user->office) !== 'CPMD') {
-            // If office not CPMD, set cpmd to a safe non-null default
-            $validated['cpmd'] = $validated['cpmd'] ?? 'Others';
-        } else {
-            $validated['cpmd'] = $validated['cpmd'] ?? $user->cpmd ?? 'Others';
-        }
         $validated['gender'] = $validated['gender'] ?? $user->gender ?? 'Male';
 
         // Handle profile picture removal

@@ -16,32 +16,40 @@ import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 
+// Sections interface
+interface Section {
+    id: number;
+    name: string;
+    code: string;
+    office: string;
+    display_order: number;
+}
+
 // Employee profile view/edit page component
 export default function EmployeeView() {
     // Define types
     type EmploymentStatus = 'Regular' | 'COS' | 'Job Order' | 'Others';
     type Office =
         | 'DO'
-        | 'ADO'
-        | 'CPMD'
-        | 'AED'
-        | 'NSQCS'
-        | 'NPQSD'
+        | 'ADO RDPSS'
+        | 'ADO RS'
+        | 'PMO'
+        | 'BIOTECH'
         | 'NSIC'
-        | 'CRPSD'
-        | 'PPSSD'
         | 'ADMINISTRATIVE'
+        | 'CPMD'
+        | 'CRPSD'
+        | 'AED'
+        | 'PPSSD'
+        | 'NPQSD'
+        | 'NSQCS'
+        | 'Baguio BPI center'
+        | 'Davao BPI center'
+        | 'Guimaras BPI center'
+        | 'La Granja BPI center'
+        | 'Los Baños BPI center'
         | 'Others';
-    type CPMDSection =
-        | ''
-        | 'BIOCON section'
-        | 'PFS section'
-        | 'PHPS SECTION'
-        | 'OC-Admin Support Unit'
-        | 'OC-ICT Unit'
-        | 'OC-Special Project'
-        | 'Others';
-    type Gender = 'Male' | 'Female';
+        type Gender = 'Male' | 'Female';
 
     interface User {
         id: number;
@@ -51,7 +59,7 @@ export default function EmployeeView() {
         position: string;
         employment_status: EmploymentStatus;
         office: Office;
-        cpmd: CPMDSection;
+        section_id: number | null;
         tin_number: string;
         landbank_number: string;
         gsis_number: string;
@@ -80,32 +88,26 @@ export default function EmployeeView() {
             };
             [key: string]: unknown;
         };
+        sections?: Section[];
+        SECTIONS_BY_OFFICE?: Record<string, string[]>;
     }
 
     // Grab server-provided user payload from Inertia page props
     const { props } = usePage<PageProps>();
-    const { user, auth } = props;
+    const { user, auth, sections, SECTIONS_BY_OFFICE: fallbackSections } = props;
 
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
+    
     interface FormData {
         name: string;
         email: string;
         employee_id: string;
         position: string;
         employment_status: 'Regular' | 'COS' | 'Job Order' | 'Others';
-        office: 'CPMD' | 'Others';
-        cpmd:
-            | ''
-            | 'Office of the Chief'
-            | 'OC-Admin Support Unit'
-            | 'OC-Special Project Unit'
-            | 'OC-ICT Unit'
-            | 'BIOCON Section'
-            | 'PFS Section'
-            | 'PHPS Section'
-            | 'Others';
+        office: Office;
+        section_id: number | null;
         tin_number: string;
         landbank_number: string;
         gsis_number: string;
@@ -151,18 +153,7 @@ export default function EmployeeView() {
             'Job Order',
             'Others',
         ] as const;
-        const offices = ['CPMD', 'Others'] as const;
-        const cpmdSections = [
-            '',
-            'Office of the Chief',
-            'OC-Admin Support Unit',
-            'OC-Special Project Unit',
-            'OC-ICT Unit',
-            'BIOCON Section',
-            'PFS Section',
-            'PHPS Section',
-            'Others',
-        ] as const;
+        const offices = ['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'] as const;
         const genders = ['Male', 'Female'] as const;
         const statuses = ['active', 'inactive'] as const;
 
@@ -177,7 +168,7 @@ export default function EmployeeView() {
                 'Regular',
             ),
             office: getEnumValue(user?.office, offices, 'Others'),
-            cpmd: getEnumValue(user?.cpmd, cpmdSections, ''),
+            section_id: (user?.section_id as number) || null,
             tin_number: getStringValue(user?.tin_number),
             landbank_number: getStringValue(user?.landbank_number),
             gsis_number: getStringValue(user?.gsis_number),
@@ -202,6 +193,32 @@ export default function EmployeeView() {
     const { data, setData, post, put, processing, transform } = useForm({
         ...initialData,
     });
+
+    // Use backend sections or fallback to hardcoded sections
+    const sectionsByOffice = useState(() => {
+        if (sections && sections.length > 0) {
+            const grouped: Record<string, string[]> = {};
+            sections.forEach((section: Section) => {
+                if (!grouped[section.office]) {
+                    grouped[section.office] = [];
+                }
+                grouped[section.office].push(section.name);
+            });
+            return grouped;
+        }
+        return fallbackSections || {};
+    })[0];
+
+    // Get available sections based on selected office
+    const availableSections = sectionsByOffice[data.office] || [];
+
+    // Reset section when office changes (but not on initial load)
+    useEffect(() => {
+        // Only reset if this is not the initial load
+        if (data.office !== user?.office) {
+            handleInputChange('section_id', null);
+        }
+    }, [data.office]);
 
     // Transform data before submission to ensure correct types for backend
     useEffect(() => {
@@ -460,13 +477,13 @@ export default function EmployeeView() {
                                     <div className="text-base text-gray-900 dark:text-gray-100">
                                         {user?.office || '—'}
                                     </div>
-                                    {user?.office === 'CPMD' && (
+                                    {!!user?.section_id && (
                                         <>
                                             <div className="mt-3 text-sm text-gray-500 dark:text-neutral-400">
                                                 Section/Unit
                                             </div>
                                             <div className="text-base text-gray-900 dark:text-gray-100">
-                                                {user?.cpmd || '—'}
+                                                {sections?.find(s => s.id === user?.section_id)?.name || '—'}
                                             </div>
                                         </>
                                     )}
@@ -613,8 +630,8 @@ export default function EmployeeView() {
                                                     );
                                                     if (val !== 'CPMD') {
                                                         handleInputChange(
-                                                            'cpmd',
-                                                            'Others' as FormData['cpmd'],
+                                                            'section_id',
+                                                            null,
                                                         );
                                                     }
                                                 }}
@@ -626,8 +643,59 @@ export default function EmployeeView() {
                                                     </SelectValue>
                                                 </SelectTrigger>
                                                 <SelectContent>
+                                                    <SelectItem value="DO">
+                                                        DO
+                                                    </SelectItem>
+                                                    <SelectItem value="ADO RDPSS">
+                                                        ADO RDPSS
+                                                    </SelectItem>
+                                                    <SelectItem value="ADO RS">
+                                                        ADO RS
+                                                    </SelectItem>
+                                                    <SelectItem value="PMO">
+                                                        PMO
+                                                    </SelectItem>
+                                                    <SelectItem value="BIOTECH">
+                                                        BIOTECH
+                                                    </SelectItem>
+                                                    <SelectItem value="NSIC">
+                                                        NSIC
+                                                    </SelectItem>
+                                                    <SelectItem value="ADMINISTRATIVE">
+                                                        ADMINISTRATIVE
+                                                    </SelectItem>
                                                     <SelectItem value="CPMD">
                                                         CPMD
+                                                    </SelectItem>
+                                                    <SelectItem value="CRPSD">
+                                                        CRPSD
+                                                    </SelectItem>
+                                                    <SelectItem value="AED">
+                                                        AED
+                                                    </SelectItem>
+                                                    <SelectItem value="PPSSD">
+                                                        PPSSD
+                                                    </SelectItem>
+                                                    <SelectItem value="NPQSD">
+                                                        NPQSD
+                                                    </SelectItem>
+                                                    <SelectItem value="NSQCS">
+                                                        NSQCS
+                                                    </SelectItem>
+                                                    <SelectItem value="Baguio BPI center">
+                                                        Baguio BPI center
+                                                    </SelectItem>
+                                                    <SelectItem value="Davao BPI center">
+                                                        Davao BPI center
+                                                    </SelectItem>
+                                                    <SelectItem value="Guimaras BPI center">
+                                                        Guimaras BPI center
+                                                    </SelectItem>
+                                                    <SelectItem value="La Granja BPI center">
+                                                        La Granja BPI center
+                                                    </SelectItem>
+                                                    <SelectItem value="Los Baños BPI center">
+                                                        Los Baños BPI center
                                                     </SelectItem>
                                                     <SelectItem value="Others">
                                                         Others
@@ -635,53 +703,35 @@ export default function EmployeeView() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        {data.office === 'CPMD' && (
+                                        {availableSections.length > 0 && (
                                             <div>
-                                                <Label htmlFor="cpmd">
+                                                <Label htmlFor="section_id">
                                                     Section/Unit
                                                 </Label>
                                                 <Select
-                                                    value={data.cpmd}
+                                                    value={data.section_id?.toString() || ''}
                                                     onValueChange={(value) =>
                                                         handleInputChange(
-                                                            'cpmd',
-                                                            value as FormData['cpmd'],
+                                                            'section_id',
+                                                            value ? parseInt(value) : null,
                                                         )
                                                     }
                                                 >
                                                     <SelectTrigger className="mt-1">
                                                         <SelectValue>
-                                                            {data.cpmd ||
+                                                            {sections?.find(s => s.id === data.section_id)?.name ||
                                                                 'Select section/unit'}
                                                         </SelectValue>
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="Office of the Chief">
-                                                            Office of the Chief
-                                                        </SelectItem>
-                                                        <SelectItem value="OC-Admin Support Unit">
-                                                            OC-Admin Support
-                                                            Unit
-                                                        </SelectItem>
-                                                        <SelectItem value="OC-Special Project Unit">
-                                                            OC-Special Project
-                                                            Unit
-                                                        </SelectItem>
-                                                        <SelectItem value="OC-ICT Unit">
-                                                            OC-ICT Unit
-                                                        </SelectItem>
-                                                        <SelectItem value="BIOCON Section">
-                                                            BIOCON Section
-                                                        </SelectItem>
-                                                        <SelectItem value="PFS Section">
-                                                            PFS Section
-                                                        </SelectItem>
-                                                        <SelectItem value="PHPS Section">
-                                                            PHPS Section
-                                                        </SelectItem>
-                                                        <SelectItem value="Others">
-                                                            Others
-                                                        </SelectItem>
+                                                        {availableSections.map((sectionName) => {
+                                                            const section = sections?.find(s => s.name === sectionName);
+                                                            return (
+                                                                <SelectItem key={sectionName} value={section?.id?.toString() || ''}>
+                                                                    {sectionName}
+                                                                </SelectItem>
+                                                            );
+                                                        })}
                                                     </SelectContent>
                                                 </Select>
                                             </div>

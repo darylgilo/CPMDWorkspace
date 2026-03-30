@@ -38,7 +38,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'mobile_number',
         'contact_number',
         'contact_person',
-        'cpmd',
+        'section_id',
         'hiring_date',
         'item_number',
         'profile_picture', // Profile picture file path
@@ -79,6 +79,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_login_at' => 'datetime',
         ];
     }
+    /**
+     * Get the section for the user.
+     */
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
+    }
+
     /**
      * Get the whereabouts for the user.
      */

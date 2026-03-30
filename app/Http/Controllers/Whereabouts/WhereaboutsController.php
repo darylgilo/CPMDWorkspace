@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Whereabouts;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Whereabout;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -17,11 +18,14 @@ class WhereaboutsController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
+        // Get the selected office from request, default to user's office or CPMD
+        $selectedOffice = $request->input('office', $request->user()->office ?? 'CPMD');
+
         // Get all users grouped by office (section)
         // We fetch all users, or maybe filter by active
         $users = User::where('status', 'active')
-            ->where('office', 'CPMD')
-            ->orderBy('cpmd') // Grouping by cpmd section
+            ->where('office', $selectedOffice)
+            ->with('section') // Load section relationship
             ->orderBy('display_order') // Custom display order
             ->orderBy('item_number') // Fallback
             ->get();
@@ -38,11 +42,31 @@ class WhereaboutsController extends Controller
             });
         });
 
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
+        // Get all available offices from users table
+        $availableOffices = User::where('status', 'active')
+            ->distinct()
+            ->pluck('office')
+            ->sort()
+            ->values();
+
         return Inertia::render('Whereabouts/whereabouts', [
             'users' => $users,
             'whereabouts' => $formattedWhereabouts,
             'currentDate' => $date->format('Y-m-d'),
-            'filters' => $request->only(['date']),
+            'filters' => $request->only(['date', 'office']),
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
+            'selectedOffice' => $selectedOffice,
+            'availableOffices' => $availableOffices,
         ]);
     }
 
@@ -235,11 +259,12 @@ class WhereaboutsController extends Controller
     public function getWhereaboutsForWidget(Request $request)
     {
         $date = $request->input('date', Carbon::now()->format('Y-m-d'));
+        $office = $request->input('office', 'CPMD');
         
-        // Get all active users from CPMD office
+        // Get all active users from selected office
         $users = User::where('status', 'active')
-            ->where('office', 'CPMD')
-            ->orderBy('cpmd')
+            ->where('office', $office)
+            ->with('section')
             ->orderBy('display_order')
             ->orderBy('item_number')
             ->get();
@@ -262,7 +287,7 @@ class WhereaboutsController extends Controller
                     'id' => $whereabout->user->id,
                     'name' => $whereabout->user->name,
                     'email' => $whereabout->user->email,
-                    'cpmd' => $whereabout->user->cpmd,
+                    'section_id' => $whereabout->user->section_id,
                     'profile_picture' => $whereabout->user->profile_picture,
                 ],
             ];

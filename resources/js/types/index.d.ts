@@ -22,11 +22,21 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface Section {
+    id: number;
+    name: string;
+    code: string;
+    office: string;
+    display_order: number;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    sections?: Section[];
+    SECTIONS_BY_OFFICE?: Record<string, string[]>;
     [key: string]: unknown;
 }
 
@@ -37,6 +47,7 @@ export interface User {
     avatar?: string;
     profile_picture?: string | null;
     profile_picture_url?: string | null;
+    section_id?: number | null;
     email_verified_at: string | null;
     two_factor_enabled?: boolean;
     created_at: string;

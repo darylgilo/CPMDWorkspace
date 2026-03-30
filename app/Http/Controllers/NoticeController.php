@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notice;
 use App\Models\User;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +23,7 @@ class NoticeController extends Controller
     {
         // Get all CPMD office users for assignee selection
         $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                $query->where('office', 'CPMD')->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')
@@ -160,7 +161,7 @@ class NoticeController extends Controller
             'assignees' => $validated['assignees'] ?? null,
         ]);
 
-        // Send email asynchronously to all employees that are CPMD, verified, and active
+        // Send email asynchronously to all employees that are CPMD or have sections, verified, and active
         SendNoticeEmailJob::dispatch($notice);
 
         return redirect()->route('noticeboard.index');
@@ -473,7 +474,7 @@ class NoticeController extends Controller
             });
 
         $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                $query->where('office', 'CPMD')->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')
@@ -531,7 +532,7 @@ class NoticeController extends Controller
             });
 
         $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                $query->where('office', 'CPMD')->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')
@@ -586,7 +587,7 @@ class NoticeController extends Controller
             });
 
         $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                $query->where('office', 'CPMD')->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')
@@ -641,7 +642,7 @@ class NoticeController extends Controller
             });
 
         $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+                $query->where('office', 'CPMD')->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')

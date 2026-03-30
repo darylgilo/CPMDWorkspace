@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('status')->default('draft'); // draft, active, archived
-            $table->string('icon')->default('FileText')->after('status'); // Icon for form identification
+            $table->string('icon')->default('FileText'); // Icon for form identification
             $table->json('fields'); // Store form fields configuration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Creator
             $table->timestamps();

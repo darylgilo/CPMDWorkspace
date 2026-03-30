@@ -22,7 +22,7 @@ export default function EmployeeDirectory() {
         email: string;
         position?: string | null;
         office?: string | null;
-        cpmd?: string | null;
+        section_id?: number | null;
         employment_status?: string | null;
         employee_id?: string | null;
         status?: 'active' | 'inactive' | null;
@@ -42,17 +42,135 @@ export default function EmployeeDirectory() {
             };
             [key: string]: unknown;
         };
+        sections?: Array<{
+            id: number;
+            name: string;
+            code: string;
+            office: string;
+            display_order: number;
+        }>;
+        [key: string]: unknown;
     }
 
     const { props } = usePage<PageProps>();
-    const { users = { data: [] } } = props;
+    const { users = { data: [] }, sections } = props;
 
     // State for search and filters
     const [search, setSearch] = useState<string>('');
     const [perPage, setPerPage] = useState<number>(12);
+    const [office, setOffice] = useState<string>('');
     const [cpmd, setCpmd] = useState<string>('');
     const [status, setStatus] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Define sections for each office
+    const officeSections: Record<string, string[]> = {
+        'CPMD': [
+            'Office of the Chief',
+            'OC-Admin Support Unit',
+            'OC-Special Project Unit',
+            'OC-ICT Unit',
+            'BIOCON Section',
+            'PFS Section',
+            'PHPS Section',
+            'Others'
+        ],
+        'DO': [
+            'Office of the Director',
+            'Admin Support Unit',
+            'Planning Unit',
+            'Others'
+        ],
+        'ADO RDPSS': [
+            'Office of the ADO',
+            'RDPSS Unit',
+            'Admin Support',
+            'Others'
+        ],
+        'ADO RS': [
+            'Office of the ADO',
+            'Research Services',
+            'Admin Support',
+            'Others'
+        ],
+        'PMO': [
+            'Project Management',
+            'Monitoring Unit',
+            'Admin Support',
+            'Others'
+        ],
+        'BIOTECH': [
+            'Biotechnology Unit',
+            'Research Lab',
+            'Admin Support',
+            'Others'
+        ],
+        'NSIC': [
+            'Office of the Chief',
+            'Information Center',
+            'Admin Support',
+            'Others'
+        ],
+        'ADMINISTRATIVE': [
+            'HR Unit',
+            'Finance Unit',
+            'General Services',
+            'Others'
+        ],
+        'CRPSD': [
+            'Office of the Chief',
+            'Crop Research',
+            'Admin Support',
+            'Others'
+        ],
+        'AED': [
+            'Office of the Chief',
+            'Extension Services',
+            'Admin Support',
+            'Others'
+        ],
+        'PPSSD': [
+            'Office of the Chief',
+            'Plant Services',
+            'Admin Support',
+            'Others'
+        ],
+        'NPQSD': [
+            'Office of the Chief',
+            'Quality Services',
+            'Admin Support',
+            'Others'
+        ],
+        'NSQCS': [
+            'Office of the Chief',
+            'Quality Control',
+            'Admin Support',
+            'Others'
+        ],
+        'Others': [
+            'General',
+            'Support',
+            'Others'
+        ]
+    };
+
+    // Use backend sections or fallback to hardcoded sections
+    const sectionsByOffice = useMemo(() => {
+        if (sections && sections.length > 0) {
+            const grouped: Record<string, { id: number; name: string }[]> = {};
+            sections.forEach((section: { id: number; name: string; code: string; office: string; display_order: number }) => {
+                if (!grouped[section.office]) {
+                    grouped[section.office] = [];
+                }
+                grouped[section.office].push({ id: section.id, name: section.name });
+            });
+            return grouped;
+        }
+        return officeSections;
+    }, [sections]);
+
+    // Get current office sections
+    const currentOfficeSections = office && office !== 'all' ? sectionsByOffice[office] || [] : [];
 
     // Local state for all employees
     const [allEmployees, setAllEmployees] = useState(users.data || []);
@@ -68,12 +186,17 @@ export default function EmployeeDirectory() {
     const filteredEmployees = useMemo(() => {
         let result: User[] = [...allEmployees];
 
-        // Filter for CPMD office only
-        result = result.filter((emp) => emp.office === 'CPMD');
+        // Apply office filter
+        if (office) {
+            result = result.filter((emp) => emp.office === office);
+        }
 
-        // Apply CPMD section filter
+        // Apply section filter (works regardless of office selection)
         if (cpmd) {
-            result = result.filter((emp) => emp.cpmd === cpmd);
+            const section = sections?.find(s => s.name === cpmd);
+            if (section) {
+                result = result.filter((emp) => emp.section_id === section.id);
+            }
         }
 
         // Apply status filter
@@ -93,7 +216,7 @@ export default function EmployeeDirectory() {
         }
 
         return result;
-    }, [allEmployees, search, cpmd, status]);
+    }, [allEmployees, search, office, cpmd, status]);
 
     // Get paginated employees
     const paginatedEmployees = useMemo(() => {
@@ -107,6 +230,7 @@ export default function EmployeeDirectory() {
             const params = new URLSearchParams();
             if (search) params.set('search', search);
             if (perPage !== 12) params.set('perPage', perPage.toString());
+            if (office) params.set('office', office);
             if (cpmd) params.set('cpmd', cpmd);
             if (status) params.set('status', status);
             if (currentPage > 1) params.set('page', currentPage.toString());
@@ -114,7 +238,7 @@ export default function EmployeeDirectory() {
             const url = `${window.location.pathname}?${params.toString()}`;
             window.history.replaceState({}, '', url);
         };
-    }, [search, perPage, cpmd, status, currentPage]);
+    }, [search, perPage, office, cpmd, status, currentPage]);
 
     // Handle page changes when filters or items per page changes
     useEffect(() => {
@@ -128,7 +252,7 @@ export default function EmployeeDirectory() {
         } else if (currentPage === 0 && newTotalPages > 0) {
             newPage = 1;
             shouldUpdate = true;
-        } else if (search || cpmd || status) {
+        } else if (search || office || cpmd || status) {
             newPage = 1;
             shouldUpdate = true;
         }
@@ -140,6 +264,7 @@ export default function EmployeeDirectory() {
         }
     }, [
         search,
+        office,
         cpmd,
         status,
         perPage,
@@ -164,6 +289,7 @@ export default function EmployeeDirectory() {
 
     const handleClearFilters = () => {
         setSearch('');
+        setOffice('');
         setCpmd('');
         setStatus('');
         setCurrentPage(1);
@@ -181,15 +307,122 @@ export default function EmployeeDirectory() {
                     {/* Filters on the left */}
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Select
+                            value={office || 'all'}
+                            onValueChange={(val) => {
+                                const newValue = val === 'all' ? '' : val;
+                                setOffice(newValue);
+                                setCpmd(''); // Reset section filter when office changes
+                                setCurrentPage(1); // Reset to first page on filter change
+                            }}
+                        >
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
+                                <SelectValue placeholder="All Offices" />
+                            </SelectTrigger>
+                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                <SelectItem
+                                    value="all"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    All Offices
+                                </SelectItem>
+                                <SelectItem
+                                    value="DO"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    DO
+                                </SelectItem>
+                                <SelectItem
+                                    value="ADO RDPSS"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    ADO RDPSS
+                                </SelectItem>
+                                <SelectItem
+                                    value="ADO RS"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    ADO RS
+                                </SelectItem>
+                                <SelectItem
+                                    value="PMO"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    PMO
+                                </SelectItem>
+                                <SelectItem
+                                    value="BIOTECH"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    BIOTECH
+                                </SelectItem>
+                                <SelectItem
+                                    value="NSIC"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    NSIC
+                                </SelectItem>
+                                <SelectItem
+                                    value="ADMINISTRATIVE"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    ADMINISTRATIVE
+                                </SelectItem>
+                                <SelectItem
+                                    value="CPMD"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    CPMD
+                                </SelectItem>
+                                <SelectItem
+                                    value="CRPSD"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    CRPSD
+                                </SelectItem>
+                                <SelectItem
+                                    value="AED"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    AED
+                                </SelectItem>
+                                <SelectItem
+                                    value="PPSSD"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    PPSSD
+                                </SelectItem>
+                                <SelectItem
+                                    value="NPQSD"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    NPQSD
+                                </SelectItem>
+                                <SelectItem
+                                    value="NSQCS"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    NSQCS
+                                </SelectItem>
+                                <SelectItem
+                                    value="Others"
+                                    className="cursor-pointer hover:bg-[#1a4d3e]"
+                                >
+                                    Others
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Select
                             value={cpmd || 'all'}
                             onValueChange={(val) => {
                                 const newValue = val === 'all' ? '' : val;
                                 setCpmd(newValue);
                                 setCurrentPage(1); // Reset to first page on filter change
                             }}
+                            disabled={!office || office === 'all'}
                         >
-                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue placeholder="All Sections" />
+                            <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950 disabled:opacity-50">
+                                <SelectValue placeholder={office && office !== 'all' ? "All Sections" : "Select office first"} />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                 <SelectItem
@@ -198,56 +431,15 @@ export default function EmployeeDirectory() {
                                 >
                                     All Sections
                                 </SelectItem>
-                                <SelectItem
-                                    value="Office of the Chief"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Office of the Chief
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-Admin Support Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-Admin Support Unit
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-Special Project Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-Special Project Unit
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-ICT Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-ICT Unit
-                                </SelectItem>
-
-                                <SelectItem
-                                    value="BIOCON Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    BIOCON Section
-                                </SelectItem>
-
-                                <SelectItem
-                                    value="PFS Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PFS Section
-                                </SelectItem>
-                                <SelectItem
-                                    value="PHPS Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PHPS Section
-                                </SelectItem>
-                                <SelectItem
-                                    value="Others"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Others
-                                </SelectItem>
+                                {currentOfficeSections.map((section) => (
+                                    <SelectItem
+                                        key={section.id}
+                                        value={section.name}
+                                        className="cursor-pointer hover:bg-[#1a4d3e]"
+                                    >
+                                        {section.name}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
 
@@ -348,7 +540,7 @@ export default function EmployeeDirectory() {
                             placeholder="Search employees..."
                             className="w-full"
                             searchRoute="/directory"
-                            additionalParams={{ perPage, cpmd, status }}
+                            additionalParams={{ perPage, office, cpmd, status }}
                         />
                     </div>
                 </div>

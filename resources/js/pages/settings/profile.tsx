@@ -3,7 +3,16 @@ import { send } from '@/routes/verification';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, usePage } from '@inertiajs/react';
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useRef, useState, useMemo, type ChangeEvent } from 'react';
+
+// Sections interface
+interface Section {
+    id: number;
+    name: string;
+    code: string;
+    office: string;
+    display_order: number;
+}
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -38,14 +47,34 @@ export default function Profile({
     status?: string;
 }) {
     const { showSuccess, showError, showInfo } = usePopupAlert();
-    const { auth } = usePage<SharedData>().props;
+    const { auth, sections, SECTIONS_BY_OFFICE: fallbackSections } = usePage<SharedData>().props;
     const [officeValue, setOfficeValue] = useState<string>(
         auth.user.office ?? 'CPMD',
     );
-    const [cpmdValue, setCpmdValue] = useState<string>(auth.user.cpmd ?? '');
+    const [sectionIdValue, setSectionIdValue] = useState<number | null>(
+    auth.user.section_id ?? null
+);
     const [employmentStatusValue, setEmploymentStatusValue] = useState<string>(
         auth.user.employment_status ?? 'Regular',
     );
+
+    // Use backend sections or fallback to hardcoded sections
+    const sectionsByOffice = useMemo(() => {
+        if (sections && Array.isArray(sections) && sections.length > 0) {
+            const grouped: Record<string, string[]> = {};
+            sections.forEach((section: Section) => {
+                if (!grouped[section.office]) {
+                    grouped[section.office] = [];
+                }
+                grouped[section.office].push(section.name);
+            });
+            return grouped;
+        }
+        return fallbackSections || {};
+    }, [sections, fallbackSections]);
+
+    // Get available sections based on selected office
+    const availableSections = sectionsByOffice[officeValue] || [];
 
     // Profile image preview and input ref
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -345,8 +374,59 @@ export default function Profile({
                                                         <SelectValue placeholder="Select office" />
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        <SelectItem value="DO">
+                                                            DO
+                                                        </SelectItem>
+                                                        <SelectItem value="ADO RDPSS">
+                                                            ADO RDPSS
+                                                        </SelectItem>
+                                                        <SelectItem value="ADO RS">
+                                                            ADO RS
+                                                        </SelectItem>
+                                                        <SelectItem value="PMO">
+                                                            PMO
+                                                        </SelectItem>
+                                                        <SelectItem value="BIOTECH">
+                                                            BIOTECH
+                                                        </SelectItem>
+                                                        <SelectItem value="NSIC">
+                                                            NSIC
+                                                        </SelectItem>
+                                                        <SelectItem value="ADMINISTRATIVE">
+                                                            ADMINISTRATIVE
+                                                        </SelectItem>
                                                         <SelectItem value="CPMD">
                                                             CPMD
+                                                        </SelectItem>
+                                                        <SelectItem value="CRPSD">
+                                                            CRPSD
+                                                        </SelectItem>
+                                                        <SelectItem value="AED">
+                                                            AED
+                                                        </SelectItem>
+                                                        <SelectItem value="PPSSD">
+                                                            PPSSD
+                                                        </SelectItem>
+                                                        <SelectItem value="NPQSD">
+                                                            NPQSD
+                                                        </SelectItem>
+                                                        <SelectItem value="NSQCS">
+                                                            NSQCS
+                                                        </SelectItem>
+                                                        <SelectItem value="Baguio BPI center">
+                                                            Baguio BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Davao BPI center">
+                                                            Davao BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Guimaras BPI center">
+                                                            Guimaras BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="La Granja BPI center">
+                                                            La Granja BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Los Baños BPI center">
+                                                            Los Baños BPI center
                                                         </SelectItem>
                                                         <SelectItem value="Others">
                                                             Others
@@ -357,55 +437,36 @@ export default function Profile({
                                                     message={errors.office}
                                                 />
                                             </div>
-                                            {officeValue === 'CPMD' && (
+                                            {availableSections.length > 0 && (
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="cpmd">
+                                                    <Label htmlFor="section_id">
                                                         Section/Unit
                                                     </Label>
                                                     <Select
-                                                        name="cpmd"
-                                                        value={cpmdValue}
+                                                        name="section_id"
+                                                        value={sectionIdValue?.toString() || ''}
                                                         onValueChange={(
                                                             value,
                                                         ) =>
-                                                            setCpmdValue(value)
+                                                            setSectionIdValue(value ? parseInt(value) : null)
                                                         }
                                                     >
                                                         <SelectTrigger>
-                                                            <SelectValue placeholder="Select CPMD section" />
+                                                            <SelectValue placeholder="Select section/unit" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="Office of the Chief">
-                                                                Office of the
-                                                                Chief
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-Admin Support Unit">
-                                                                OC-Admin Support
-                                                                Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-Special Project Unit">
-                                                                OC-Special
-                                                                Project Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-ICT Unit">
-                                                                OC-ICT Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="BIOCON Section">
-                                                                BIOCON Section
-                                                            </SelectItem>
-                                                            <SelectItem value="PFS Section">
-                                                                PFS Section
-                                                            </SelectItem>
-                                                            <SelectItem value="PHPS Section">
-                                                                PHPS Section
-                                                            </SelectItem>
-                                                            <SelectItem value="Others">
-                                                                Others
-                                                            </SelectItem>
+                                                            {availableSections.map((sectionName: string) => {
+                                                                const section = sections?.find((s: Section) => s.name === sectionName);
+                                                                return (
+                                                                    <SelectItem key={sectionName} value={section?.id?.toString() || ''}>
+                                                                        {sectionName}
+                                                                    </SelectItem>
+                                                                );
+                                                            })}
                                                         </SelectContent>
                                                     </Select>
                                                     <InputError
-                                                        message={errors.cpmd}
+                                                        message={errors.section_id}
                                                     />
                                                 </div>
                                             )}

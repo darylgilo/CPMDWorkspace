@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { MapPin, User, Briefcase, Plane, Calendar, AlertCircle, Coffee, Home, Sun } from 'lucide-react';
+import { MapPin, User as LucideUser, Briefcase, Plane, Calendar, AlertCircle, Coffee, Home, Sun } from 'lucide-react';
 import React from 'react';
 import { format } from 'date-fns';
 
@@ -16,7 +16,7 @@ interface User {
     id: number;
     name: string;
     office: string;
-    cpmd: string;
+    section_id?: number | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -94,7 +94,7 @@ export function WhereaboutsTooltip({
 
                 {/* User info */}
                 <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                    <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <LucideUser className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span className="truncate">{user.name}</span>
                 </div>
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Taskboard;
 use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Section;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,9 @@ class TaskboardController extends Controller
         $page = $request->input('page', 1);
         $status = $request->input('status', '');
         $priority = $request->input('priority', '');
+        
+        // Get current user's office for filtering
+        $currentUserOffice = Auth::user()->office;
 
         $taskQuery = Task::with('creator')
             ->when($search, function ($query) use ($search) {
@@ -32,6 +36,9 @@ class TaskboardController extends Controller
             })
             ->when($status, fn($q) => $q->where('status', $status))
             ->when($priority, fn($q) => $q->where('priority', $priority))
+            ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            })
             ->orderBy('created_at', 'desc');
 
         $myTaskQuery = Task::with('creator')
@@ -48,19 +55,39 @@ class TaskboardController extends Controller
             })
             ->when($status, fn($q) => $q->where('status', $status))
             ->when($priority, fn($q) => $q->where('priority', $priority))
+            ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            })
             ->orderBy('created_at', 'desc');
 
         $tasks = $taskQuery->paginate($perPage, ['*'], 'page', $page);
         $myTasks = $myTaskQuery->paginate($perPage, ['*'], 'page', $page);
 
-        // Analytics
+        // Analytics - filter by current user's office
         $analytics = [
-            'total' => Task::count(),
-            'notStarted' => Task::where('status', 'not_started')->count(),
-            'inProgress' => Task::where('status', 'in_progress')->count(),
-            'inReview' => Task::where('status', 'in_review')->count(),
-            'completed' => Task::where('status', 'completed')->count(),
-            'cancelled' => Task::where('status', 'cancelled')->count(),
+            'total' => Task::whereHas('creator', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            })->count(),
+            'notStarted' => Task::where('status', 'not_started')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })->count(),
+            'inProgress' => Task::where('status', 'in_progress')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })->count(),
+            'inReview' => Task::where('status', 'in_review')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })->count(),
+            'completed' => Task::where('status', 'completed')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })->count(),
+            'cancelled' => Task::where('status', 'cancelled')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })->count(),
         ];
 
         $userId = Auth::id();
@@ -79,9 +106,10 @@ class TaskboardController extends Controller
             })->where('status', 'completed')->count(),
         ];
 
-        // Get all users for assignee picker
-        $users = User::where(function ($query) {
-                $query->where('office', 'CPMD')->orWhere('cpmd', 1);
+        // Get all users for assignee picker - filter by current user's office
+        $currentUserOffice = Auth::user()->office;
+        $users = User::where(function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice)->orWhereNotNull('section_id');
             })
             ->where('status', 'active')
             ->whereNotNull('email_verified_at')
@@ -94,8 +122,11 @@ class TaskboardController extends Controller
                 'avatar' => $u->profile_picture_url,
             ]);
 
-        // Get all tasks for timeline view
+        // Get all tasks for timeline view - filter by current user's office
         $allTasks = Task::with('creator')
+            ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            })
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($task) {
@@ -197,8 +228,12 @@ class TaskboardController extends Controller
         // Only return JSON if it's not an Inertia request
         if (($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') 
             && !$request->header('X-Inertia')) {
-            // Get fresh allTasks data
+            // Get fresh allTasks data - filter by current user's office
+            $currentUserOffice = Auth::user()->office;
             $allTasks = Task::with('creator')
+                ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                })
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($task) {
@@ -253,11 +288,15 @@ class TaskboardController extends Controller
     public function getMyTasks()
     {
         $userId = Auth::id();
-        return Task::where(function ($query) use ($userId) {
-                $query->where('created_by', $userId)
+        $currentUserOffice = Auth::user()->office;
+        return Task::where(function ($q) use ($userId) {
+                $q->where('created_by', $userId)
                       ->orWhereJsonContains('assignees', $userId);
             })
             ->where('status', '!=', 'completed')
+            ->whereHas('creator', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            })
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

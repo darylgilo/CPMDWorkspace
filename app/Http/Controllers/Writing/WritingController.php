@@ -42,8 +42,12 @@ class WritingController extends Controller
             $user = auth()->user();
             
             // Build query for archive documents
+            $currentUserOffice = Auth::user()->office;
             $query = Document::with(['user'])
-                ->where('user_id', $user->id);
+                ->where('user_id', $user->id)
+                ->whereHas('user', function ($query) use ($currentUserOffice) {
+                    $query->where('office', $currentUserOffice);
+                });
 
             // Apply search
             if ($search) {
@@ -104,7 +108,18 @@ class WritingController extends Controller
         }
 
         // Build query for writeup tab
+        $currentUser = Auth::user();
+        $currentUserOffice = $currentUser->office;
+        $currentUserRole = $currentUser->role;
+        
         $query = Document::with(['user', 'histories.user', 'comments.user', 'approvedBy', 'approvals', 'likes', 'bookmarks', 'images']);
+        
+        // ICS users can see all documents, others only see their office
+        if ($currentUserRole !== 'ICS') {
+            $query->whereHas('user', function ($query) use ($currentUserOffice) {
+                $query->where('office', $currentUserOffice);
+            });
+        }
 
         // Apply search
         if ($search) {
@@ -151,6 +166,8 @@ class WritingController extends Controller
                     'id' => $document->user->id,
                     'name' => $document->user->name,
                     'email' => $document->user->email,
+                    'role' => $document->user->role,
+                    'office' => $document->user->office,
                     'profile_picture' => $document->user->profile_picture,
                 ],
                 'histories' => $document->histories->map(function ($history) {
@@ -174,6 +191,8 @@ class WritingController extends Controller
                             'id' => $comment->user->id,
                             'name' => $comment->user->name,
                             'email' => $comment->user->email,
+                            'role' => $comment->user->role,
+                            'office' => $comment->user->office,
                             'profile_picture' => $comment->user->profile_picture,
                         ],
                         'created_at' => $comment->created_at->format('Y-m-d H:i:s'),
@@ -203,24 +222,51 @@ class WritingController extends Controller
             'total' => $documents->total(),
         ];
 
-        // Generate analytics data
+        // Generate analytics data - ICS users see all, others see their office only
+        $currentUser = Auth::user();
+        $currentUserOffice = $currentUser->office;
+        $currentUserRole = $currentUser->role;
+        
+        // Base queries
+        $baseQuery = function ($query) use ($currentUserRole, $currentUserOffice) {
+            if ($currentUserRole !== 'ICS') {
+                $query->whereHas('user', function ($subQuery) use ($currentUserOffice) {
+                    $subQuery->where('office', $currentUserOffice);
+                });
+            }
+        };
+        
         $analytics = [
             'categoryStatistics' => [
                 [
                     'category' => 'posting',
-                    'count' => Document::where('category', 'posting')->count(),
-                    'totalDocuments' => Document::where('category', 'posting')->count(),
+                    'count' => Document::where('category', 'posting')
+                        ->when($currentUserRole !== 'ICS', $baseQuery)
+                        ->count(),
+                    'totalDocuments' => Document::where('category', 'posting')
+                        ->when($currentUserRole !== 'ICS', $baseQuery)
+                        ->count(),
                 ],
                 [
                     'category' => 'travel_report',
-                    'count' => Document::where('category', 'travel_report')->count(),
-                    'totalDocuments' => Document::where('category', 'travel_report')->count(),
+                    'count' => Document::where('category', 'travel_report')
+                        ->when($currentUserRole !== 'ICS', $baseQuery)
+                        ->count(),
+                    'totalDocuments' => Document::where('category', 'travel_report')
+                        ->when($currentUserRole !== 'ICS', $baseQuery)
+                        ->count(),
                 ],
             ],
-            'totalDocuments' => Document::count(),
-            'draftCount' => Document::where('status', 'draft')->count(),
-            'approvedCount' => Document::where('status', 'approved')->count(),
-            'postedCount' => Document::where('status', 'posted')->count(),
+            'totalDocuments' => Document::when($currentUserRole !== 'ICS', $baseQuery)->count(),
+            'draftCount' => Document::where('status', 'draft')
+                ->when($currentUserRole !== 'ICS', $baseQuery)
+                ->count(),
+            'approvedCount' => Document::where('status', 'approved')
+                ->when($currentUserRole !== 'ICS', $baseQuery)
+                ->count(),
+            'postedCount' => Document::where('status', 'posted')
+                ->when($currentUserRole !== 'ICS', $baseQuery)
+                ->count(),
         ];
 
         // Merge all data
@@ -245,9 +291,21 @@ class WritingController extends Controller
     {
         $perPage = $request->input('perPage', 10);
         
+        // Get current user's role for filtering
+        $currentUser = Auth::user();
+        $currentUserRole = $currentUser->role;
+        
         // Build query for documents
-        $query = Document::with(['user'])
-            ->orderBy('updated_at', 'desc');
+        $query = Document::with(['user']);
+        
+        // ICS users can see all documents, others only see their office
+        if ($currentUserRole !== 'ICS') {
+            $query->whereHas('user', function ($query) use ($currentUser) {
+                $query->where('office', $currentUser->office);
+            });
+        }
+        
+        $query->orderBy('updated_at', 'desc');
 
         // Get paginated documents
         $documents = $query->paginate($perPage, ['*'], 'page', 1);
@@ -268,6 +326,8 @@ class WritingController extends Controller
                 'author' => [
                     'id' => $document->user->id,
                     'name' => $document->user->name,
+                    'role' => $document->user->role,
+                    'office' => $document->user->office,
                     'profile_picture' => $document->user->profile_picture,
                 ],
             ];
@@ -362,6 +422,8 @@ class WritingController extends Controller
                     'id' => $document->user->id,
                     'name' => $document->user->name,
                     'email' => $document->user->email,
+                    'role' => $document->user->role,
+                    'office' => $document->user->office,
                     'profile_picture' => $document->user->profile_picture,
                 ],
                 'images' => $document->images->map(function ($image) {
@@ -447,8 +509,30 @@ class WritingController extends Controller
      */
     public function update(Request $request, Document $document)
     {
-        // Check if user owns the document or is an admin/superadmin
-        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+        // Check if user owns the document or has permission based on role/office
+        $currentUser = auth()->user();
+        $documentAuthor = $document->user;
+        
+        $canEdit = false;
+        
+        // Document owner can always edit
+        if ($document->user_id === $currentUser->id) {
+            $canEdit = true;
+        }
+        // Admin and superadmin can edit any document
+        elseif (in_array($currentUser->role, ['admin', 'superadmin'])) {
+            $canEdit = true;
+        }
+        // ICS can edit any document
+        elseif ($currentUser->role === 'ICS') {
+            $canEdit = true;
+        }
+        // Office-based permissions: CPMD can edit CPMD documents, NPQSD can edit NPQSD documents, etc.
+        elseif ($currentUser->role === $documentAuthor->office) {
+            $canEdit = true;
+        }
+        
+        if (!$canEdit) {
             abort(403, 'Unauthorized action.');
         }
         
@@ -513,8 +597,30 @@ class WritingController extends Controller
      */
     public function deleteImage(Request $request, Document $document, DocumentImage $image)
     {
-        // Check if user owns the document or is an admin/superadmin
-        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+        // Check if user owns the document or has permission based on role/office
+        $currentUser = auth()->user();
+        $documentAuthor = $document->user;
+        
+        $canEdit = false;
+        
+        // Document owner can always edit
+        if ($document->user_id === $currentUser->id) {
+            $canEdit = true;
+        }
+        // Admin and superadmin can edit any document
+        elseif (in_array($currentUser->role, ['admin', 'superadmin'])) {
+            $canEdit = true;
+        }
+        // ICS can edit any document
+        elseif ($currentUser->role === 'ICS') {
+            $canEdit = true;
+        }
+        // Office-based permissions: CPMD can edit CPMD documents, NPQSD can edit NPQSD documents, etc.
+        elseif ($currentUser->role === $documentAuthor->office) {
+            $canEdit = true;
+        }
+        
+        if (!$canEdit) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -579,8 +685,30 @@ class WritingController extends Controller
      */
     public function destroy(Document $document)
     {
-        // Check if user owns the document or is an admin/superadmin
-        if ($document->user_id !== auth()->id() && !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+        // Check if user owns the document or has permission based on role/office
+        $currentUser = auth()->user();
+        $documentAuthor = $document->user;
+        
+        $canEdit = false;
+        
+        // Document owner can always edit
+        if ($document->user_id === $currentUser->id) {
+            $canEdit = true;
+        }
+        // Admin and superadmin can edit any document
+        elseif (in_array($currentUser->role, ['admin', 'superadmin'])) {
+            $canEdit = true;
+        }
+        // ICS can edit any document
+        elseif ($currentUser->role === 'ICS') {
+            $canEdit = true;
+        }
+        // Office-based permissions: CPMD can edit CPMD documents, NPQSD can edit NPQSD documents, etc.
+        elseif ($currentUser->role === $documentAuthor->office) {
+            $canEdit = true;
+        }
+        
+        if (!$canEdit) {
             abort(403, 'Unauthorized action.');
         }
 
