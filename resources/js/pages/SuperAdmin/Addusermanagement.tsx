@@ -13,10 +13,29 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useRef, useState, useEffect } from 'react';
+
+// Sections interface
+interface Section {
+    id: number;
+    name: string;
+    code: string;
+    office: string;
+    display_order: number;
+}
+
+interface PageProps {
+    [key: string]: unknown;
+    sections?: Section[];
+    SECTIONS_BY_OFFICE?: Record<string, string[]>;
+}
 
 export default function AddUserManagement() {
+    // Get sections from backend
+    const { props } = usePage<PageProps>();
+    const { sections, SECTIONS_BY_OFFICE: fallbackSections } = props;
+
     // Initialize popup alert hook
     const { showSuccess, showError } = usePopupAlert();
 
@@ -26,7 +45,7 @@ export default function AddUserManagement() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState<
-        'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS'
+        'user' | 'admin' | 'superadmin' | 'DO' | 'ADO RDPSS' | 'ADO RS' | 'PMO' | 'BIOTECH' | 'NSIC' | 'ADMINISTRATIVE' | 'CPMD' | 'CRPSD' | 'AED' | 'PPSSD' | 'NPQSD' | 'NSQCS' | 'ICS' | 'HR' | 'Baguio BPI center' | 'Davao BPI center' | 'Guimaras BPI center' | 'La Granja BPI center' | 'Los Baños BPI center' | 'Others'
     >('user');
     const [status, setStatus] = useState<'active' | 'inactive'>('active');
 
@@ -35,7 +54,7 @@ export default function AddUserManagement() {
     const [position, setPosition] = useState('');
     const [employment_status, setEmploymentStatus] = useState('Regular');
     const [office, setOffice] = useState('Others');
-    const [cpmd, setCpmd] = useState('Others');
+    const [section_id, setSectionId] = useState<number | null>(null);
     const [tin_number, setTinNumber] = useState('');
     const [landbank_number, setLandbankNumber] = useState('');
     const [gsis_number, setGsisNumber] = useState('');
@@ -61,6 +80,29 @@ export default function AddUserManagement() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [passwordError, setPasswordError] = useState('');
+
+    // Use backend sections or fallback to hardcoded sections
+    const sectionsByOffice = useState(() => {
+        if (sections && sections.length > 0) {
+            const grouped: Record<string, string[]> = {};
+            sections.forEach((section: Section) => {
+                if (!grouped[section.office]) {
+                    grouped[section.office] = [];
+                }
+                grouped[section.office].push(section.name);
+            });
+            return grouped;
+        }
+        return fallbackSections || {};
+    })[0];
+
+    // Get available sections based on selected office
+    const availableSections = sectionsByOffice[office] || [];
+
+    // Reset section when office changes
+    useEffect(() => {
+        setSectionId(null);
+    }, [office]);
 
     // References
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -120,7 +162,9 @@ export default function AddUserManagement() {
         formData.append('position', position);
         formData.append('employment_status', employment_status);
         formData.append('office', office);
-        formData.append('cpmd', cpmd);
+        if (section_id) {
+            formData.append('section_id', section_id.toString());
+        }
         formData.append('tin_number', tin_number);
         formData.append('landbank_number', landbank_number);
         formData.append('gsis_number', gsis_number);
@@ -352,6 +396,24 @@ export default function AddUserManagement() {
                                                         <SelectItem value="Others">
                                                             Others
                                                         </SelectItem>
+                                                        <SelectItem value="NSQCS">
+                                                            NSQCS
+                                                        </SelectItem>
+                                                        <SelectItem value="Baguio BPI center">
+                                                            Baguio BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Davao BPI center">
+                                                            Davao BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Guimaras BPI center">
+                                                            Guimaras BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="La Granja BPI center">
+                                                            La Granja BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Los Baños BPI center">
+                                                            Los Baños BPI center
+                                                        </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -389,8 +451,59 @@ export default function AddUserManagement() {
                                                         <SelectValue placeholder="Select office" />
                                                     </SelectTrigger>
                                                     <SelectContent>
+                                                        <SelectItem value="DO">
+                                                            DO
+                                                        </SelectItem>
+                                                        <SelectItem value="ADO RDPSS">
+                                                            ADO RDPSS
+                                                        </SelectItem>
+                                                        <SelectItem value="ADO RS">
+                                                            ADO RS
+                                                        </SelectItem>
+                                                        <SelectItem value="PMO">
+                                                            PMO
+                                                        </SelectItem>
+                                                        <SelectItem value="BIOTECH">
+                                                            BIOTECH
+                                                        </SelectItem>
+                                                        <SelectItem value="NSIC">
+                                                            NSIC
+                                                        </SelectItem>
+                                                        <SelectItem value="ADMINISTRATIVE">
+                                                            ADMINISTRATIVE
+                                                        </SelectItem>
                                                         <SelectItem value="CPMD">
                                                             CPMD
+                                                        </SelectItem>
+                                                        <SelectItem value="CRPSD">
+                                                            CRPSD
+                                                        </SelectItem>
+                                                        <SelectItem value="AED">
+                                                            AED
+                                                        </SelectItem>
+                                                        <SelectItem value="PPSSD">
+                                                            PPSSD
+                                                        </SelectItem>
+                                                        <SelectItem value="NPQSD">
+                                                            NPQSD
+                                                        </SelectItem>
+                                                        <SelectItem value="NSQCS">
+                                                            NSQCS
+                                                        </SelectItem>
+                                                        <SelectItem value="Baguio BPI center">
+                                                            Baguio BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Davao BPI center">
+                                                            Davao BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Guimaras BPI center">
+                                                            Guimaras BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="La Granja BPI center">
+                                                            La Granja BPI center
+                                                        </SelectItem>
+                                                        <SelectItem value="Los Baños BPI center">
+                                                            Los Baños BPI center
                                                         </SelectItem>
                                                         <SelectItem value="Others">
                                                             Others
@@ -399,46 +512,27 @@ export default function AddUserManagement() {
                                                 </Select>
                                             </div>
 
-                                            {office === 'CPMD' && (
+                                            {availableSections.length > 0 && (
                                                 <div>
-                                                    <Label htmlFor="cpmd">
+                                                    <Label htmlFor="section_id">
                                                         Section/Unit
                                                     </Label>
                                                     <Select
-                                                        value={cpmd}
-                                                        onValueChange={setCpmd}
+                                                        value={section_id?.toString() || ''}
+                                                        onValueChange={(value) => setSectionId(value ? parseInt(value) : null)}
                                                     >
                                                         <SelectTrigger className="mt-1">
                                                             <SelectValue placeholder="Select section/unit" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="Office of the Chief">
-                                                                Office of the
-                                                                Chief
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-Admin Support Unit">
-                                                                OC-Admin Support
-                                                                Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-Special Project Unit">
-                                                                OC-Special
-                                                                Project Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="OC-ICT Unit">
-                                                                OC-ICT Unit
-                                                            </SelectItem>
-                                                            <SelectItem value="BIOCON Section">
-                                                                BIOCON Section
-                                                            </SelectItem>
-                                                            <SelectItem value="PFS Section">
-                                                                PFS Section
-                                                            </SelectItem>
-                                                            <SelectItem value="PHPS Section">
-                                                                PHPS Section
-                                                            </SelectItem>
-                                                            <SelectItem value="Others">
-                                                                Others
-                                                            </SelectItem>
+                                                            {availableSections.map((sectionName) => {
+                                                                const section = sections?.find(s => s.name === sectionName);
+                                                                return (
+                                                                    <SelectItem key={sectionName} value={section?.id?.toString() || ''}>
+                                                                        {sectionName}
+                                                                    </SelectItem>
+                                                                );
+                                                            })}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -700,9 +794,25 @@ export default function AddUserManagement() {
                                                                     | 'user'
                                                                     | 'admin'
                                                                     | 'superadmin'
-                                                                    | 'BIOCON'
-                                                                    | 'PFS'
-                                                                    | 'PHPS',
+                                                                    | 'DO'
+                                                                    | 'ADO RDPSS'
+                                                                    | 'ADO RS'
+                                                                    | 'PMO'
+                                                                    | 'BIOTECH'
+                                                                    | 'NSIC'
+                                                                    | 'ADMINISTRATIVE'
+                                                                    | 'CPMD'
+                                                                    | 'CRPSD'
+                                                                    | 'AED'
+                                                                    | 'PPSSD'
+                                                                    | 'NPQSD'
+                                                                    | 'NSQCS'
+                                                                    | 'Baguio BPI center'
+                                                                    | 'Davao BPI center'
+                                                                    | 'Guimaras BPI center'
+                                                                    | 'La Granja BPI center'
+                                                                    | 'Los Baños BPI center'
+                                                                    | 'Others',
                                                             )
                                                         }
                                                     >
@@ -719,14 +829,68 @@ export default function AddUserManagement() {
                                                             <SelectItem value="superadmin">
                                                                 Super Admin
                                                             </SelectItem>
-                                                            <SelectItem value="BIOCON">
-                                                                BIOCON
+                                                            <SelectItem value="DO">
+                                                                DO
                                                             </SelectItem>
-                                                            <SelectItem value="PFS">
-                                                                PFS
+                                                            <SelectItem value="ADO RDPSS">
+                                                                ADO RDPSS
                                                             </SelectItem>
-                                                            <SelectItem value="PHPS">
-                                                                PHPS
+                                                            <SelectItem value="ADO RS">
+                                                                ADO RS
+                                                            </SelectItem>
+                                                            <SelectItem value="PMO">
+                                                                PMO
+                                                            </SelectItem>
+                                                            <SelectItem value="BIOTECH">
+                                                                BIOTECH
+                                                            </SelectItem>
+                                                            <SelectItem value="NSIC">
+                                                                NSIC
+                                                            </SelectItem>
+                                                            <SelectItem value="ADMINISTRATIVE">
+                                                                ADMINISTRATIVE
+                                                            </SelectItem>
+                                                            <SelectItem value="CPMD">
+                                                                CPMD
+                                                            </SelectItem>
+                                                            <SelectItem value="CRPSD">
+                                                                CRPSD
+                                                            </SelectItem>
+                                                            <SelectItem value="AED">
+                                                                AED
+                                                            </SelectItem>
+                                                            <SelectItem value="PPSSD">
+                                                                PPSSD
+                                                            </SelectItem>
+                                                            <SelectItem value="NPQSD">
+                                                                NPQSD
+                                                            </SelectItem>
+                                                            <SelectItem value="NSQCS">
+                                                                NSQCS
+                                                            </SelectItem>
+                                                            <SelectItem value="ICS">
+                                                                ICS
+                                                            </SelectItem>
+                                                            <SelectItem value="HR">
+                                                                HR
+                                                            </SelectItem>
+                                                            <SelectItem value="Baguio BPI center">
+                                                                Baguio BPI center
+                                                            </SelectItem>
+                                                            <SelectItem value="Davao BPI center">
+                                                                Davao BPI center
+                                                            </SelectItem>
+                                                            <SelectItem value="Guimaras BPI center">
+                                                                Guimaras BPI center
+                                                            </SelectItem>
+                                                            <SelectItem value="La Granja BPI center">
+                                                                La Granja BPI center
+                                                            </SelectItem>
+                                                            <SelectItem value="Los Baños BPI center">
+                                                                Los Baños BPI center
+                                                            </SelectItem>
+                                                            <SelectItem value="Others">
+                                                                Others
                                                             </SelectItem>
                                                         </SelectContent>
                                                     </Select>

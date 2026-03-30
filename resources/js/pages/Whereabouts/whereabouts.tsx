@@ -50,12 +50,22 @@ import {
 import { ChevronLeft, ChevronRight, GripVertical, MapPin, Briefcase, Home, Plane, Calendar, Coffee, AlertCircle, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
+// Sections interface
+interface Section {
+    id: number;
+    name: string;
+    code: string;
+    office: string;
+    display_order: number;
+}
+
 interface User {
     id: number;
     name: string;
     office: string;
-    cpmd: string;
+    section_id?: number | null;
 }
+
 
 interface Whereabout {
     id: number;
@@ -76,6 +86,10 @@ interface PageProps {
     auth: {
         user: AuthUser;
     };
+    sections?: Section[];
+    SECTIONS_BY_OFFICE?: Record<string, string[]>;
+    selectedOffice?: string;
+    availableOffices?: string[];
     [key: string]: unknown;
 }
 
@@ -85,7 +99,10 @@ interface Props {
     currentDate: string;
     filters: {
         date?: string;
+        office?: string;
     };
+    selectedOffice?: string;
+    availableOffices?: string[];
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -114,15 +131,6 @@ const STATUS_OPTIONS = [
     'ABSENT',
     'HALF DAY',
     'WFH',
-];
-
-const SECTION_FILTERS = [
-    { label: 'All Sections', value: 'all' },
-    { label: 'Office of the Chief', value: 'office_of_the_chief_group' },
-    { label: 'BIOCON Section', value: 'BIOCON Section' },
-    { label: 'PFS Section', value: 'PFS Section' },
-    { label: 'PHPS Section', value: 'PHPS Section' },
-    { label: 'Others', value: 'Others' },
 ];
 
 // Sortable Row Component
@@ -299,9 +307,43 @@ export default function Whereabouts({
     users,
     whereabouts,
     currentDate,
+    selectedOffice = 'CPMD',
+    availableOffices = [],
 }: Props) {
     const { showSuccess, showError, showInfo } = usePopupAlert();
-    const { auth } = usePage<PageProps>().props;
+    const { auth, sections, SECTIONS_BY_OFFICE: fallbackSections } = usePage<PageProps>().props;
+
+    // Helper function to get section name by ID
+    const getSectionName = (sectionId: number | null | undefined): string => {
+        if (!sectionId || !sections) return 'Unassigned';
+        const section = sections.find(s => s.id === sectionId);
+        return section?.name || 'Unassigned';
+    };
+
+    // Create dynamic section filters based on selected office
+    const getSectionFilters = (office: string) => {
+        const officeSections = fallbackSections?.[office] || [];
+        const filters = [{ label: 'All Sections', value: 'all' }];
+        
+        // Add office of the chief group if it exists
+        const chiefSections = officeSections.filter((section: string) => 
+            section.includes('Office of the Chief') || 
+            section.includes('OC-') ||
+            section.toLowerCase().includes('chief')
+        );
+        if (chiefSections.length > 0) {
+            filters.push({ label: 'Office of the Chief', value: 'office_of_the_chief_group' });
+        }
+        
+        // Add individual sections
+        officeSections.forEach((section: string) => {
+            if (!section.includes('Office of the Chief') && !section.includes('OC-')) {
+                filters.push({ label: section, value: section });
+            }
+        });
+        
+        return filters;
+    };
     const [date] = useState(parseISO(currentDate));
     const [selectedCell, setSelectedCell] = useState<{
         user: User;
@@ -344,7 +386,7 @@ export default function Whereabouts({
     // Group users by section
     const usersByOffice = localUsers.reduce(
         (acc, user) => {
-            const section = user.cpmd || 'Unassigned';
+            const section = getSectionName(user.section_id);
             if (!acc[section]) acc[section] = [];
             acc[section].push(user);
             return acc;
@@ -375,16 +417,16 @@ export default function Whereabouts({
                 if (!activeUser || !overUser) return items;
 
                 // Get the section for these users
-                const section = activeUser.cpmd || 'Unassigned';
+                const section = getSectionName(activeUser.section_id);
 
                 // Only reorder if both items are in the same section
-                if ((overUser.cpmd || 'Unassigned') !== section) {
+                if (getSectionName(overUser.section_id) !== section) {
                     return items;
                 }
 
                 // Get all users in this section
                 const sectionUsers = items.filter(
-                    (u) => (u.cpmd || 'Unassigned') === section,
+                    (u) => getSectionName(u.section_id) === section,
                 );
 
                 // Find indices within the section
@@ -408,7 +450,7 @@ export default function Whereabouts({
 
                 // Reconstruct the array maintaining section groupings
                 const allSections = Array.from(
-                    new Set(items.map((u) => u.cpmd || 'Unassigned')),
+                    new Set(items.map((u) => getSectionName(u.section_id))),
                 );
 
                 allSections.forEach((sec) => {
@@ -417,7 +459,7 @@ export default function Whereabouts({
                     } else {
                         result.push(
                             ...items.filter(
-                                (u) => (u.cpmd || 'Unassigned') === sec,
+                                (u) => getSectionName(u.section_id) === sec,
                             ),
                         );
                     }
@@ -436,7 +478,7 @@ export default function Whereabouts({
                     result: result.map((u) => ({
                         id: u.id,
                         name: u.name,
-                        section: u.cpmd,
+                        section: getSectionName(u.section_id),
                     })),
                 });
 
@@ -703,6 +745,30 @@ export default function Whereabouts({
                                 </SelectContent>
                             </Select>
 
+                            {/* Office Selection Dropdown - Hidden */}
+                            {/* <Select
+                                value={selectedOffice}
+                                onValueChange={(val) => {
+                                    router.visit(
+                                        `/whereabouts?date=${format(date, 'yyyy-MM-dd')}&office=${val}`,
+                                    );
+                                }}
+                            >
+                                <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectValue placeholder="Select Office" />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    {availableOffices.map((office) => (
+                                        <SelectItem
+                                            key={office}
+                                            value={office}
+                                        >
+                                            {office}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select> */}
+
                             <Select
                                 value={selectedSection}
                                 onValueChange={setSelectedSection}
@@ -711,7 +777,7 @@ export default function Whereabouts({
                                     <SelectValue placeholder="Select Section" />
                                 </SelectTrigger>
                                 <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                    {SECTION_FILTERS.map((filter) => (
+                                    {getSectionFilters(selectedOffice).map((filter) => (
                                         <SelectItem
                                             key={filter.value}
                                             value={filter.value}
@@ -761,7 +827,7 @@ export default function Whereabouts({
                             <thead>
                                 <tr>
                                     <th className="sticky left-0 z-20 min-w-[140px] border-r-2 border-gray-300 bg-gradient-to-r from-gray-50 to-gray-100 p-3 text-left text-xs font-semibold shadow-sm sm:min-w-[200px] sm:p-4 sm:text-sm dark:border-neutral-600 dark:from-neutral-800 dark:to-neutral-900 dark:text-white">
-                                        CROP PEST MANAGEMENT DIVISION
+                                        {selectedOffice} - WHEREABOUTS
                                     </th>
                                     {days.map((day: Date) => (
                                         <th
@@ -873,7 +939,7 @@ export default function Whereabouts({
                                                         )}
                                                         <h4 className="font-semibold text-gray-900 dark:text-white">{user.name}</h4>
                                                     </div>
-                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-neutral-700 dark:text-gray-400">{user.cpmd}</span>
+                                                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-neutral-700 dark:text-gray-400">{getSectionName(user.section_id)}</span>
                                                 </div>
                                                 
                                                 <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">

@@ -35,7 +35,7 @@ interface User {
     email: string;
     position?: string | null;
     office?: string | null;
-    cpmd?: string | null;
+    section_id?: number | null;
     employment_status?: string | null;
     employee_id?: string | null;
     landbank_number?: string | null;
@@ -75,6 +75,7 @@ interface PageProps extends InertiaPageProps {
         user?: {
             id: number;
             role?: string;
+            office?: string;
             [key: string]: unknown;
         };
         [key: string]: unknown;
@@ -85,6 +86,19 @@ interface PageProps extends InertiaPageProps {
         cos: number;
         jobOrder: number;
     };
+}
+
+// Import sections from backend
+interface PageProps extends InertiaPageProps {
+    sections?: Array<{
+        id: number;
+        name: string;
+        code: string;
+        office: string;
+        display_order: number;
+    }>;
+    // Define sections by office (fallback if backend sections not available)
+    SECTIONS_BY_OFFICE?: Record<string, string[]>;
 }
 
 // Status colors matching Whereabouts page
@@ -114,35 +128,66 @@ const isWhereaboutsUpdatedToday = (updatedAt: string | null | undefined): boolea
 };
 
 // Employee Management list page component
-export default function EmployeeManagement() {
+export default function EmployeeManagement({ sections, SECTIONS_BY_OFFICE: fallbackSections }: PageProps) {
     const { showSuccess, showError, showInfo } = usePopupAlert();
     const { props } = usePage<PageProps>();
     const {
-        users = {
-            data: [],
-            links: [],
-            current_page: 1,
-            last_page: 1,
-            per_page: 12,
-            total: 0,
-        } as PaginatedUsers,
         auth,
-        stats = {
-            total: 0,
-            regular: 0,
-            cos: 0,
-            jobOrder: 0,
-        },
+        users,
+        stats,
     } = props;
+
+    // Use backend sections or fallback to hardcoded sections
+    const sectionsByOffice = useMemo(() => {
+        if (sections && sections.length > 0) {
+            const grouped: Record<string, string[]> = {};
+            sections.forEach((section: { id: number; name: string; code: string; office: string; display_order: number }) => {
+                if (!grouped[section.office]) {
+                    grouped[section.office] = [];
+                }
+                grouped[section.office].push(section.name);
+            });
+            return grouped;
+        }
+        return fallbackSections || {};
+    }, [sections, fallbackSections]);
+
+    // Set default users if not provided
+    const paginatedUsers = users || {
+        data: [],
+        links: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: 12,
+        total: 0,
+    } as PaginatedUsers;
 
     // Local state for search, filters, and employees
     const [search, setSearch] = useState<string>('');
     const [perPage, setPerPage] = useState<number>(12);
+    const [office, setOffice] = useState<string>('');
     const [cpmd, setCpmd] = useState<string>('');
     const [status, setStatus] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+
+    // Get available sections based on selected office (for HR) or current user's office (for others)
+    const availableSections = useMemo(() => {
+        if (auth?.user?.role === 'HR') {
+            // HR users: use selected office filter, or all sections if no office selected
+            if (office) {
+                return sectionsByOffice[office] || [];
+            } else {
+                // If no office selected, show all sections from all offices
+                return Object.values(sectionsByOffice).flat();
+            }
+        } else {
+            // Non-HR users: use their own office
+            const currentUserOffice = auth?.user?.office;
+            return currentUserOffice ? sectionsByOffice[currentUserOffice] || [] : [];
+        }
+    }, [auth?.user?.role, auth?.user?.office, office, sectionsByOffice]);
 
     const toggleRow = (id: number) => {
         const newExpandedRows = new Set(expandedRows);
@@ -170,43 +215,74 @@ export default function EmployeeManagement() {
     }, [activeDropdown]);
 
     // Load all employees once on component mount
-    const [allEmployees, setAllEmployees] = useState(users.data || []);
+    const [allEmployees, setAllEmployees] = useState(paginatedUsers.data || []);
 
-    // Update all employees when data changes
-    useEffect(() => {
-        setAllEmployees(users.data || []);
-    }, [users.data]);
+    // Calculate statistics based on filtered employees
+    const officeStats = useMemo(() => {
+        let statsEmployees;
+        
+        if (auth?.user?.role === 'HR') {
+            // HR users: show statistics for all offices
+            statsEmployees = allEmployees;
+        } else {
+            // Non-HR users: show statistics for their own office only
+            const currentUserOffice = auth?.user?.office;
+            statsEmployees = currentUserOffice 
+                ? allEmployees.filter(emp => emp.office === currentUserOffice)
+                : allEmployees;
+        }
+            
+        return {
+            total: statsEmployees.length,
+            regular: statsEmployees.filter(emp => emp.employment_status === 'Regular').length,
+            cos: statsEmployees.filter(emp => emp.employment_status === 'COS').length,
+            jobOrder: statsEmployees.filter(emp => emp.employment_status === 'Job Order').length,
+        };
+    }, [allEmployees, auth?.user?.role, auth?.user?.office]);
 
     // Filter employees based on search and filters
     const filteredEmployees = useMemo(() => {
         let result = [...allEmployees];
 
-        // Filter for CPMD office only
-        result = result.filter((emp) => emp.office === 'CPMD');
+        // HR users can filter by office, others see their office only
+        if (auth?.user?.role === 'HR') {
+            // HR users can apply office filter if selected
+            if (office) {
+                result = result.filter((emp) => emp.office === office);
+            }
+        } else {
+            // Non-HR users are filtered by their own office
+            const currentUserOffice = auth?.user?.office;
+            if (currentUserOffice) {
+                result = result.filter((emp) => emp.office === currentUserOffice);
+            }
+        }
 
-        // Apply CPMD section filter
+        // Apply section filter
         if (cpmd) {
-            result = result.filter((emp) => emp.cpmd === cpmd);
+            result = result.filter((emp) => {
+                const section = sections?.find(s => s.name === cpmd);
+                return section && emp.section_id === section.id;
+            });
         }
 
         // Apply status filter
-        if (status) {
+        if (status && status !== 'all') {
             result = result.filter((emp) => emp.employment_status === status);
         }
 
-        // Apply search
+        // Apply search filter
         if (search) {
-            const query = search.toLowerCase();
-            result = result.filter(
-                (emp) =>
-                    emp.name?.toLowerCase().includes(query) ||
-                    emp.email?.toLowerCase().includes(query) ||
-                    emp.position?.toLowerCase().includes(query),
+            result = result.filter((emp) =>
+                emp.name?.toLowerCase().includes(search.toLowerCase()) ||
+                emp.email?.toLowerCase().includes(search.toLowerCase()) ||
+                emp.employee_id?.toLowerCase().includes(search.toLowerCase()) ||
+                emp.position?.toLowerCase().includes(search.toLowerCase())
             );
         }
 
         return result;
-    }, [allEmployees, search, cpmd, status]);
+    }, [allEmployees, search, office, cpmd, status, auth?.user?.role, auth?.user?.office]);
 
     // Pagination
     const paginatedEmployees = useMemo(() => {
@@ -219,13 +295,14 @@ export default function EmployeeManagement() {
         const params = new URLSearchParams();
         if (search) params.set('search', search);
         if (perPage !== 12) params.set('perPage', perPage.toString());
+        if (office) params.set('office', office);
         if (cpmd) params.set('cpmd', cpmd);
         if (status) params.set('status', status);
         if (currentPage > 1) params.set('page', currentPage.toString());
 
         const url = `${window.location.pathname}?${params.toString()}`;
         window.history.replaceState({}, '', url);
-    }, [search, perPage, cpmd, status, currentPage]);
+    }, [search, perPage, office, cpmd, status, currentPage]);
 
     // Handle page changes when filters or items per page changes
     useEffect(() => {
@@ -234,12 +311,13 @@ export default function EmployeeManagement() {
             setCurrentPage(newTotalPages);
         } else if (currentPage === 0 && newTotalPages > 0) {
             setCurrentPage(1);
-        } else if (search || cpmd || status) {
+        } else if (search || office || cpmd || status) {
             setCurrentPage(1);
         }
         updateUrl();
     }, [
         search,
+        office,
         cpmd,
         status,
         perPage,
@@ -250,6 +328,13 @@ export default function EmployeeManagement() {
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
+    };
+
+    // Handle office change - clear section filter when office changes
+    const handleOfficeChange = (value: string) => {
+        const newValue = value === 'all' ? '' : value;
+        setOffice(newValue);
+        setCpmd(''); // Clear section filter when office changes
     };
 
     // Handle page change with proper type safety
@@ -269,28 +354,28 @@ export default function EmployeeManagement() {
                 <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-2 sm:gap-3 md:grid-cols-4 md:gap-4">
                     <SimpleStatistic
                         label="Total Employees"
-                        value={stats.total}
+                        value={officeStats.total}
                         icon={Users}
-                        subtitle="Total employees in CPMD"
+                        subtitle={auth?.user?.role === 'HR' ? 'BPI employees' : (auth?.user?.office ? `Total employees in ${auth.user.office}` : 'Total employees')}
                         backgroundColor="#163832"
                     />
                     <SimpleStatistic
                         label="Regular Employees"
-                        value={stats.regular}
+                        value={officeStats.regular}
                         icon={UserCheck}
                         subtitle="Permanent status"
                         backgroundColor="#1a4d3e"
                     />
                     <SimpleStatistic
                         label="COS Employees"
-                        value={stats.cos}
+                        value={officeStats.cos}
                         icon={Briefcase}
                         subtitle="Contract of Service"
                         backgroundColor="#235347"
                     />
                     <SimpleStatistic
                         label="Job Order"
-                        value={stats.jobOrder}
+                        value={officeStats.jobOrder}
                         icon={Clock}
                         subtitle="Casual/Temporary"
                         backgroundColor="#2a6358"
@@ -302,14 +387,77 @@ export default function EmployeeManagement() {
                     {/* Filters and Add button on the left */}
                     <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                         {(auth?.user?.role === 'superadmin' ||
-                            auth?.user?.role === 'admin') && (
+                            auth?.user?.role === 'admin' ||
+                            auth?.user?.role === 'HR') && (
                             <button
                                 onClick={() => router.get('/employees/create')}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#163832] px-3 py-2 text-sm text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                className="inline-flex w-full items-center justify-center rounded-md bg-[#163832] p-2 text-white transition hover:bg-[#163832]/90 sm:w-auto dark:bg-[#235347] dark:hover:bg-[#235347]/90"
+                                title="Add Employee"
                             >
                                 <UserPlus className="h-4 w-4" />
-                                <span>Add Employee</span>
                             </button>
+                        )}
+
+                        {/* Office Filter - Only for HR users */}
+                        {auth?.user?.role === 'HR' && (
+                            <Select
+                                value={office || 'all'}
+                                onValueChange={handleOfficeChange}
+                            >
+                                <SelectTrigger className="w-full border-gray-300 sm:w-[150px] dark:border-neutral-700 dark:bg-neutral-950">
+                                    <SelectValue placeholder="All Offices" />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    <SelectItem
+                                        value="all"
+                                        className="cursor-pointer hover:bg-[#1a4d3e]"
+                                    >
+                                        All Offices
+                                    </SelectItem>
+                                    <SelectItem value="CPMD" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        CPMD
+                                    </SelectItem>
+                                    <SelectItem value="DO" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        DO
+                                    </SelectItem>
+                                    <SelectItem value="ADO RDPSS" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        ADO RDPSS
+                                    </SelectItem>
+                                    <SelectItem value="ADO RS" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        ADO RS
+                                    </SelectItem>
+                                    <SelectItem value="PMO" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        PMO
+                                    </SelectItem>
+                                    <SelectItem value="BIOTECH" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        BIOTECH
+                                    </SelectItem>
+                                    <SelectItem value="NSIC" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        NSIC
+                                    </SelectItem>
+                                    <SelectItem value="ADMINISTRATIVE" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        ADMINISTRATIVE
+                                    </SelectItem>
+                                    <SelectItem value="CRPSD" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        CRPSD
+                                    </SelectItem>
+                                    <SelectItem value="AED" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        AED
+                                    </SelectItem>
+                                    <SelectItem value="PPSSD" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        PPSSD
+                                    </SelectItem>
+                                    <SelectItem value="NPQSD" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        NPQSD
+                                    </SelectItem>
+                                    <SelectItem value="NSQCS" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        NSQCS
+                                    </SelectItem>
+                                    <SelectItem value="Others" className="cursor-pointer hover:bg-[#1a4d3e]">
+                                        Others
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         )}
 
                         <Select
@@ -321,7 +469,7 @@ export default function EmployeeManagement() {
                             }}
                         >
                             <SelectTrigger className="w-full border-gray-300 sm:w-[180px] dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue placeholder="All Sections" />
+                                <SelectValue placeholder={auth?.user?.role === 'HR' ? (office ? `Sections in ${office}` : 'All Sections') : 'All Sections'} />
                             </SelectTrigger>
                             <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                 <SelectItem
@@ -330,56 +478,15 @@ export default function EmployeeManagement() {
                                 >
                                     All Sections
                                 </SelectItem>
-                                <SelectItem
-                                    value="Office of the Chief"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Office of the Chief
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-Admin Support Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-Admin Support Unit
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-Special Project Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-Special Project Unit
-                                </SelectItem>
-                                <SelectItem
-                                    value="OC-ICT Unit"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    OC-ICT Unit
-                                </SelectItem>
-
-                                <SelectItem
-                                    value="BIOCON Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    BIOCON Section
-                                </SelectItem>
-
-                                <SelectItem
-                                    value="PFS Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PFS Section
-                                </SelectItem>
-                                <SelectItem
-                                    value="PHPS Section"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    PHPS Section
-                                </SelectItem>
-                                <SelectItem
-                                    value="Others"
-                                    className="cursor-pointer hover:bg-[#1a4d3e]"
-                                >
-                                    Others
-                                </SelectItem>
+                                {availableSections.map((section) => (
+                                    <SelectItem
+                                        key={section}
+                                        value={section}
+                                        className="cursor-pointer hover:bg-[#1a4d3e]"
+                                    >
+                                        {section}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
 
@@ -477,7 +584,7 @@ export default function EmployeeManagement() {
                                 placeholder="Search employees..."
                                 className="w-full"
                                 searchRoute="/employees"
-                                additionalParams={{ perPage, cpmd, status }}
+                                additionalParams={{ perPage, office, cpmd, status }}
                             />
                         </div>
                     </div>
@@ -594,7 +701,7 @@ export default function EmployeeManagement() {
                                                         {employee.office || '—'}
                                                     </td>
                                                     <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
-                                                        {employee.cpmd || '—'}
+                                                        {employee.section_id ? sections?.find(s => s.id === employee.section_id)?.name || '—' : '—'}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap">
                                                         <span
@@ -848,7 +955,7 @@ export default function EmployeeManagement() {
                                                     <div className="flex flex-wrap gap-3">
                                                         <div className="flex items-center flex-1 min-w-0">
                                                             <span className="font-medium text-gray-500 dark:text-gray-400">Section:</span>
-                                                            <span className="ml-1 text-gray-900 dark:text-white truncate">{employee.cpmd || '—'}</span>
+                                                            <span className="ml-1 text-gray-900 dark:text-white truncate">{employee.section_id ? sections?.find(s => s.id === employee.section_id)?.name || '—' : '—'}</span>
                                                         </div>
                                                         <div className="flex items-center flex-shrink-0">
                                                             <span className="font-medium text-gray-500 dark:text-gray-400">Status:</span>

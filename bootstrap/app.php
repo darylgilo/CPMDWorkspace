@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\PageAccessMiddleware;
+use App\Http\Middleware\OfficeMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,6 +34,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // This allows you to use 'page_access:noticeboard', 'page_access:writing_suite', etc.
             // to restrict access to specific pages based on user permissions.
             'page_access'=>PageAccessMiddleware::class,
+            // Register the 'office' middleware alias for office-based access control
+            // This allows you to use 'office:CPMD', etc. in your route definitions
+            // to restrict access to specific pages based on user office assignment.
+            'office'=>OfficeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

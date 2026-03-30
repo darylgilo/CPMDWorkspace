@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\Section;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,20 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        // Get sections for the frontend
+        $sections = Section::active()->ordered()->get();
+        
+        // Create sections by office mapping for frontend
+        $sectionsByOffice = [];
+        foreach ($sections as $section) {
+            $sectionsByOffice[$section->office][] = $section->name;
+        }
+
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
         ]);
     }
 

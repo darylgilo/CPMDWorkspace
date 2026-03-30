@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('submitter_name')->nullable(); // For non-authenticated submissions
             $table->string('submitter_email')->nullable();
             $table->string('status')->default('submitted'); // submitted, reviewed, approved, rejected
-            $table->enum('priority', ['urgent', 'high', 'medium', 'low'])->default('medium')->after('status');
-            $table->json('assignees')->nullable()->after('priority'); // For multiple assignees
+            $table->enum('priority', ['urgent', 'high', 'medium', 'low'])->default('medium');
+            $table->json('assignees')->nullable(); // For multiple assignees
             $table->text('notes')->nullable(); // Admin notes
             $table->timestamps();
         });

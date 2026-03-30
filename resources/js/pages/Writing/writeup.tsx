@@ -45,6 +45,8 @@ interface Comment {
         id: number;
         name: string;
         email: string;
+        role: string;
+        office: string;
         profile_picture?: string;
     };
     created_at: string;
@@ -78,6 +80,8 @@ interface Document {
         id: number;
         name: string;
         email: string;
+        role: string;
+        office: string;
         profile_picture?: string;
     };
     histories: Array<{
@@ -107,6 +111,7 @@ interface PageProps {
             id: number;
             name: string;
             email: string;
+            role: string;
             profile_picture?: string;
         };
     };
@@ -987,13 +992,12 @@ export default function Writeup() {
                                             <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                                                 {document.author.name}
                                             </h3>
-                                            {/* Date below name on mobile only */}
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
-                                                {formatDateForBlog(
-                                                    document.created_at,
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-1">
+                                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                                                {/* Office badge */}
+                                                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                    {document.author.office}
+                                                </span>
+                                                {/* Status badge */}
                                                 <span
                                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(document.status)}`}
                                                 >
@@ -1002,12 +1006,19 @@ export default function Writeup() {
                                                         .toUpperCase() +
                                                         document.status.slice(1)}
                                                 </span>
+                                                {/* Category badge */}
                                                 <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-neutral-800 dark:text-gray-300">
                                                     {document.category === 'posting'
                                                         ? 'Posting'
                                                         : 'Travel Report'}
                                                 </span>
-                                                {/* Date on same line on desktop */}
+                                                {/* Date - mobile inline, desktop hidden */}
+                                                <span className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                                                    {formatDateForBlog(
+                                                        document.created_at,
+                                                    )}
+                                                </span>
+                                                {/* Desktop date */}
                                                 <span className="hidden sm:flex items-center text-xs text-gray-500 dark:text-gray-400">
                                                     <span className="mx-1">•</span>
                                                     {formatDateForBlog(
@@ -1040,8 +1051,7 @@ export default function Writeup() {
                                                 <Edit3 className="mr-2 h-4 w-4" />
                                                 <span>Edit</span>
                                             </DropdownMenuItem>
-                                            {current_user?.id ===
-                                                document.author.id && (
+                                            {(current_user?.id === document.author.id || auth?.user?.role === 'admin' || auth?.user?.role === 'superadmin' || auth?.user?.role === 'ICS' || auth?.user?.role === document.author.office) && (
                                                 <DropdownMenuItem
                                                     onClick={() =>
                                                         handleDelete(
@@ -1485,17 +1495,17 @@ export default function Writeup() {
                                                                                 .name
                                                                         }
                                                                     </span>
+                                                                    {/* Comment author office badge */}
+                                                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                                        {comment.author.office}
+                                                                    </span>
                                                                     <span className="text-xs text-gray-500 dark:text-gray-400">
                                                                         {formatDate(
                                                                             comment.created_at,
                                                                         )}
                                                                     </span>
                                                                 </div>
-                                                                {current_user &&
-                                                                    current_user.id ===
-                                                                        comment
-                                                                            .author
-                                                                            .id && (
+                                                                {current_user && current_user.id === comment.author.id && (
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger
                                                                             asChild

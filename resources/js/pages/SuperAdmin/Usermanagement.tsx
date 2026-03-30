@@ -45,7 +45,7 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string | null;
-    role: 'user' | 'admin' | 'superadmin' | 'BIOCON' | 'PFS' | 'PHPS';
+    role: 'user' | 'admin' | 'superadmin' | 'DO' | 'ADO RDPSS' | 'ADO RS' | 'PMO' | 'BIOTECH' | 'NSIC' | 'ADMINISTRATIVE' | 'CPMD' | 'CRPSD' | 'AED' | 'PPSSD' | 'NPQSD' | 'NSQCS' | 'Baguio BPI center' | 'Davao BPI center' | 'Guimaras BPI center' | 'La Granja BPI center' | 'Los Baños BPI center' | 'Others';
     status: 'active' | 'inactive';
     created_at?: string;
     last_login_at?: string | null;

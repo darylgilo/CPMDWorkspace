@@ -31,7 +31,7 @@ class ProfileUpdateRequest extends FormRequest
             // Employment information (all optional)
             'position' => ['nullable', 'string', 'max:255'],
             'employment_status' => ['nullable', 'string'],
-            'office' => ['nullable', 'string'],
+            'office' => ['nullable', 'string', Rule::in(['DO','ADO RDPSS','ADO RS','PMO','BIOTECH','NSIC','ADMINISTRATIVE','CPMD','CRPSD','AED','PPSSD','NPQSD','NSQCS','Baguio BPI center','Davao BPI center','Guimaras BPI center','La Granja BPI center','Los Baños BPI center','Others'])],
             'employee_id' => ['nullable', 'string', 'max:255', Rule::unique(User::class)->ignore($this->user()->id)],
             'item_number' => ['nullable', 'string', 'max:255'],
             'hiring_date' => ['nullable', 'date'],
@@ -51,8 +51,8 @@ class ProfileUpdateRequest extends FormRequest
             'contact_number' => ['nullable', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             
-            // Department/CPMD information
-            'cpmd' => ['nullable', 'string'],
+            // Department/Section information
+            'section_id' => ['nullable', 'exists:sections,id'],
             
             // Profile picture upload with restrictions
             'profile_picture' => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,gif', 'max:10240'], // 10MB max
