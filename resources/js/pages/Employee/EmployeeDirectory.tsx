@@ -166,11 +166,16 @@ export default function EmployeeDirectory() {
             });
             return grouped;
         }
-        return officeSections;
+        // Convert fallback to object format
+        const fallbackGrouped: Record<string, { id: number; name: string }[]> = {};
+        Object.entries(officeSections).forEach(([office, sections]) => {
+            fallbackGrouped[office] = sections.map((name, index) => ({ id: index + 1, name }));
+        });
+        return fallbackGrouped;
     }, [sections]);
 
     // Get current office sections
-    const currentOfficeSections = office && office !== 'all' ? sectionsByOffice[office] || [] : [];
+    const currentOfficeSections: { id: number; name: string }[] = office && office !== 'all' ? sectionsByOffice[office] || [] : [];
 
     // Local state for all employees
     const [allEmployees, setAllEmployees] = useState(users.data || []);
@@ -431,7 +436,7 @@ export default function EmployeeDirectory() {
                                 >
                                     All Sections
                                 </SelectItem>
-                                {currentOfficeSections.map((section) => (
+                                {currentOfficeSections.map((section: { id: number; name: string }) => (
                                     <SelectItem
                                         key={section.id}
                                         value={section.name}
