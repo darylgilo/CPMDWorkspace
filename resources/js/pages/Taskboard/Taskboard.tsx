@@ -3,6 +3,9 @@ import FormDialog, { type FormField } from '@/components/FormDialog';
 import KanbanBoard from '@/components/KanbanBoard';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
+import AddUpdateDialog from '@/components/AddUpdateDialog';
+import TaskUpdatesRow from '@/components/TaskUpdatesRow';
+import { type PaginatedData } from '@/types/ppmp';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,6 +13,12 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { usePopupAlert } from '@/components/ui/popup-alert';
 import {
     Select,
@@ -26,9 +35,12 @@ import {
     ClipboardList,
     Clock,
     Edit3,
+    Eye,
     Flag,
     LayoutGrid,
+    Lightbulb,
     List,
+    MessageSquare,
     MoreVertical,
     Play,
     Plus,
@@ -42,6 +54,17 @@ interface TaskUser {
     name: string;
     avatar?: string | null;
     profile_picture_url?: string | null;
+    office?: string;
+    status?: string;
+    email_verified_at?: string | null;
+}
+
+interface TaskUpdate {
+    id: number;
+    description: string;
+    update_date: string;
+    created_at: string;
+    user: TaskUser;
 }
 
 interface Task {
@@ -61,6 +84,15 @@ interface Task {
     assignees: number[] | null;
     created_at: string;
     creator?: TaskUser;
+    updates?: TaskUpdate[];
+    office?: string | null;
+    section_id?: number | null;
+    section?: {
+        id: number;
+        name: string;
+        code: string;
+        office: string;
+    } | null;
 }
 
 interface Analytics {
@@ -73,14 +105,8 @@ interface Analytics {
 }
 
 interface PageProps {
-    auth: { user: { id: number; role: string; name: string } };
-    tasks: {
-        data: Task[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-    };
+    auth: { user: { id: number; role: string; name: string; office: string } };
+    tasks: PaginatedData<Task>;
     allTasks: Task[];
     analytics: Analytics;
     users: TaskUser[];
@@ -88,6 +114,12 @@ interface PageProps {
     perPage: number;
     statusFilter: string;
     priorityFilter: string;
+    sections: Array<{
+        id: number;
+        name: string;
+        code: string;
+        office: string;
+    }>;
     [key: string]: unknown;
 }
 
@@ -286,6 +318,7 @@ const defaultForm: Record<string, string> = {
     priority: 'medium',
     progress: '0',
     assignees: '',
+    section_id: '',
 };
 
 export default function Taskboard() {
@@ -298,10 +331,15 @@ export default function Taskboard() {
         users = [],
         search = '',
         perPage: perPageProp = 10,
+        statusFilter: status = 'all',
+        section = '',
+        sections = [],
         auth,
     } = props;
 
     const [searchValue, setSearchValue] = useState(search);
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [sectionFilter, setSectionFilter] = useState<string>(typeof section === 'string' ? section : 'all');
     const [perPage, setPerPage] = useState(perPageProp);
     const [currentPage, setCurrentPage] = useState(tasks?.current_page || 1);
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -315,9 +353,34 @@ export default function Taskboard() {
     const [formData, setFormData] =
         useState<Record<string, string>>(defaultForm);
     const [assigneeSearch, setAssigneeSearch] = useState('');
+    const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+    const [selectedTaskForUpdate, setSelectedTaskForUpdate] = useState<Task | null>(null);
+    const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
+    const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+    const [mobileUpdatesModal, setMobileUpdatesModal] = useState<{ isOpen: boolean; task: Task | null }>({ isOpen: false, task: null });
 
     const handleTasksUpdate = (updatedTasks: Task[]) => {
         setCurrentAllTasks(updatedTasks);
+    };
+
+    const toggleRowExpansion = (taskId: number) => {
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(taskId)) {
+                newSet.delete(taskId);
+            } else {
+                newSet.add(taskId);
+            }
+            return newSet;
+        });
+    };
+
+    const openMobileUpdatesModal = (task: Task) => {
+        setMobileUpdatesModal({ isOpen: true, task });
+    };
+
+    const closeMobileUpdatesModal = () => {
+        setMobileUpdatesModal({ isOpen: false, task: null });
     };
 
     const userOptions = useMemo(
@@ -369,11 +432,77 @@ export default function Taskboard() {
             placeholder: 'Select priority',
         },
         {
+            name: 'office',
+            label: 'Office',
+            type: 'custom',
+            required: false,
+            customRender: (value, onChange) => {
+                return (
+                    <div className="space-y-2">
+                        <label className="text-sm leading-none font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-100">
+                            Office
+                        </label>
+                        <div className="w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-100">
+                            {auth.user?.office || 'Not specified'}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Office is automatically set based on your profile
+                        </p>
+                    </div>
+                );
+            },
+        },
+        {
+            name: 'section_id',
+            label: 'Section',
+            type: 'select',
+            required: false,
+            options: sections?.filter(s => s.office === auth.user?.office).map(s => ({ value: s.id.toString(), label: s.name })) || [],
+            placeholder: 'Select section',
+        },
+        {
             name: 'progress',
-            label: 'Progress (0-100)',
-            type: 'number',
-            required: true,
-            min: '0',
+            label: 'Progress',
+            type: 'custom',
+            required: false,
+            customRender: (value, onChange) => {
+                const progress = parseInt(value) || 0;
+                
+                return (
+                    <div className="space-y-3">
+                        <label className="text-sm leading-none font-medium text-gray-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-70 dark:text-gray-100">
+                            Progress: {progress}%
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                (Updates only via task updates)
+                            </span>
+                        </label>
+                        <div className="space-y-2">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={progress}
+                                disabled
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-not-allowed dark:bg-gray-700 opacity-50"
+                                style={{
+                                    background: `linear-gradient(to right, #163832 0%, #163832 ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`
+                                }}
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <span>0%</span>
+                                <span>25%</span>
+                                <span>50%</span>
+                                <span>75%</span>
+                                <span>100%</span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
+                                <Lightbulb className="h-3 w-3" />
+                                Progress can only be updated when adding task updates
+                            </p>
+                        </div>
+                    </div>
+                );
+            },
         },
         {
             name: 'assignees',
@@ -384,6 +513,10 @@ export default function Taskboard() {
                 const selected = v ? v.split(',') : [];
 
                 // Filter users based on search
+                // Note: Users are already filtered on backend to show only:
+                // - Same office users (or users with section_id)
+                // - Active users only
+                // - Email verified users only
                 const filteredUsers = users.filter(user => 
                     user.name.toLowerCase().includes(assigneeSearch.toLowerCase())
                 );
@@ -484,6 +617,8 @@ export default function Taskboard() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    // Remove automatic status filtering - let 'all' show all tasks
+
     const handleAdd = () => {
         resetForm();
         setIsAddOpen(true);
@@ -498,6 +633,7 @@ export default function Taskboard() {
             priority: task.priority,
             progress: task.progress.toString(),
             assignees: task.assignees?.length ? task.assignees.join(',') : '',
+            section_id: task.section_id?.toString() ?? '',
         });
         setIsEditOpen(true);
     };
@@ -529,6 +665,8 @@ export default function Taskboard() {
                   .map((a) => parseInt(a))
                   .filter((a) => !isNaN(a))
             : [],
+        office: auth.user?.office || null,
+        section_id: formData.section_id ? parseInt(formData.section_id) : null,
     });
 
     const handleSubmitAdd = (e: React.FormEvent) => {
@@ -561,6 +699,94 @@ export default function Taskboard() {
         });
     };
 
+    const handleAddUpdate = (task: Task) => {
+        // Only allow updates if task is in progress or in review
+        if (task.status !== 'in_progress' && task.status !== 'in_review') {
+            showError('Update Not Allowed', 'Updates can only be added to tasks that are in progress or in review.');
+            return;
+        }
+
+        // Check if user is the creator or assigned to the task
+        const currentUserId = auth.user?.id;
+        const isCreator = task.created_by === currentUserId;
+        const isAssignee = task.assignees?.includes(currentUserId || 0);
+        
+        if (!isCreator && !isAssignee) {
+            showError('Access Denied', 'Only the task creator and assigned users can add updates.');
+            return;
+        }
+
+        setSelectedTaskForUpdate(task);
+        setShowUpdateDialog(true);
+    };
+
+    const handleSubmitUpdate = async (description: string, updateDate: string, progress?: number) => {
+        if (!selectedTaskForUpdate) return;
+        
+        // Progress validation: cannot be less than current task progress
+        if (progress !== undefined && progress < selectedTaskForUpdate.progress) {
+            showError('Progress Cannot Decrease', 'Please set a value greater than or equal to current progress.');
+            return;
+        }
+        
+        setIsLoadingUpdate(true);
+        try {
+            // First, add the update with progress
+            const response = await fetch(`/tasks/${selectedTaskForUpdate.id}/updates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ description, update_date: updateDate, progress })
+            });
+
+            // If progress is provided and different from current, update the task
+            if (progress !== undefined && progress !== selectedTaskForUpdate.progress) {
+                const progressResponse = await fetch(`/tasks/${selectedTaskForUpdate.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ 
+                        title: selectedTaskForUpdate.title,
+                        description: selectedTaskForUpdate.description || '',
+                        end_date: selectedTaskForUpdate.end_date,
+                        status: selectedTaskForUpdate.status,
+                        priority: selectedTaskForUpdate.priority,
+                        progress: progress,
+                        assignees: selectedTaskForUpdate.assignees || []
+                    })
+                });
+
+                if (!progressResponse.ok) {
+                    console.error('Failed to update task progress');
+                    showError('Progress Update Failed', 'Task update was added but progress could not be updated.');
+                } else {
+                    showSuccess('Progress Updated', 'Task progress has been updated successfully.');
+                }
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                showSuccess('Update Added', 'Task update added successfully.');
+                setShowUpdateDialog(false);
+                
+                // Refresh the page to show the new update and updated progress
+                router.reload();
+            } else {
+                showError('Update Failed', 'Unable to add task update.');
+            }
+        } catch (error) {
+            showError('Update Failed', 'Unable to add task update.');
+        } finally {
+            setIsLoadingUpdate(false);
+        }
+    };
+
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         router.get(
@@ -568,6 +794,8 @@ export default function Taskboard() {
             {
                 tab: 'taskboard',
                 search: searchValue,
+                status: statusFilter,
+                section: sectionFilter,
                 perPage,
                 page,
                 sort: sortField,
@@ -587,6 +815,8 @@ export default function Taskboard() {
             {
                 tab: 'taskboard',
                 search: searchValue,
+                status: statusFilter,
+                section: sectionFilter,
                 perPage,
                 sort: field,
                 direction: dir,
@@ -660,9 +890,9 @@ export default function Taskboard() {
             {/* ─── Table card ─── */}
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
                 {/* Controls bar */}
-                <div className="flex flex-col gap-3 border-b border-gray-200 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-3 md:py-3 dark:border-neutral-700">
-                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:flex-nowrap md:gap-3">
-                        {/* View Toggle */}
+                <div className="flex flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-neutral-700">
+                    {/* Mobile View Toggle - Centered, full width */}
+                    <div className="flex justify-center md:hidden">
                         <div className="inline-flex items-center gap-1 p-1 bg-gray-100 dark:bg-neutral-800 rounded-lg shadow-sm">
                             <button
                                 onClick={() => setViewMode('table')}
@@ -673,7 +903,7 @@ export default function Taskboard() {
                                 }`}
                             >
                                 <List className="h-4 w-4" />
-                                <span className="hidden sm:inline">Table</span>
+                                <span>Table</span>
                             </button>
                             <button
                                 onClick={() => setViewMode('kanban')}
@@ -684,56 +914,283 @@ export default function Taskboard() {
                                 }`}
                             >
                                 <LayoutGrid className="h-4 w-4" />
-                                <span className="hidden sm:inline">Kanban</span>
+                                <span>Kanban</span>
                             </button>
                         </div>
-                        
-                        {viewMode === 'table' && (
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">Show:</span>
-                                <Select
-                                    value={perPage.toString()}
-                                    onValueChange={(v) => {
-                                        const n = parseInt(v);
-                                        setPerPage(n);
-                                        router.get(
-                                            '/taskboard',
-                                            {
+                    </div>
+
+                    {/* Filters Row - Different layout for mobile vs desktop */}
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-3">
+                        {/* Mobile Layout - Two rows */}
+                        <div className="flex flex-col gap-3 w-full md:hidden">
+                            {/* First Row - Status & Section */}
+                            <div className="flex gap-3 w-full">
+                                {/* Status Filter */}
+                                <div className="flex-1">
+                                    <Select
+                                        value={statusFilter}
+                                        onValueChange={(value: string) => {
+                                            setStatusFilter(value);
+                                            const params = {
+                                                tab: 'taskboard' as const,
+                                                search: searchValue,
+                                                status: value,
+                                                section: sectionFilter,
+                                                perPage,
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="in_progress">In Progress</SelectItem>
+                                            <SelectItem value="in_review">In Review</SelectItem>
+                                            <SelectItem value="completed">Completed</SelectItem>
+                                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            <SelectItem value="not_started">Not Started</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Section Filter */}
+                                <div className="flex-1">
+                                    <Select
+                                        value={sectionFilter}
+                                        onValueChange={(value: string) => {
+                                            setSectionFilter(value);
+                                            const params: Record<string, string | number> = {
                                                 tab: 'taskboard',
                                                 search: searchValue,
+                                                status: statusFilter,
+                                                section: value,
+                                                perPage,
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Section" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <SelectItem value="all">All Sections</SelectItem>
+                                            {(() => {
+                                                try {
+                                                    if (!sections || !auth.user?.office) return null;
+                                                    return sections
+                                                        .filter(s => s && s.office === auth.user.office)
+                                                        .map((section) => (
+                                                            <SelectItem key={section.id} value={section.id.toString()}>
+                                                                {section.name || 'Unknown Section'}
+                                                            </SelectItem>
+                                                        ));
+                                                } catch (error) {
+                                                    console.error('Error rendering sections:', error);
+                                                    return null;
+                                                }
+                                            })()}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Second Row - Per Page & Search */}
+                            <div className="flex gap-3 w-full">
+                                {/* Per Page Filter */}
+                                <div className="w-32">
+                                    <Select
+                                        value={perPage.toString()}
+                                        onValueChange={(v: string) => {
+                                            const n = parseInt(v);
+                                            setPerPage(n);
+                                            const params: Record<string, string | number> = {
+                                                tab: 'taskboard',
+                                                search: searchValue,
+                                                status: statusFilter,
+                                                section: sectionFilter,
                                                 perPage: n,
-                                            },
-                                            { preserveState: true, replace: true },
-                                        );
-                                    }}
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Entries" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            {[10, 25, 50, 100].map((n) => (
+                                                <SelectItem
+                                                    key={n}
+                                                    value={n.toString()}
+                                                >
+                                                    {n} entries
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="flex-1">
+                                    <SearchBar
+                                        search={searchValue}
+                                        onSearchChange={setSearchValue}
+                                        placeholder="Search tasks…"
+                                        className="w-full"
+                                        searchRoute="/taskboard"
+                                        additionalParams={{ tab: 'taskboard', status: statusFilter, section: sectionFilter, perPage: perPage } as Record<string, string | number>}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Desktop Layout - Single row with view toggle */}
+                        <div className="hidden md:flex md:flex-row md:items-center md:gap-3 md:w-full">
+                            {/* View Toggle - Now in the same row */}
+                            <div className="inline-flex items-center gap-1 p-1 bg-gray-100 dark:bg-neutral-800 rounded-lg shadow-sm">
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                        viewMode === 'table'
+                                            ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-neutral-600'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-neutral-700'
+                                    }`}
                                 >
-                                    <SelectTrigger className="h-7 w-[60px] border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                        {[10, 25, 50, 100].map((n) => (
-                                            <SelectItem
-                                                key={n}
-                                                value={n.toString()}
-                                            >
-                                                {n}
-                                            </SelectItem>
+                                    <List className="h-4 w-4" />
+                                    <span>Table</span>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('kanban')}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                                        viewMode === 'kanban'
+                                            ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-200 dark:ring-neutral-600'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-neutral-700'
+                                    }`}
+                                >
+                                    <LayoutGrid className="h-4 w-4" />
+                                    <span>Kanban</span>
+                                </button>
+                            </div>
+
+                            {/* Left Filters */}
+                            <div className="flex flex-row items-center gap-3 flex-1">
+                                {/* Status Filter */}
+                                <div className="md:w-auto">
+                                    <Select
+                                        value={statusFilter}
+                                        onValueChange={(value: string) => {
+                                            setStatusFilter(value);
+                                            const params = {
+                                                tab: 'taskboard' as const,
+                                                search: searchValue,
+                                                status: value,
+                                                section: sectionFilter,
+                                                perPage,
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Status" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="in_progress">In Progress</SelectItem>
+                                            <SelectItem value="in_review">In Review</SelectItem>
+                                            <SelectItem value="completed">Completed</SelectItem>
+                                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                                            <SelectItem value="not_started">Not Started</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Section Filter */}
+                                <div className="md:w-auto">
+                                    <Select
+                                        value={sectionFilter}
+                                        onValueChange={(value: string) => {
+                                            setSectionFilter(value);
+                                            const params: Record<string, string | number> = {
+                                                tab: 'taskboard',
+                                                search: searchValue,
+                                                status: statusFilter,
+                                                section: value,
+                                                perPage,
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Section" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <SelectItem value="all">All Sections</SelectItem>
+                                            {(() => {
+                                                try {
+                                                    if (!sections || !auth.user?.office) return null;
+                                                    return sections
+                                                        .filter(s => s && s.office === auth.user.office)
+                                                        .map((section) => (
+                                                            <SelectItem key={section.id} value={section.id.toString()}>
+                                                                {section.name || 'Unknown Section'}
+                                                            </SelectItem>
+                                                        ));
+                                                } catch (error) {
+                                                    console.error('Error rendering sections:', error);
+                                                    return null;
+                                                }
+                                            })()}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Per Page Filter */}
+                                <div className="md:w-auto">
+                                    <Select
+                                        value={perPage.toString()}
+                                        onValueChange={(v: string) => {
+                                            const n = parseInt(v);
+                                            setPerPage(n);
+                                            const params: Record<string, string | number> = {
+                                                tab: 'taskboard',
+                                                search: searchValue,
+                                                status: statusFilter,
+                                                section: sectionFilter,
+                                                perPage: n,
+                                            };
+                                            router.get('/taskboard', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                            <SelectValue placeholder="Entries" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            {[10, 25, 50, 100].map((n) => (
+                                                <SelectItem
+                                                    key={n}
+                                                    value={n.toString()}
+                                                >
+                                                    {n} entries
+                                                </SelectItem>
                                         ))}
                                     </SelectContent>
-                                </Select>
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">entries</span>
+                                    </Select>
+                                </div>
                             </div>
-                        )}
-                    </div>
-                    <div className="w-full md:w-auto md:max-w-xs">
-                        <SearchBar
-                            search={searchValue}
-                            onSearchChange={setSearchValue}
-                            placeholder="Search tasks…"
-                            className="w-full"
-                            searchRoute="/taskboard"
-                            additionalParams={{ tab: 'taskboard', perPage }}
-                        />
+
+                            {/* Search Bar - On the right */}
+                            <div className="md:w-auto md:max-w-xs">
+                                <SearchBar
+                                    search={searchValue}
+                                    onSearchChange={setSearchValue}
+                                    placeholder="Search tasks…"
+                                    className="w-full"
+                                    searchRoute="/taskboard"
+                                    additionalParams={{ tab: 'taskboard', status: statusFilter, section: sectionFilter, perPage: perPage } as Record<string, string | number>}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -747,43 +1204,86 @@ export default function Taskboard() {
                             <thead>
                                 <tr className="border-b border-gray-200 dark:border-neutral-700">
                                     <th className="w-1 py-4" />
-                                    <ColHeader
-                                        label="Task"
-                                        field="title"
-                                        sortField={sortField}
-                                        sortDir={sortDir}
-                                        onSort={handleSort}
-                                    />
-                                    <ColHeader
-                                        label="End Date"
-                                        field="end_date"
-                                        sortField={sortField}
-                                        sortDir={sortDir}
-                                        onSort={handleSort}
-                                    />
-                                    <ColHeader
-                                        label="Status"
-                                        field="status"
-                                        sortField={sortField}
-                                        sortDir={sortDir}
-                                        onSort={handleSort}
-                                    />
-                                    <ColHeader
-                                        label="Priority"
-                                        field="priority"
-                                        sortField={sortField}
-                                        sortDir={sortDir}
-                                        onSort={handleSort}
-                                    />
-                                    <ColHeader
-                                        label="Progress"
-                                        field="progress"
-                                        sortField={sortField}
-                                        sortDir={sortDir}
-                                        onSort={handleSort}
-                                    />
-                                    <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400 cursor-pointer select-none"
+                                        onClick={() => handleSort('title')}>
+                                        <span className="flex items-center gap-1">
+                                            Task
+                                            {sortField === 'title' ? (
+                                                sortDir === 'asc' ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )
+                                            ) : (
+                                                <ChevronUp className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+                                            )}
+                                        </span>
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400 cursor-pointer select-none"
+                                        onClick={() => handleSort('end_date')}>
+                                        <span className="flex items-center gap-1">
+                                            End Date
+                                            {sortField === 'end_date' ? (
+                                                sortDir === 'asc' ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )
+                                            ) : (
+                                                <ChevronUp className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+                                            )}
+                                        </span>
+                                    </th>
+                                    <th className="px-6 py-4 text-center text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400 cursor-pointer select-none"
+                                        onClick={() => handleSort('status')}>
+                                        <span className="flex items-center justify-center gap-1">
+                                            Status
+                                            {sortField === 'status' ? (
+                                                sortDir === 'asc' ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )
+                                            ) : (
+                                                <ChevronUp className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+                                            )}
+                                        </span>
+                                    </th>
+                                    <th className="px-6 py-4 text-center text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400 cursor-pointer select-none"
+                                        onClick={() => handleSort('priority')}>
+                                        <span className="flex items-center justify-center gap-1">
+                                            Priority
+                                            {sortField === 'priority' ? (
+                                                sortDir === 'asc' ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )
+                                            ) : (
+                                                <ChevronUp className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+                                            )}
+                                        </span>
+                                    </th>
+                                    <th className="px-6 py-4 text-center text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400 cursor-pointer select-none"
+                                        onClick={() => handleSort('progress')}>
+                                        <span className="flex items-center justify-center gap-1">
+                                            Progress
+                                            {sortField === 'progress' ? (
+                                                sortDir === 'asc' ? (
+                                                    <ChevronUp className="h-3 w-3" />
+                                                ) : (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                )
+                                            ) : (
+                                                <ChevronUp className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+                                            )}
+                                        </span>
+                                    </th>
+                                    <th className="px-6 py-4 text-center text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                                         Assignees
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                                        Section
                                     </th>
                                     <th className="w-12 py-4" />
                                 </tr>
@@ -793,7 +1293,7 @@ export default function Taskboard() {
                                 {/* ── Add New Task inline row ── */}
                                 <tr className="group border-b border-dashed border-gray-300 dark:border-neutral-700">
                                     <td className="w-1" />
-                                    <td colSpan={6} className="px-6 py-4">
+                                    <td colSpan={7} className="px-6 py-4">
                                         <button
                                             onClick={handleAdd}
                                             className="flex items-center gap-2 text-sm font-medium text-[#163832] transition-opacity hover:opacity-70 dark:text-[#4ade80]"
@@ -824,10 +1324,11 @@ export default function Taskboard() {
                                             '#9ca3af';
 
                                         return (
-                                            <tr
-                                                key={task.id}
-                                                className="group relative border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50"
-                                            >
+                                            <>
+                                                <tr
+                                                    key={task.id}
+                                                    className="group relative border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-neutral-800 dark:hover:bg-neutral-800/50"
+                                                >
                                                 {/* priority accent bar */}
                                                 <td className="w-1 p-0">
                                                     <div
@@ -840,23 +1341,37 @@ export default function Taskboard() {
 
                                                 {/* Task */}
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        {task.title}
-                                                    </p>
-                                                    {task.description && (
-                                                        <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">
-                                                            {task.description}
-                                                        </p>
-                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => toggleRowExpansion(task.id)}
+                                                            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                                                        >
+                                                            {expandedRows.has(task.id) ? (
+                                                                <ChevronUp className="h-4 w-4" />
+                                                            ) : (
+                                                                <ChevronDown className="h-4 w-4" />
+                                                            )}
+                                                        </button>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                                {task.title}
+                                                            </p>
+                                                            {task.description && (
+                                                                <p className="mt-0.5 line-clamp-1 text-xs text-gray-400">
+                                                                    {task.description}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </td>
 
                                                 {/* End date */}
-                                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 text-left">
                                                     {formatDate(task.end_date)}
                                                 </td>
 
                                                 {/* Status */}
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-center">
                                                     <span
                                                         className="inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-bold tracking-wide"
                                                         style={{
@@ -869,9 +1384,9 @@ export default function Taskboard() {
                                                 </td>
 
                                                 {/* Priority */}
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-center">
                                                     <div
-                                                        className="flex h-7 w-7 items-center justify-center rounded-full border border-current"
+                                                        className="flex h-7 w-7 items-center justify-center rounded-full border border-current mx-auto"
                                                         style={{ color: playColor }}
                                                         title={task.priority}
                                                     >
@@ -883,14 +1398,14 @@ export default function Taskboard() {
                                                 </td>
 
                                                 {/* Progress */}
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-left">
                                                     <ProgressRing
                                                         progress={task.progress}
                                                     />
                                                 </td>
 
                                                 {/* Assignees */}
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-4 text-center">
                                                     <AvatarStack
                                                         assignees={task.assignees}
                                                         users={users}
@@ -912,6 +1427,15 @@ export default function Taskboard() {
                                                                 : undefined
                                                         }
                                                     />
+                                                </td>
+
+                                                {/* Section */}
+                                                <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 text-left">
+                                                    {task.section?.name || (
+                                                        <span className="text-xs text-gray-400 italic">
+                                                            Not specified
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 {/* Three-dot menu */}
@@ -949,6 +1473,20 @@ export default function Taskboard() {
                                                                     Edit
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
+                                                                {(task.status === 'in_progress' || task.status === 'in_review') && (
+                                                                    <DropdownMenuItem
+                                                                        onClick={() =>
+                                                                            handleAddUpdate(
+                                                                                task,
+                                                                            )
+                                                                        }
+                                                                        className="cursor-pointer gap-2"
+                                                                    >
+                                                                        <MessageSquare className="h-4 w-4" />
+                                                                        Add Update
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
                                                                     onClick={() =>
                                                                         handleDelete(
@@ -965,11 +1503,16 @@ export default function Taskboard() {
                                                     )}
                                                 </td>
                                             </tr>
+                                            {/* Expandable row for updates */}
+                                            {expandedRows.has(task.id) && (
+                                                <TaskUpdatesRow task={task} onAddUpdate={handleAddUpdate} />
+                                            )}
+                                            </>
                                         );
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan={8} className="px-6 py-12 text-center">
+                                        <td colSpan={10} className="px-6 py-12 text-center">
                                             <div className="text-gray-400">
                                                 No tasks found. Click
                                                 <strong>+ Add New Task</strong> above to
@@ -1002,10 +1545,11 @@ export default function Taskboard() {
                                     const playColor = priorityPlayColor[task.priority] ?? '#9ca3af';
 
                                     return (
-                                        <div
-                                            key={task.id}
-                                            className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
-                                        >
+                                        <>
+                                            <div
+                                                key={task.id}
+                                                className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm"
+                                            >
                                             {/* Priority accent bar */}
                                             <div
                                                 className="h-1 w-full rounded-t-lg mb-3"
@@ -1044,6 +1588,23 @@ export default function Taskboard() {
                                                             >
                                                                 <Edit3 className="h-4 w-4" />
                                                                 Edit
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            {(task.status === 'in_progress' || task.status === 'in_review') && (
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleAddUpdate(task)}
+                                                                    className="cursor-pointer gap-2"
+                                                                >
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                    Add Update
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            <DropdownMenuItem
+                                                                onClick={() => openMobileUpdatesModal(task)}
+                                                                className="cursor-pointer gap-2 lg:hidden"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                                View Update
                                                             </DropdownMenuItem>
                                                             <DropdownMenuSeparator />
                                                             <DropdownMenuItem
@@ -1118,6 +1679,7 @@ export default function Taskboard() {
                                                 />
                                             </div>
                                         </div>
+                                                                                    </>
                                     );
                                 })
                             ) : (
@@ -1140,11 +1702,11 @@ export default function Taskboard() {
                 )}
 
                 {/* Pagination */}
-                {viewMode === 'table' && tasks?.total > 0 && (
+                {viewMode === 'table' && (tasks?.total ?? 0) > 0 && (
                     <div className="border-t border-gray-200 px-4 py-3 dark:border-neutral-700">
                         <CustomPagination
                             currentPage={currentPage}
-                            totalItems={tasks.total}
+                            totalItems={tasks?.total ?? 0}
                             perPage={perPage}
                             onPageChange={handlePageChange}
                         />
@@ -1189,6 +1751,35 @@ export default function Taskboard() {
                 submitButtonText="Update Task"
                 isEdit
             />
+            
+            {/* Update Dialog */}
+            <AddUpdateDialog
+                isOpen={showUpdateDialog}
+                onClose={() => {
+                    setShowUpdateDialog(false);
+                    setSelectedTaskForUpdate(null);
+                }}
+                onSubmit={handleSubmitUpdate}
+                isLoading={isLoadingUpdate}
+                initialProgress={selectedTaskForUpdate?.progress || 0}
+                isMostRecentUpdate={true}
+            />
+            
+            {/* Mobile Updates Modal */}
+            <Dialog open={mobileUpdatesModal.isOpen} onOpenChange={closeMobileUpdatesModal}>
+                <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {mobileUpdatesModal.task?.title}
+                        </DialogTitle>
+                    </DialogHeader>
+                    {mobileUpdatesModal.task && (
+                        <div className="flex justify-center">
+                            <TaskUpdatesRow task={mobileUpdatesModal.task} onAddUpdate={handleAddUpdate} />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

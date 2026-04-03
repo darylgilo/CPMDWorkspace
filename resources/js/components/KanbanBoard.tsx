@@ -1,7 +1,8 @@
 import { usePage } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
-import { Clock, MoreVertical, Plus, Calendar, Users, ChevronLeft, ChevronRight, Edit3, Trash2 } from 'lucide-react';
+import { Clock, MoreVertical, Plus, Calendar, Users, ChevronLeft, ChevronRight, Edit3, Trash2, MessageSquare, History } from 'lucide-react';
 import React, { useState } from 'react';
+import AddUpdateDialog from '@/components/AddUpdateDialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,6 +18,14 @@ interface TaskUser {
     profile_picture_url?: string | null;
 }
 
+interface TaskUpdate {
+    id: number;
+    description: string;
+    update_date: string;
+    created_at: string;
+    user: TaskUser;
+}
+
 interface Task {
     id: number;
     title: string;
@@ -29,6 +38,7 @@ interface Task {
     assignees: number[] | null;
     created_at: string;
     creator?: TaskUser;
+    updates?: TaskUpdate[];
 }
 
 interface KanbanBoardProps {
@@ -58,7 +68,115 @@ function TaskCard({ task, users, onEdit, onDelete }: { task: Task; users: TaskUs
     const priority = priorityConfig[task.priority] || priorityConfig.medium;
     const { auth } = usePage().props as any;
     const canEdit = auth.user.role === 'admin' || auth.user.role === 'superadmin' || task.created_by === auth.user.id || (task.assignees && task.assignees.includes(auth.user.id));
-    const canDelete = auth.user.role === 'admin' || auth.user.role === 'superadmin' || task.created_by === auth.user.id;
+    const canDelete = auth.user.role === 'admin' || auth.user.role === 'superadmin' || task.created_by === auth.user.id || (task.assignees && task.assignees.includes(auth.user.id));
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+    const [showUpdateDropdown, setShowUpdateDropdown] = useState<number | null>(null);
+    const [selectedUpdate, setSelectedUpdate] = useState<TaskUpdate | null>(null);
+    const [updates, setUpdates] = useState<TaskUpdate[]>(task.updates || []);
+    const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
+    
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showDropdown) {
+                setShowDropdown(false);
+            }
+            if (showUpdateDropdown !== null) {
+                setShowUpdateDropdown(null);
+            }
+        };
+        
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [showDropdown, showUpdateDropdown]);
+
+    const handleAddUpdate = async (description: string, updateDate: string) => {
+        setIsLoadingUpdate(true);
+        try {
+            const response = await fetch(`/tasks/${task.id}/updates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ description, update_date: updateDate })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setUpdates(prev => [data.update, ...prev]);
+                setShowUpdateDialog(false);
+            } else {
+                console.error('Failed to add update');
+            }
+        } catch (error) {
+            console.error('Error adding update:', error);
+        } finally {
+            setIsLoadingUpdate(false);
+        }
+    };
+
+    const handleEditUpdate = async (update: TaskUpdate) => {
+        setSelectedUpdate(update);
+        setShowUpdateDialog(true);
+        setShowUpdateDropdown(null);
+    };
+
+    const handleSubmitEditUpdate = async (description: string, updateDate: string) => {
+        if (!selectedUpdate) return;
+        
+        try {
+            const response = await fetch(`/task-updates/${selectedUpdate.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ description, update_date: updateDate })
+            });
+
+            if (response.ok) {
+                setShowUpdateDialog(false);
+                setSelectedUpdate(null);
+                router.reload();
+            }
+        } catch (error) {
+            console.error('Error updating update:', error);
+        }
+    };
+
+    const handleDeleteUpdate = async (updateId: number) => {
+        if (!confirm('Delete this update?')) return;
+        
+        try {
+            const response = await fetch(`/task-updates/${updateId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.ok) {
+                setUpdates(prev => prev.filter(u => u.id !== updateId));
+            } else {
+                console.error('Failed to delete update');
+            }
+        } catch (error) {
+            console.error('Error deleting update:', error);
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
 
     return (
         <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-neutral-700 hover:shadow-md transition-shadow cursor-move">
@@ -95,6 +213,106 @@ function TaskCard({ task, users, onEdit, onDelete }: { task: Task; users: TaskUs
                     <span className="text-xs text-gray-600 dark:text-gray-400">{task.progress}%</span>
                 </div>
             </div>
+
+            {/* Updates Section */}
+            {(updates.length > 0 || canEdit) && (
+                <div className="mb-2 pt-2 border-t border-gray-100 dark:border-neutral-700">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                            <History className="h-3 w-3" />
+                            Updates ({updates.length})
+                        </div>
+                        {canEdit && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowUpdateDialog(true);
+                                }}
+                                className="text-xs text-[#163832] dark:text-[#4ade80] hover:opacity-70"
+                            >
+                                + Add
+                            </button>
+                        )}
+                    </div>
+                    
+                    {/* Recent Updates */}
+                    {updates.length > 0 && (
+                        <div className="space-y-1">
+                            {[...updates].sort((a, b) => {
+                                const dateA = new Date(b.update_date).getTime();
+                                const dateB = new Date(a.update_date).getTime();
+                                if (dateA !== dateB) {
+                                    return dateA - dateB; // Newest date first
+                                }
+                                // If dates are the same, sort by created_at (newest first)
+                                const createdAtA = new Date(b.created_at).getTime();
+                                const createdAtB = new Date(a.created_at).getTime();
+                                return createdAtA - createdAtB;
+                            }).slice(0, 1).map((update) => (
+                                <div key={update.id} className="text-xs p-1.5 bg-gray-50 dark:bg-neutral-700 rounded">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                                            {update.user?.name}
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-gray-500 dark:text-gray-400">
+                                                {formatDate(update.update_date)}
+                                            </span>
+                                            {canEdit && (
+                                                <div className="relative">
+                                                    <button 
+                                                        className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded" 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowUpdateDropdown(showUpdateDropdown === update.id ? null : update.id);
+                                                        }}
+                                                    >
+                                                        <MoreVertical className="h-2 w-2" />
+                                                    </button>
+                                                    
+                                                    {showUpdateDropdown === update.id && (
+                                                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-md shadow-lg z-[100] min-w-[80px]">
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditUpdate(update);
+                                                                }}
+                                                                className="flex items-center gap-1 w-full px-2 py-1 text-xs text-left hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                            >
+                                                                <Edit3 className="h-2 w-2" />
+                                                                Edit
+                                                            </button>
+                                                            <div className="border-t border-gray-200 dark:border-neutral-700" />
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteUpdate(update.id);
+                                                                }}
+                                                                className="flex items-center gap-1 w-full px-2 py-1 text-xs text-left text-red-600 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                                            >
+                                                                <Trash2 className="h-2 w-2" />
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-600 dark:text-gray-400 line-clamp-2">
+                                        {update.description}
+                                    </p>
+                                </div>
+                            ))}
+                            {updates.length > 1 && (
+                                <div className="text-xs text-gray-500 dark:text-gray-400 text-center pt-1">
+                                    +{updates.length - 1} more update{updates.length - 1 > 1 ? 's' : ''}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Bottom Row: Assignees and Actions */}
             <div className="flex items-center justify-between">
@@ -141,30 +359,67 @@ function TaskCard({ task, users, onEdit, onDelete }: { task: Task; users: TaskUs
 
                 {/* Actions */}
                 {(canEdit || canDelete) && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded">
-                                <MoreVertical className="h-3 w-3" />
-                            </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                            {canEdit && (
-                                <DropdownMenuItem onClick={() => onEdit(task)} className="cursor-pointer gap-2 text-xs">
-                                    <Edit3 className="h-3 w-3" />
-                                    Edit
-                                </DropdownMenuItem>
-                            )}
-                            {canEdit && canDelete && <DropdownMenuSeparator />}
-                            {canDelete && (
-                                <DropdownMenuItem onClick={() => onDelete(task.id)} className="cursor-pointer gap-2 text-xs text-red-600">
-                                    <Trash2 className="h-3 w-3" />
-                                    Delete
-                                </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="relative">
+                        <button 
+                            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowDropdown(!showDropdown);
+                            }}
+                        >
+                            <MoreVertical className="h-3 w-3" />
+                        </button>
+                        
+                        {showDropdown && (
+                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-md shadow-lg z-[100] min-w-[100px]">
+                                {canEdit && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEdit(task);
+                                            setShowDropdown(false);
+                                        }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                    >
+                                        <Edit3 className="h-3 w-3" />
+                                        Edit
+                                    </button>
+                                )}
+                                {canEdit && canDelete && (
+                                    <div className="border-t border-gray-200 dark:border-neutral-700" />
+                                )}
+                                {canDelete && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(task.id);
+                                            setShowDropdown(false);
+                                        }}
+                                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-left text-red-600 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
+
+            {/* Update Dialog */}
+            <AddUpdateDialog
+                isOpen={showUpdateDialog}
+                onClose={() => {
+                    setShowUpdateDialog(false);
+                    setSelectedUpdate(null);
+                }}
+                onSubmit={selectedUpdate ? handleSubmitEditUpdate : handleAddUpdate}
+                isLoading={isLoadingUpdate}
+                initialDescription={selectedUpdate?.description || ''}
+                initialDate={selectedUpdate?.update_date || ''}
+                isEdit={!!selectedUpdate}
+            />
         </div>
     );
 }
@@ -276,7 +531,7 @@ export default function KanbanBoard({ tasks, users, onTaskEdit, onTaskDelete, on
     };
 
     return (
-        <div className="flex gap-3 overflow-x-auto pb-4 min-h-0">
+        <div className="flex gap-3 overflow-x-auto overflow-y-visible pb-4 min-h-0">
             {columns.map((column) => (
                 <div
                     key={column.id}

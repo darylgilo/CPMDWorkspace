@@ -11,7 +11,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type PageProps } from '@inertiajs/core';
 import { Head, router, usePage } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface User {
     id: number;
@@ -171,11 +171,16 @@ export default function EmployeeDirectoryView() {
             });
             return grouped;
         }
-        return officeSections;
+        // Convert fallback to object format
+        const fallbackGrouped: Record<string, { id: number; name: string }[]> = {};
+        Object.entries(officeSections).forEach(([office, sections]) => {
+            fallbackGrouped[office] = sections.map((name, index) => ({ id: index + 1, name }));
+        });
+        return fallbackGrouped;
     }, [sections]);
 
     // Get current office sections
-    const currentOfficeSections = office && office !== 'all' ? sectionsByOffice[office] || [] : [];
+    const currentOfficeSections: { id: number; name: string }[] = office && office !== 'all' ? sectionsByOffice[office] || [] : [];
 
     // Get URL parameters on mount
     useEffect(() => {
@@ -366,7 +371,7 @@ export default function EmployeeDirectoryView() {
                                     >
                                         All Sections
                                     </SelectItem>
-                                    {currentOfficeSections.map((section) => (
+                                    {currentOfficeSections.map((section: { id: number; name: string }) => (
                                         <SelectItem
                                             key={section.id}
                                             value={section.name}
