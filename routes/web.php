@@ -127,6 +127,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tasks', [TaskboardController::class, 'store'])->name('tasks.store');
     Route::put('/tasks/{task}', [TaskboardController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [TaskboardController::class, 'destroy'])->name('tasks.destroy');
+    
+    // Task Updates
+    Route::post('/tasks/{task}/updates', [TaskboardController::class, 'storeUpdate'])->name('tasks.updates.store');
+    Route::put('/task-updates/{taskUpdate}', [TaskboardController::class, 'updateUpdate'])->name('task-updates.update');
+    Route::delete('/task-updates/{taskUpdate}', [TaskboardController::class, 'destroyUpdate'])->name('task-updates.destroy');
+    Route::get('/tasks/{task}/updates', [TaskboardController::class, 'getTaskUpdates'])->name('tasks.updates.index');
     // API routes for dashboard widgets
     Route::get('/api/writeups', [WritingController::class, 'getWriteupsForWidget'])->name('api.writeups');
     Route::get('/api/notices', [NoticeController::class, 'getNoticesForWidget'])->name('api.notices');
