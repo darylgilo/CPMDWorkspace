@@ -78,6 +78,7 @@ class WhereaboutsController extends Controller
             'status' => 'required|string',
             'reason' => 'nullable|string',
             'location' => 'nullable|string',
+            'accomplishment' => 'nullable|string',
         ]);
 
         // Check authorization: only admin/superadmin or the user themselves can update
@@ -95,6 +96,7 @@ class WhereaboutsController extends Controller
                 'status' => $validated['status'],
                 'reason' => $validated['reason'],
                 'location' => $validated['location'],
+                'accomplishment' => $validated['accomplishment'],
             ]
         );
 
@@ -180,6 +182,7 @@ class WhereaboutsController extends Controller
             'status' => 'required|string',
             'reason' => 'nullable|string',
             'location' => 'nullable|string',
+            'accomplishment' => 'nullable|string',
         ]);
 
         // Check authorization: only admin/superadmin or the user themselves can update
@@ -202,6 +205,7 @@ class WhereaboutsController extends Controller
                         'status' => $validated['status'],
                         'reason' => $validated['reason'],
                         'location' => $validated['location'],
+                        'accomplishment' => $validated['accomplishment'],
                     ]
                 );
                 $updatedCount++;
@@ -283,10 +287,12 @@ class WhereaboutsController extends Controller
                 'status' => $whereabout->status,
                 'reason' => $whereabout->reason,
                 'location' => $whereabout->location,
+                'accomplishment' => $whereabout->accomplishment,
                 'user' => [
                     'id' => $whereabout->user->id,
                     'name' => $whereabout->user->name,
                     'email' => $whereabout->user->email,
+                    'cpmd' => $whereabout->user->cpmd,
                     'section_id' => $whereabout->user->section_id,
                     'profile_picture' => $whereabout->user->profile_picture,
                 ],

@@ -74,6 +74,7 @@ interface Whereabout {
     status: string;
     reason?: string;
     location?: string;
+    accomplishment?: string;
 }
 
 interface AuthUser {
@@ -253,6 +254,7 @@ function SortableRow({
                             ${entry ? entry.status : 'Not set'}
                             ${entry?.reason ? ` - ${entry.reason}` : ''}
                             ${entry?.location ? ` - Location: ${entry.location}` : ''}
+                            ${entry?.accomplishment ? ` - Accomplishment: ${entry.accomplishment}` : ''}
                             ${!isEditable ? ' - No edit permission' : ' - Click to edit'}
                         `}
                         onMouseEnter={(e) => {
@@ -355,6 +357,7 @@ export default function Whereabouts({
         status: 'ON DUTY',
         reason: '',
         location: '',
+        accomplishment: '',
     });
     const [selectedSection, setSelectedSection] = useState('all');
     const [useDateRange, setUseDateRange] = useState(false);
@@ -549,6 +552,7 @@ export default function Whereabouts({
             status: existing?.status || 'ON DUTY',
             reason: existing?.reason || '',
             location: existing?.location || '',
+            accomplishment: existing?.accomplishment || '',
         });
         setSelectedCell({ user, date: day });
     };
@@ -990,11 +994,12 @@ export default function Whereabouts({
                                                                     ${entry ? entry.status : 'Not set'}
                                                                     ${entry?.reason ? ` - ${entry.reason}` : ''}
                                                                     ${entry?.location ? ` - Location: ${entry.location}` : ''}
+                                                                    ${entry?.accomplishment ? ` - Accomplishment: ${entry.accomplishment}` : ''}
                                                                     ${!isEditable ? ' - No edit permission' : ' - Click to edit'}
                                                                 `}
                                                                 title={
                                                                     entry
-                                                                        ? `${format(day, 'MMM d')}: ${entry.status}${entry.reason ? ` - ${entry.reason}` : ''}${entry.location ? ` 📍 ${entry.location}` : ''}`
+                                                                        ? `${format(day, 'MMM d')}: ${entry.status}${entry.reason ? ` - ${entry.reason}` : ''}${entry.location ? ` 📍 ${entry.location}` : ''}${entry.accomplishment ? ` ✅ ${entry.accomplishment.substring(0, 50)}${entry.accomplishment.length > 50 ? '...' : ''}` : ''}`
                                                                         : `${format(day, 'MMM d')}: Not set`
                                                                 }
                                                             >
@@ -1106,7 +1111,7 @@ export default function Whereabouts({
                         {(formData.status === 'ABSENT') && (
                             <div className="grid gap-2">
                                 <Label>Reason (Optional)</Label>
-                                <Input
+                                <textarea
                                     value={formData.reason}
                                     onChange={(e) =>
                                         setFormData({
@@ -1115,6 +1120,8 @@ export default function Whereabouts({
                                         })
                                     }
                                     placeholder="e.g., Sick Leave, Official Business"
+                                    className="min-h-[80px] max-h-[200px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y dark:border-neutral-600 dark:bg-neutral-950 dark:placeholder:text-gray-400"
+                                    rows={2}
                                 />
                             </div>
                         )}
@@ -1131,6 +1138,24 @@ export default function Whereabouts({
                                         })
                                     }
                                     placeholder="e.g., Manila, Home"
+                                />
+                            </div>
+                        )}
+
+                        {(formData.status === 'WFH') && (
+                            <div className="grid gap-2">
+                                <Label>Accomplishment (Optional)</Label>
+                                <textarea
+                                    value={formData.accomplishment}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            accomplishment: e.target.value,
+                                        })
+                                    }
+                                    placeholder="Describe your accomplishments for the day..."
+                                    className="min-h-[120px] max-h-[300px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y dark:border-neutral-600 dark:bg-neutral-950 dark:placeholder:text-gray-400"
+                                    rows={5}
                                 />
                             </div>
                         )}

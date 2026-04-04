@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { MapPin, User as LucideUser, Briefcase, Plane, Calendar, AlertCircle, Coffee, Home, Sun } from 'lucide-react';
+import { MapPin, User as LucideUser, Briefcase, Plane, Calendar, AlertCircle, Coffee, Home, Sun, CheckCircle } from 'lucide-react';
 import React from 'react';
 import { format } from 'date-fns';
 
@@ -10,6 +10,7 @@ interface Whereabout {
     status: string;
     reason?: string;
     location?: string;
+    accomplishment?: string;
 }
 
 interface User {
@@ -112,6 +113,19 @@ export function WhereaboutsTooltip({
                         <div className="font-medium mb-1 text-xs sm:text-sm">Reason:</div>
                         <div className="text-xs bg-gray-50 dark:bg-neutral-700 p-2 rounded break-words max-h-20 overflow-y-auto">
                             {entry.reason}
+                        </div>
+                    </div>
+                )}
+
+                {/* Accomplishment */}
+                {entry.accomplishment && entry.status === 'WFH' && (
+                    <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
+                        <div className="font-medium mb-1 text-xs sm:text-sm flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Accomplishment:
+                        </div>
+                        <div className="text-xs bg-purple-50 dark:bg-purple-900/20 p-2 rounded break-words max-h-24 overflow-y-auto border border-purple-200 dark:border-purple-700">
+                            {entry.accomplishment}
                         </div>
                     </div>
                 )}

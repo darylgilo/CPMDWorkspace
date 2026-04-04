@@ -10,6 +10,7 @@ import {
     UserCheck,
     Users,
     UserX,
+    CheckCircle,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -26,6 +27,7 @@ interface Whereabout {
         | 'WFH';
     reason?: string;
     location?: string;
+    accomplishment?: string;
     user: {
         id: number;
         name: string;
@@ -343,6 +345,12 @@ const WhereaboutsWidget: React.FC<WhereaboutsWidgetProps> = ({ className }) => {
                                             <div className="flex items-center gap-1 truncate text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px]">
                                                 <MapPin className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
                                                 <span className="truncate">{whereabout.location}</span>
+                                            </div>
+                                        )}
+                                        {whereabout.accomplishment && whereabout.status === 'WFH' && (
+                                            <div className="flex items-start gap-1 truncate text-[9px] text-gray-500 dark:text-gray-400 sm:text-[10px] mt-1">
+                                                <CheckCircle className="h-2 w-2 sm:h-2.5 sm:w-2.5 mt-0.5 flex-shrink-0 text-indigo-500" />
+                                                <span className="truncate">{whereabout.accomplishment.substring(0, 60)}{whereabout.accomplishment.length > 60 ? '...' : ''}</span>
                                             </div>
                                         )}
                                     </div>

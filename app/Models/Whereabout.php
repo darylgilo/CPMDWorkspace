@@ -15,6 +15,7 @@ class Whereabout extends Model
         'status',
         'reason',
         'location',
+        'accomplishment',
         'display_order',
     ];
 
