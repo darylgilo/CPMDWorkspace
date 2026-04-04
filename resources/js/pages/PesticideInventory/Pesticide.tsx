@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ExportPesticide from '@/components/export/ExportPesticide';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
@@ -110,6 +111,8 @@ export default function PesticideIndex() {
         useState<Pesticide | null>(null);
     const [sortField, setSortField] = useState<string>('brand_name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Form field configuration for pesticides
     const pesticideFormFields: FormField[] = [
@@ -241,22 +244,28 @@ export default function PesticideIndex() {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this pesticide?')) {
-            router.delete(`/pesticides/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Pesticide Deleted',
-                        'Pesticide record has been successfully removed.',
-                    );
-                },
-                onError: (errors) => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete pesticide. Please try again.',
-                    );
-                },
-            });
-        }
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/pesticides/${deleteId}`, {
+            onSuccess: () => {
+                showDeleted(
+                    'Pesticide Deleted',
+                    'Pesticide record has been successfully removed.',
+                );
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete pesticide. Please try again.',
+                );
+            },
+        });
     };
 
     const handleSubmitAdd = (e: React.FormEvent) => {
@@ -1071,6 +1080,18 @@ export default function PesticideIndex() {
                 isEdit
                 isLoading={isSubmitting}
                 loadingText="Updating..."
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Pesticide"
+                message="Are you sure you want to delete this pesticide? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                variant="destructive"
             />
         </>
     );

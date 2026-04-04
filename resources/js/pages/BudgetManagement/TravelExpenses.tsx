@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
@@ -162,6 +163,8 @@ export default function TravelExpenses() {
     const [selectedFundId, setSelectedFundId] = useState<number | null>(
         urlFundId ? parseInt(urlFundId) : null,
     );
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Add loading state to track when all required data is available
     const [isDataLoading, setIsDataLoading] = useState(true);
@@ -431,43 +434,45 @@ export default function TravelExpenses() {
     };
 
     const handleDelete = (id: number) => {
-        if (
-            window.confirm(
-                'Are you sure you want to delete this travel expense?',
-            )
-        ) {
-            setIsSubmitting(true);
-            router.delete(`/travel-expenses/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Travel Expense Deleted',
-                        'Travel expense has been successfully removed.',
-                    );
-                    router.get(
-                        '/budgetmanagement',
-                        {
-                            tab: 'travel-expenses',
-                            search: searchValue,
-                            perPage,
-                            page: currentPage,
-                            sort: sortField,
-                            direction: sortDirection,
-                            year: selectedYear,
-                            fundId: selectedFundId,
-                        },
-                        { preserveState: true },
-                    );
-                },
-                onError: (errors) => {
-                    console.error('Error deleting travel expense:', errors);
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete travel expense. Please try again.',
-                    );
-                },
-                onFinish: () => setIsSubmitting(false),
-            });
-        }
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setIsSubmitting(true);
+        setShowDeleteConfirm(false);
+        router.delete(`/travel-expenses/${deleteId}`, {
+            onSuccess: () => {
+                showDeleted(
+                    'Travel Expense Deleted',
+                    'Travel expense has been successfully removed.',
+                );
+                router.get(
+                    '/budgetmanagement',
+                    {
+                        tab: 'travel-expenses',
+                        search: searchValue,
+                        perPage,
+                        page: currentPage,
+                        sort: sortField,
+                        direction: sortDirection,
+                        year: selectedYear,
+                        fundId: selectedFundId,
+                    },
+                    { preserveState: true },
+                );
+            },
+            onError: (errors) => {
+                console.error('Error deleting travel expense:', errors);
+                showError(
+                    'Delete Failed',
+                    'Unable to delete travel expense. Please try again.',
+                );
+            },
+            onFinish: () => setIsSubmitting(false),
+        });
     };
 
     // Get fund from expense
@@ -1609,6 +1614,20 @@ export default function TravelExpenses() {
                 isEdit={true}
                 isLoading={isSubmitting}
                 loadingText="Updating..."
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Travel Expense"
+                message="Are you sure you want to delete this travel expense? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                isLoading={isSubmitting}
+                loadingText="Deleting..."
+                variant="destructive"
             />
         </>
     );

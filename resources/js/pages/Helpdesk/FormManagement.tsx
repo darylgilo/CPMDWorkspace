@@ -1,4 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { 
@@ -48,6 +49,8 @@ interface FormManagementProps {
 
 export default function FormManagement({ forms }: FormManagementProps) {
     const [processing, setProcessing] = useState<number | null>(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -82,21 +85,27 @@ export default function FormManagement({ forms }: FormManagementProps) {
     };
 
     const handleDelete = async (formId: number) => {
-        if (confirm('Are you sure you want to delete this form? This action cannot be undone.')) {
-            setProcessing(formId);
-            try {
-                await router.delete(`/forms/${formId}`, {
-                    onSuccess: () => {
-                        // Forms will be automatically refreshed by Inertia
-                    },
-                    onError: (errors) => {
-                        console.error('Delete failed:', errors);
-                        alert('Failed to delete form. Please try again.');
-                    },
-                });
-            } finally {
-                setProcessing(null);
-            }
+        setDeleteId(formId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
+        
+        setProcessing(deleteId);
+        setShowDeleteConfirm(false);
+        try {
+            await router.delete(`/forms/${deleteId}`, {
+                onSuccess: () => {
+                    // Forms will be automatically refreshed by Inertia
+                },
+                onError: (errors) => {
+                    console.error('Delete failed:', errors);
+                    alert('Failed to delete form. Please try again.');
+                },
+            });
+        } finally {
+            setProcessing(null);
         }
     };
 
@@ -326,6 +335,20 @@ export default function FormManagement({ forms }: FormManagementProps) {
                     </div>
                 )}
             </div>
+            
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Form"
+                message="Are you sure you want to delete this form? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                isLoading={processing !== null}
+                loadingText="Deleting..."
+                variant="destructive"
+            />
         </AppLayout>
     );
 }

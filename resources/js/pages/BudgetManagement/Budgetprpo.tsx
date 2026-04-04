@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
@@ -178,6 +179,8 @@ export default function BudgetAllocation() {
     const [sortField, setSortField] = useState<string>('created_at');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
     const [isCustomCategory, setIsCustomCategory] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Initialize with first available year and fund immediately (only if not set from URL)
     React.useEffect(() => {
@@ -452,39 +455,43 @@ export default function BudgetAllocation() {
     };
 
     const handleDeleteTransaction = (id: number) => {
-        if (
-            window.confirm('Are you sure you want to delete this transaction?')
-        ) {
-            router.delete(`/fund-transactions/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Transaction Deleted',
-                        'Fund transaction has been successfully removed.',
-                    );
-                    router.get(
-                        '/budgetmanagement',
-                        {
-                            tab: 'allocation',
-                            search: searchValue,
-                            perPage,
-                            page: currentPage,
-                            sort: sortField,
-                            direction: sortDirection,
-                            year: selectedYear,
-                            fundId: activeFundId,
-                        },
-                        { preserveState: true },
-                    );
-                },
-                onError: (errors) => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete transaction. Please try again.',
-                    );
-                    console.error('Error deleting transaction:', errors);
-                },
-            });
-        }
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/fund-transactions/${deleteId}`, {
+            onSuccess: () => {
+                showDeleted(
+                    'Transaction Deleted',
+                    'Fund transaction has been successfully removed.',
+                );
+                router.get(
+                    '/budgetmanagement',
+                    {
+                        tab: 'allocation',
+                        search: searchValue,
+                        perPage,
+                        page: currentPage,
+                        sort: sortField,
+                        direction: sortDirection,
+                        year: selectedYear,
+                        fundId: activeFundId,
+                    },
+                    { preserveState: true },
+                );
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete transaction. Please try again.',
+                );
+                console.error('Error deleting transaction:', errors);
+            },
+        });
     };
 
     const handleSubmitTransaction = (e: React.FormEvent) => {
@@ -1311,6 +1318,18 @@ export default function BudgetAllocation() {
                 onSubmit={handleSubmitEditTransaction}
                 submitButtonText="Update Transaction"
                 isEdit={true}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Transaction"
+                message="Are you sure you want to delete this transaction? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                variant="destructive"
             />
         </>
     );

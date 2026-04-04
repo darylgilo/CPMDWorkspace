@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import SearchBar from '@/components/SearchBar';
 import TaskCalendar from '@/components/TaskCalendar';
@@ -361,6 +362,8 @@ export default function MyTaskboard() {
         isOpen: boolean;
         task: Task | null;
     }>({ isOpen: false, task: null });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const resetForm = () => setFormData({ ...defaultForm });
 
@@ -400,8 +403,15 @@ export default function MyTaskboard() {
         setFormData((p) => ({ ...p, [name]: value }));
 
     const handleDelete = (id: number) => {
-        if (!window.confirm('Delete this task?')) return;
-        router.delete(`/tasks/${id}`, {
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/tasks/${deleteId}`, {
             onSuccess: () =>
                 showDeleted('Task Deleted', 'Task has been removed.'),
             onError: () => showError('Delete Failed', 'Unable to delete task.'),
@@ -1477,6 +1487,18 @@ export default function MyTaskboard() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Task"
+                message="Are you sure you want to delete this task? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                variant="destructive"
+            />
         </div>
     );
 }

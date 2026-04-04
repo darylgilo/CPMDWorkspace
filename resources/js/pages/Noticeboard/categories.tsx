@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import SearchBar from '@/components/SearchBar';
 import CustomCardPin from '@/components/ui/CustomCardPin';
 import {
@@ -209,6 +210,8 @@ export default function CategoriesPage() {
         }
         return new Set<string>();
     });
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     // Save pinned notices to localStorage whenever they change
     useEffect(() => {
@@ -348,6 +351,29 @@ export default function CategoriesPage() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedNotices = filteredNotices.slice(startIndex, endIndex);
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/noticeboard/${deleteId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showDeleted(
+                    'Notice Deleted',
+                    'Notice has been successfully removed.',
+                );
+                setEditOpen(false);
+                resetEditForm();
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete notice. Please try again.',
+                );
+            },
+        });
+    };
 
     // Reset to page 1 when filters change or adjust current page when items per page changes
     useEffect(() => {
@@ -1544,32 +1570,8 @@ export default function CategoriesPage() {
                                         type="button"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (
-                                                confirm(
-                                                    'Are you sure you want to delete this notice?',
-                                                )
-                                            ) {
-                                                router.delete(
-                                                    `/noticeboard/${editingNotice.id}`,
-                                                    {
-                                                        preserveScroll: true,
-                                                        onSuccess: () => {
-                                                            showDeleted(
-                                                                'Notice Deleted',
-                                                                'Notice has been successfully removed.',
-                                                            );
-                                                            setEditOpen(false);
-                                                            resetEditForm();
-                                                        },
-                                                        onError: (errors) => {
-                                                            showError(
-                                                                'Delete Failed',
-                                                                'Unable to delete notice. Please try again.',
-                                                            );
-                                                        },
-                                                    },
-                                                );
-                                            }
+                                            setDeleteId(editingNotice.id);
+                                            setShowDeleteConfirm(true);
                                         }}
                                         className="inline-flex h-[38px] min-w-[38px] items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 active:scale-[0.98]"
                                     >
@@ -1658,6 +1660,18 @@ export default function CategoriesPage() {
                         onPageChange={(page) => setCurrentPage(page)}
                     />
                 </div>
+
+                {/* Delete Confirmation Dialog */}
+                <ConfirmDialog
+                    open={showDeleteConfirm}
+                    onOpenChange={setShowDeleteConfirm}
+                    title="Delete Notice"
+                    message="Are you sure you want to delete this notice? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    onConfirm={confirmDelete}
+                    variant="destructive"
+                />
             </div>
         </>
     );

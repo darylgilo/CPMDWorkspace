@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import ImageModal from '@/components/ImageModal';
 import SearchBar from '@/components/SearchBar';
@@ -184,6 +185,9 @@ export default function Writeup() {
 
     // Profile picture helper functions
     const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [deleteType, setDeleteType] = useState<'document' | 'comment' | null>(null);
 
     const getProfilePictureUrl = (profilePicture?: string) => {
         if (!profilePicture) return null;
@@ -410,22 +414,9 @@ export default function Writeup() {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this document?')) {
-            router.delete(`/documents/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Document Deleted',
-                        'Document has been successfully removed.',
-                    );
-                },
-                onError: () => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete document. Please try again.',
-                    );
-                },
-            });
-        }
+        setDeleteId(id);
+        setDeleteType('document');
+        setShowDeleteConfirm(true);
     };
 
     const handleSubmitAdd = (e: React.FormEvent) => {
@@ -824,15 +815,38 @@ export default function Writeup() {
     };
 
     const handleDeleteComment = (commentId: number) => {
-        if (window.confirm('Are you sure you want to delete this comment?')) {
-            router.delete(`/comments/${commentId}`, {
+        setDeleteId(commentId);
+        setDeleteType('comment');
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId || !deleteType) return;
+        
+        setShowDeleteConfirm(false);
+        
+        if (deleteType === 'document') {
+            router.delete(`/documents/${deleteId}`, {
+                onSuccess: () => {
+                    showDeleted(
+                        'Document Deleted',
+                        'Document has been successfully removed.',
+                    );
+                },
+                onError: () => {
+                    showError(
+                        'Delete Failed',
+                        'Unable to delete document. Please try again.',
+                    );
+                },
+            });
+        } else if (deleteType === 'comment') {
+            router.delete(`/comments/${deleteId}`, {
                 onSuccess: () => {
                     showDeleted(
                         'Comment Deleted',
                         'Comment has been successfully removed.',
                     );
-                    // The page props will be automatically updated by Inertia
-                    // No need for manual state updates or page reload
                 },
                 onError: (errors: Record<string, string>) => {
                     showError(
@@ -1694,6 +1708,21 @@ export default function Writeup() {
                 initialIndex={modalInitialIndex}
                 isOpen={isModalOpen}
                 onClose={handleCloseModal}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title={deleteType === 'document' ? 'Delete Document' : 'Delete Comment'}
+                message={deleteType === 'document' 
+                    ? 'Are you sure you want to delete this document? This action cannot be undone.'
+                    : 'Are you sure you want to delete this comment? This action cannot be undone.'
+                }
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                variant="destructive"
             />
         </div>
     );

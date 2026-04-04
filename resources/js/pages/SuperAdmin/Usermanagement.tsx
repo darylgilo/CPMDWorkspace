@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import SearchBar from '@/components/SearchBar';
 import SimpleStatistic from '@/components/SimpleStatistic';
 import ToggleButton from '@/components/ToggleButton';
@@ -149,6 +150,8 @@ export default function UserManagement() {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortField, setSortField] = useState<keyof User>('name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Analytics calculation
     const analytics = useMemo<AnalyticsData>(() => {
@@ -242,23 +245,29 @@ export default function UserManagement() {
 
     // Handle user deletion with confirmation
     const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this user?')) {
-            router.delete(`/superadmin/users/${id}`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    showDeleted(
-                        'User Deleted',
-                        'User account has been successfully removed.',
-                    );
-                },
-                onError: (errors) => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete user. Please try again.',
-                    );
-                },
-            });
-        }
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/superadmin/users/${deleteId}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showDeleted(
+                    'User Deleted',
+                    'User account has been successfully removed.',
+                );
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete user. Please try again.',
+                );
+            },
+        });
     };
 
     // Handle search input change (client-side only)
@@ -354,12 +363,13 @@ export default function UserManagement() {
     // Status filter toggle is controlled and synchronized with server via statusFilter
 
     return (
-        <AppLayout
-            breadcrumbs={breadcrumbs.map((crumb) => ({
-                title: crumb.title,
-                href: crumb.href,
-            }))}
-        >
+        <>
+            <AppLayout
+                breadcrumbs={breadcrumbs.map((crumb) => ({
+                    title: crumb.title,
+                    href: crumb.href,
+                }))}
+            >
             <Head title="User Management" />
             <div className="flex flex-col gap-4 p-4">
                 {/* Page Header */}
@@ -1064,5 +1074,18 @@ export default function UserManagement() {
                 </div>
             </div>
         </AppLayout>
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+            open={showDeleteConfirm}
+            onOpenChange={setShowDeleteConfirm}
+            title="Delete User"
+            message="Are you sure you want to delete this user? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            onConfirm={confirmDelete}
+            variant="destructive"
+        />
+    </>
     );
 }

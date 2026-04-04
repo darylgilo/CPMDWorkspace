@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ExportPesticide from '@/components/export/ExportPesticide';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import PhilippineLocationSelector from '@/components/PhilippineLocationSelector';
@@ -120,6 +121,8 @@ export default function Distribution() {
         useState<Distribution | null>(null);
     const [sortField, setSortField] = useState<string>('received_date');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Form field configuration for distributions
     const distributionFormFields: FormField[] = [
@@ -306,43 +309,45 @@ export default function Distribution() {
     };
 
     const handleDelete = (id: number) => {
-        if (
-            window.confirm(
-                'Are you sure you want to delete this distribution record?',
-            )
-        ) {
-            router.delete(`/distributions/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Distribution Deleted',
-                        'Distribution record has been successfully removed.',
-                    );
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
 
-                    // Small delay to ensure alert is visible before navigation
-                    setTimeout(() => {
-                        router.get(
-                            '/pesticidesindex',
-                            {
-                                tab: 'distribution',
-                                search: searchValue,
-                                perPage,
-                                page: currentPage,
-                                sort: sortField,
-                                direction: sortDirection,
-                            },
-                            { preserveState: true },
-                        );
-                    }, 100);
-                },
-                onError: (errors) => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete distribution. Please try again.',
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/distributions/${deleteId}`, {
+            onSuccess: () => {
+                showDeleted(
+                    'Distribution Deleted',
+                    'Distribution record has been successfully removed.',
+                );
+
+                // Small delay to ensure alert is visible before navigation
+                setTimeout(() => {
+                    router.get(
+                        '/pesticidesindex',
+                        {
+                            tab: 'distribution',
+                            search: searchValue,
+                            perPage,
+                            page: currentPage,
+                            sort: sortField,
+                            direction: sortDirection,
+                        },
+                        { preserveState: true },
                     );
-                    console.error('Error deleting distribution:', errors);
-                },
-            });
-        }
+                }, 100);
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete distribution. Please try again.',
+                );
+                console.error('Error deleting distribution:', errors);
+            },
+        });
     };
 
     const handleSubmitAdd = (e: React.FormEvent) => {
@@ -1026,6 +1031,18 @@ export default function Distribution() {
                 isEdit
                 isLoading={isSubmitting}
                 loadingText="Updating..."
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title="Delete Distribution"
+                message="Are you sure you want to delete this distribution record? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                variant="destructive"
             />
         </>
     );

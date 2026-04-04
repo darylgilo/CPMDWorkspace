@@ -1,4 +1,5 @@
 import CustomPagination from '@/components/CustomPagination';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import DonutPieChart from '@/components/DonutPieChart';
 import FormDialog, { type FormField } from '@/components/FormDialog';
 import FundTrendChart from '@/components/FundTrendChart';
@@ -84,6 +85,8 @@ export default function SourceofFund() {
     const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
     const [sortField, setSortField] = useState<string>('fund_name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Form field configuration for funds
     // Generate year options (20 years back and 10 years forward)
@@ -152,35 +155,41 @@ export default function SourceofFund() {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm('Are you sure you want to delete this fund?')) {
-            router.delete(`/funds/${id}`, {
-                onSuccess: () => {
-                    showDeleted(
-                        'Fund Deleted',
-                        'Fund source has been successfully removed.',
-                    );
-                    router.get(
-                        '/budgetmanagement',
-                        {
-                            tab: 'source',
-                            search: searchValue,
-                            perPage,
-                            page: currentPage,
-                            sort: sortField,
-                            direction: sortDirection,
-                        },
-                        { preserveState: false }, // Force refresh to get updated analytics
-                    );
-                },
-                onError: (errors) => {
-                    showError(
-                        'Delete Failed',
-                        'Unable to delete fund. Please try again.',
-                    );
-                    console.error('Error deleting fund:', errors);
-                },
-            });
-        }
+        setDeleteId(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId) return;
+        
+        setShowDeleteConfirm(false);
+        router.delete(`/funds/${deleteId}`, {
+            onSuccess: () => {
+                showDeleted(
+                    'Fund Deleted',
+                    'Fund source has been successfully removed.',
+                );
+                router.get(
+                    '/budgetmanagement',
+                    {
+                        tab: 'source',
+                        search: searchValue,
+                        perPage,
+                        page: currentPage,
+                        sort: sortField,
+                        direction: sortDirection,
+                    },
+                    { preserveState: false }, // Force refresh to get updated analytics
+                );
+            },
+            onError: (errors) => {
+                showError(
+                    'Delete Failed',
+                    'Unable to delete fund. Please try again.',
+                );
+                console.error('Error deleting fund:', errors);
+            },
+        });
     };
 
     const handleSubmitAdd = (e: React.FormEvent) => {
@@ -663,6 +672,18 @@ export default function SourceofFund() {
                     onSubmit={handleSubmitEdit}
                     submitButtonText="Update Fund"
                     isEdit={true}
+                />
+
+                {/* Delete Confirmation Dialog */}
+                <ConfirmDialog
+                    open={showDeleteConfirm}
+                    onOpenChange={setShowDeleteConfirm}
+                    title="Delete Fund"
+                    message="Are you sure you want to delete this fund? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    onConfirm={confirmDelete}
+                    variant="destructive"
                 />
             </div>
         </>

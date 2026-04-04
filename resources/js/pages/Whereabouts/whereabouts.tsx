@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
     Dialog,
     DialogContent,
@@ -363,6 +364,7 @@ export default function Whereabouts({
     const [useDateRange, setUseDateRange] = useState(false);
     const [dateRangeStart, setDateRangeStart] = useState('');
     const [dateRangeEnd, setDateRangeEnd] = useState('');
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
     
     // Global tooltip state
     const [globalTooltip, setGlobalTooltip] = useState<{
@@ -643,7 +645,19 @@ export default function Whereabouts({
             setSelectedCell(null);
             return;
         }
+
+        // Show confirmation dialog
+        setShowResetConfirm(true);
+    };
+
+    const confirmReset = () => {
+        if (!selectedCell) return;
+
+        const dateStr = format(selectedCell.date, 'yyyy-MM-dd');
+        const existing = whereabouts[selectedCell.user.id]?.[dateStr];
+
         setIsSubmitting(true);
+        setShowResetConfirm(false);
 
         router.delete(`/whereabouts/${existing.id}`, {
             onSuccess: () => {
@@ -1194,6 +1208,20 @@ export default function Whereabouts({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            
+            {/* Reset Confirmation Dialog */}
+            <ConfirmDialog
+                open={showResetConfirm}
+                onOpenChange={setShowResetConfirm}
+                title="Confirm Reset"
+                message="Are you sure you want to reset this whereabouts entry? This action cannot be undone."
+                confirmText="Yes, Reset"
+                cancelText="No"
+                onConfirm={confirmReset}
+                isLoading={isSubmitting}
+                loadingText="Resetting..."
+                variant="destructive"
+            />
             
             {/* Global Tooltip */}
             {globalTooltip && (

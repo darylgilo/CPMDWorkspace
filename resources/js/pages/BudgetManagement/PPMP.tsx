@@ -1,4 +1,5 @@
 import SearchBar from '@/components/SearchBar';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import ExportPPMP from '@/components/export/ExportPPMP';
 import { Button } from '@/components/ui/button';
 import {
@@ -120,6 +121,9 @@ export default function PPMP() {
         Set<string>
     >(new Set());
     const [isCustomDescription, setIsCustomDescription] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [deleteType, setDeleteType] = useState<'ppmp' | 'funding-detail' | null>(null);
 
     const formatCurrency = (amount: number | undefined | null) => {
         const val = amount || 0;
@@ -545,30 +549,9 @@ export default function PPMP() {
     };
 
     const handleDeleteFundingDetail = (fundingDetailId: number) => {
-        if (confirm('Are you sure you want to delete this funding detail?')) {
-            setIsSubmitting(true);
-            router.delete(
-                `/budgetmanagement/ppmp/funding-details/${fundingDetailId}`,
-                {
-                    onSuccess: () => {
-                        showDeleted(
-                            'Funding Detail Deleted',
-                            'Funding detail has been successfully removed.',
-                        );
-                        // Force a page reload to refresh the table data
-                        router.reload();
-                    },
-                    onError: (errors) => {
-                        console.error('Error deleting funding detail:', errors);
-                        showError(
-                            'Delete Failed',
-                            'Unable to delete funding detail. Please try again.',
-                        );
-                    },
-                    onFinish: () => setIsSubmitting(false),
-                },
-            );
-        }
+        setDeleteId(fundingDetailId);
+        setDeleteType('funding-detail');
+        setShowDeleteConfirm(true);
     };
 
     const loadHighlights = () => {
@@ -680,9 +663,19 @@ export default function PPMP() {
     };
 
     const handleDeletePPMP = (item: PPMPProject) => {
-        if (confirm('Are you sure you want to delete this PPMP item?')) {
-            setIsSubmitting(true);
-            router.delete(`/budgetmanagement/ppmp/${item.id}`, {
+        setDeleteId(item.id);
+        setDeleteType('ppmp');
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = () => {
+        if (!deleteId || !deleteType) return;
+        
+        setIsSubmitting(true);
+        setShowDeleteConfirm(false);
+
+        if (deleteType === 'ppmp') {
+            router.delete(`/budgetmanagement/ppmp/${deleteId}`, {
                 onSuccess: () => {
                     showDeleted(
                         'PPMP Item Deleted',
@@ -698,6 +691,28 @@ export default function PPMP() {
                 },
                 onFinish: () => setIsSubmitting(false),
             });
+        } else if (deleteType === 'funding-detail') {
+            router.delete(
+                `/budgetmanagement/ppmp/funding-details/${deleteId}`,
+                {
+                    onSuccess: () => {
+                        showDeleted(
+                            'Funding Detail Deleted',
+                            'Funding detail has been successfully removed.',
+                        );
+                        // Force a page reload to refresh the table data
+                        router.reload();
+                    },
+                    onError: (errors) => {
+                        console.error('Error deleting funding detail:', errors);
+                        showError(
+                            'Delete Failed',
+                            'Unable to delete funding detail. Please try again.',
+                        );
+                    },
+                    onFinish: () => setIsSubmitting(false),
+                },
+            );
         }
     };
 
@@ -3054,6 +3069,23 @@ export default function PPMP() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                title={deleteType === 'ppmp' ? 'Delete PPMP Item' : 'Delete Funding Detail'}
+                message={deleteType === 'ppmp' 
+                    ? 'Are you sure you want to delete this PPMP item? This action cannot be undone.'
+                    : 'Are you sure you want to delete this funding detail? This action cannot be undone.'
+                }
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                isLoading={isSubmitting}
+                loadingText="Deleting..."
+                variant="destructive"
+            />
         </div>
     );
 }
