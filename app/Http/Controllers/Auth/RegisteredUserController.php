@@ -26,7 +26,18 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('auth/register');
+        // Get sections for the registration form
+        $sections = \App\Models\Section::orderBy('office')->orderBy('display_order')->get();
+        
+        // Group sections by office for better organization
+        $sectionsByOffice = $sections->groupBy('office')->map(function ($officeSections) {
+            return $officeSections->pluck('name')->toArray();
+        })->toArray();
+        
+        return Inertia::render('auth/register', [
+            'sections' => $sections,
+            'SECTIONS_BY_OFFICE' => $sectionsByOffice,
+        ]);
     }
 
     /**
@@ -53,13 +64,22 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'office' => 'required|string|in:DO,ADO RDPSS,ADO RS,PMO,BIOTECH,NSIC,ADMINISTRATIVE,CPMD,CRPSD,AED,PPSSD,NPQSD,NSQCS,Baguio BPI center,Davao BPI center,Guimaras BPI center,La Granja BPI center,Los Baños BPI center,Others',
+            'section_id' => 'required|string',
         ]);
+
+        // Find the section by name and office
+        $section = \App\Models\Section::where('name', $request->section_id)
+            ->where('office', $request->office)
+            ->first();
 
         // Create user with status 'inactive' (requires admin activation)
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'office' => $request->office,
+            'section_id' => $section ? $section->id : null,
             'status' => 'inactive', // User is inactive by default
         ]);
 

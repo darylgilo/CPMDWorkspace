@@ -1,4 +1,5 @@
 import authIllustration from '@/Assets/Images/auth-illustration.png';
+import logoImage from '@/Assets/Images/DA-BPI New  logo White Glow.png';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
@@ -41,7 +42,15 @@ export default function AuthSplitLayout({
                 )}
             </div>
             <div className="w-full lg:p-8">
-                <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+                <div className="mx-auto flex w-full flex-col justify-center space-y-3 sm:w-[350px]">
+                    {/* Logo at very top */}
+                    <div className="flex justify-center mb-3">
+                        <img
+                            src={logoImage}
+                            alt="DA BPI Logo"
+                            className="h-24 w-auto max-w-[300px]"
+                        />
+                    </div>
                     <div className="flex flex-col items-center gap-2 text-center sm:items-center sm:text-center">
                         <h1 className="text-xl font-medium">{title}</h1>
                         <p className="text-sm text-balance text-muted-foreground">

@@ -10,6 +10,7 @@ import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import logoImage from '@/Assets/Images/DA-BPI New  logo White Glow.png';
 
 interface LoginProps {
     status?: string;
@@ -42,7 +43,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    placeholder="Enter your Email Addess"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -67,7 +68,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     required
                                     tabIndex={2}
                                     autoComplete="current-password"
-                                    placeholder="Password"
+                                    placeholder="Enter Password"
                                 />
                                 <InputError message={errors.password} />
                             </div>
