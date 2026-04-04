@@ -924,19 +924,21 @@ export default function MyTaskboard() {
                                     );
                                 }}
                             >
-                            <SelectTrigger className="h-8 w-[72px] border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                {[10, 25, 50, 100].map((n) => (
-                                    <SelectItem key={n} value={n.toString()}>
-                                        {n}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <span>entries</span>
-                    </div>
+                                <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                    <SelectValue placeholder="Entries" />
+                                </SelectTrigger>
+                                <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                    {[10, 25, 50, 100].map((n) => (
+                                        <SelectItem
+                                            key={n}
+                                            value={n.toString()}
+                                        >
+                                            {n} entries
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <SearchBar
                         search={searchValue}

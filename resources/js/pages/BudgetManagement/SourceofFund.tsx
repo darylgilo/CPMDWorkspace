@@ -459,12 +459,6 @@ export default function SourceofFund() {
                                 </span>
                             </Button>
                             <div className="flex items-center gap-2">
-                                <label
-                                    htmlFor="entries"
-                                    className="font-medium"
-                                >
-                                    Show
-                                </label>
                                 <Select
                                     value={perPage.toString()}
                                     onValueChange={(value) => {
@@ -484,17 +478,16 @@ export default function SourceofFund() {
                                         );
                                     }}
                                 >
-                                    <SelectTrigger className="w-[80px] border-gray-300 dark:border-neutral-700 dark:bg-neutral-950">
-                                        <SelectValue placeholder="10" />
+                                    <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                        <SelectValue placeholder="Entries" />
                                     </SelectTrigger>
                                     <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                        <SelectItem value="10">10</SelectItem>
-                                        <SelectItem value="25">25</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
+                                        <SelectItem value="10">10 entries</SelectItem>
+                                        <SelectItem value="25">25 entries</SelectItem>
+                                        <SelectItem value="50">50 entries</SelectItem>
+                                        <SelectItem value="100">100 entries</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <span>entries</span>
                             </div>
                         </div>
                         <div className="flex w-full items-center gap-2 md:w-auto">

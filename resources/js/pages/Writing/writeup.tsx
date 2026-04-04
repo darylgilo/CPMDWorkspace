@@ -911,12 +911,6 @@ export default function Writeup() {
                             <span className="sm:hidden">Add</span>
                         </Button>
                         <div className="flex items-center gap-1 sm:gap-2">
-                            <label
-                                htmlFor="entries"
-                                className="text-xs font-medium sm:text-sm"
-                            >
-                                Show
-                            </label>
                             <Select
                                 value={perPage.toString()}
                                 onValueChange={(value) => {
@@ -936,17 +930,16 @@ export default function Writeup() {
                                     );
                                 }}
                             >
-                                <SelectTrigger className="w-[60px] h-8 border-gray-300 text-xs dark:border-neutral-700 dark:bg-neutral-950 sm:w-[80px] sm:h-auto sm:text-sm">
-                                    <SelectValue placeholder="10" />
+                                <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100 sm:w-auto sm:h-auto sm:text-sm">
+                                    <SelectValue placeholder="Entries" />
                                 </SelectTrigger>
                                 <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="25">25</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                    <SelectItem value="100">100</SelectItem>
+                                    <SelectItem value="10">10 entries</SelectItem>
+                                    <SelectItem value="25">25 entries</SelectItem>
+                                    <SelectItem value="50">50 entries</SelectItem>
+                                    <SelectItem value="100">100 entries</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <span className="text-xs text-gray-600 sm:text-sm">entries</span>
                         </div>
                     </div>
                     <div className="flex w-full items-center gap-2 sm:w-auto sm:max-w-md">

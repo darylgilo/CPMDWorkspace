@@ -1067,7 +1067,6 @@ export default function TravelExpenses() {
                         {/* Search and Per Page */}
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                             <div className="flex items-center gap-2">
-                                <label className="font-medium text-sm">Show:</label>
                                 <Select
                                     value={perPage.toString()}
                                     onValueChange={(value) => {
@@ -1090,18 +1089,17 @@ export default function TravelExpenses() {
                                         );
                                     }}
                                 >
-                                    <SelectTrigger className="w-16">
-                                        <SelectValue />
+                                    <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                        <SelectValue placeholder="Entries" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
                                         {[10, 25, 50, 100].map((n) => (
                                             <SelectItem key={n} value={n.toString()}>
-                                                {n}
+                                                {n} entries
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <span className="text-sm">entries</span>
                             </div>
                             <div className="flex w-full items-center gap-2 sm:w-auto">
                                 <SearchBar
