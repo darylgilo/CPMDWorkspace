@@ -100,18 +100,12 @@ class FormSubmissionController extends Controller
                 'responses_count' => count($validated['responses'])
             ]);
 
-            // Generate request ID based on form name
-            $acronym = $this->generateFormAcronym($form->title);
-            $sequenceNumber = $this->getNextSequenceNumber($acronym);
-            $requestId = $acronym . '-' . str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
-
             $submission = FormSubmission::create([
                 'form_id' => $form->id,
                 'user_id' => auth()->id(),
                 'submitter_name' => $validated['submitter_name'],
                 'submitter_email' => $validated['submitter_email'],
                 'status' => 'submitted',
-                'request_id' => $requestId,
                 'priority' => $validated['priority'] ?? 'medium',
             ]);
 
@@ -289,14 +283,27 @@ class FormSubmissionController extends Controller
      */
     public function updateStatus(Request $request, FormSubmission $submission)
     {
+        \Log::info('updateStatus called:', [
+            'submission_id' => $submission->id,
+            'request_data' => $request->all(),
+            'current_notes' => $submission->notes
+        ]);
+
         $validated = $request->validate([
-            'status' => 'required|in:pending,in_progress,resolved',
+            'status' => 'required|in:submitted,reviewed,approved,rejected,pending,in_progress,resolved',
             'notes' => 'nullable|string',
         ]);
+
+        \Log::info('Validated data:', $validated);
 
         $submission->update([
             'status' => $validated['status'],
             'notes' => $validated['notes'] ?? $submission->notes,
+        ]);
+
+        \Log::info('Submission updated:', [
+            'id' => $submission->id,
+            'new_notes' => $submission->notes
         ]);
 
         if ($request->expectsJson()) {
@@ -308,34 +315,5 @@ class FormSubmissionController extends Controller
         }
 
         return back()->with('success', 'Submission status updated!');
-    }
-
-    /**
-     * Generate acronym from form title
-     */
-    private function generateFormAcronym($title)
-    {
-        // Remove special characters and split by spaces
-        $words = preg_split('/[\s\-_]+/', preg_replace('/[^a-zA-Z0-9\s\-_]/', '', $title));
-        
-        $acronym = '';
-        foreach ($words as $word) {
-            if (!empty($word)) {
-                $acronym .= strtoupper(substr($word, 0, 1));
-            }
-        }
-        
-        // If no words found, use 'FRM' as default
-        return empty($acronym) ? 'FRM' : substr($acronym, 0, 5); // Limit to 5 characters
-    }
-
-    /**
-     * Get next sequence number for the acronym
-     */
-    private function getNextSequenceNumber($acronym)
-    {
-        // Count existing submissions with the same acronym pattern
-        $count = FormSubmission::where('request_id', 'like', $acronym . '-%')->count();
-        return $count + 1;
     }
 }

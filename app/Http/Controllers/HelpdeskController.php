@@ -90,7 +90,6 @@ class HelpdeskController extends Controller
     public function updateAssignment(Request $request, $id)
     {
         $request->validate([
-            'assigned_to' => 'nullable|exists:users,id',
             'assignees' => 'nullable|array',
             'assignees.*' => 'exists:users,id',
         ]);
@@ -100,9 +99,9 @@ class HelpdeskController extends Controller
         // Handle multiple assignees if provided
         if ($request->has('assignees') && is_array($request->assignees)) {
             $submission->assignees = !empty($request->assignees) ? json_encode($request->assignees) : null;
-            $submission->assigned_to = !empty($request->assignees) ? $request->assignees[0] : null;
+            // Don't set assigned_to since we're using multiple assignees
         } else {
-            // Handle single assignment
+            // Handle single assignment - set both for backward compatibility
             $submission->assigned_to = $request->assigned_to;
             $submission->assignees = $request->assigned_to ? json_encode([$request->assigned_to]) : null;
         }

@@ -13,6 +13,16 @@ import {
     XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    role?: string;
+}
 
 interface FormResponse {
     id: number;
@@ -28,7 +38,7 @@ interface FormSubmission {
     user_id: number;
     submitter_name: string;
     submitter_email: string;
-    status: 'submitted' | 'reviewed' | 'approved' | 'rejected';
+    status: 'submitted' | 'reviewed' | 'approved' | 'rejected' | 'pending' | 'in_progress' | 'resolved';
     notes?: string;
     request_id?: string;
     created_at: string;
@@ -45,7 +55,7 @@ interface FormSubmission {
             options?: string[];
         }>;
     };
-    user: {
+    user?: {
         id: number;
         name: string;
         email: string;
@@ -58,6 +68,25 @@ interface HelpdeskFormViewProps {
 }
 
 export default function HelpdeskFormView({ submission }: HelpdeskFormViewProps) {
+    const { props } = usePage() as { props: { auth?: { user?: User } } };
+    const currentUser = props.auth?.user;
+    const [notes, setNotes] = useState(submission.notes || '');
+    const [isEditingNotes, setIsEditingNotes] = useState(false);
+    const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+    // Check if current user is the submission owner (not admin)
+    const isSubmissionOwner = currentUser && (
+        (currentUser.id === submission.user_id) || 
+        (currentUser.email === submission.submitter_email)
+    );
+    
+    // Check if current user is admin/superadmin/ICS
+    const isAdmin = currentUser && (
+        currentUser.role === 'admin' || 
+        currentUser.role === 'superadmin' ||
+        currentUser.role === 'ICS'
+    );
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Helpdesk Dashboard',
@@ -141,6 +170,29 @@ export default function HelpdeskFormView({ submission }: HelpdeskFormViewProps) 
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const handleSaveNotes = async () => {
+        console.log('Saving notes...', { submissionId: submission.id, notes });
+        setIsSavingNotes(true);
+        try {
+            const response = await router.put(`/forms/submissions/${submission.id}/status`, {
+                status: submission.status, // Keep original status
+                notes: notes
+            });
+            
+            console.log('Response from server:', response);
+            setIsEditingNotes(false);
+            // Optionally show success message
+            console.log('Notes saved successfully:', response);
+            
+            // Refresh the page to show updated notes
+            window.location.reload();
+        } catch (error) {
+            console.error('Failed to save notes:', error);
+        } finally {
+            setIsSavingNotes(false);
+        }
     };
 
     return (
@@ -245,11 +297,61 @@ export default function HelpdeskFormView({ submission }: HelpdeskFormViewProps) 
                                 )}
                             </div>
 
-                            {/* Admin Notes */}
-                            {submission.notes && (
-                                <div className="mt-8 p-4 bg-gray-50 rounded-lg dark:bg-neutral-800">
-                                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Admin Notes</h3>
-                                    <p className="text-gray-900 dark:text-gray-100">{submission.notes}</p>
+                            {/* Admin Notes - Only show to admins, not submission owners */}
+                            {isAdmin && (
+                                <div className="mt-8">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Notes</h3>
+                                        {!isEditingNotes && (
+                                            <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => setIsEditingNotes(true)}
+                                                >
+                                                    Edit Notes
+                                                </Button>
+                                            )}
+                                    </div>
+                                
+                                    {isEditingNotes ? (
+                                        <div className="space-y-4">
+                                            <textarea
+                                                value={notes}
+                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
+                                                placeholder="Add admin notes..."
+                                                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                            <div className="flex gap-2">
+                                                <Button 
+                                                    onClick={handleSaveNotes}
+                                                    disabled={isSavingNotes}
+                                                    size="sm"
+                                                    className="bg-[#163832] hover:bg-[#163832]/90 text-white"
+                                                >
+                                                    {isSavingNotes ? 'Saving...' : 'Save Notes'}
+                                                </Button>
+                                                <Button 
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setNotes(submission.notes || '');
+                                                        setIsEditingNotes(false);
+                                                    }}
+                                                    disabled={isSavingNotes}
+                                                    size="sm"
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 bg-gray-50 rounded-lg dark:bg-neutral-800">
+                                            {submission.notes ? (
+                                                <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{submission.notes}</p>
+                                            ) : (
+                                                <p className="text-gray-500 italic">No notes added yet.</p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

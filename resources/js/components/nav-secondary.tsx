@@ -51,13 +51,18 @@ export function NavSecondary({
                             isItemActive = true;
                         }
                         
-                        // Exclude Form Builder URLs from Request and Forms
-                        if (item.title === 'Request and Forms' && (basePath.startsWith('/forms/create') || basePath.startsWith('/forms/') && basePath !== '/forms')) {
+                        // Exclude Form Builder URLs from Request and Forms (only admin routes)
+                        if (item.title === 'Request and Forms' && (basePath.startsWith('/forms/create') || basePath.startsWith('/forms/') && basePath !== '/forms' && !basePath.match(/^\/forms\/\d+$/))) {
                             isItemActive = false;
                         }
                         
-                        // Special case for Help Desk to include /form-management and Form Builder URLs
-                        if (item.title === 'Help Desk' && (basePath === '/form-management' || basePath.startsWith('/forms/create') || (basePath.startsWith('/forms/') && basePath !== '/forms'))) {
+                        // Special case for Help Desk to include /form-management and Form Builder URLs (admin routes only)
+                        if (item.title === 'Help Desk' && (basePath === '/form-management' || basePath.startsWith('/forms/create') || (basePath.startsWith('/forms/') && basePath !== '/forms' && !basePath.match(/^\/forms\/\d+$/)))) {
+                            isItemActive = true;
+                        }
+                        
+                        // Form submission URLs (/forms/{id}) should belong to Request and Forms
+                        if (item.title === 'Request and Forms' && basePath.match(/^\/forms\/\d+$/)) {
                             isItemActive = true;
                         }
 

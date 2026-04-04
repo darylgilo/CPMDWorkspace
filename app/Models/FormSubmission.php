@@ -13,7 +13,6 @@ class FormSubmission extends Model
         'submitter_email',
         'status',
         'notes',
-        'request_id',
         'assigned_to',
         'assignees',
         'priority',

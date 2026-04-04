@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { CheckCircle, Clock, Eye, Filter, ListFilter, MoreHorizontal, Search, User, Users, ChevronDown, Plus, ChevronUp, X } from 'lucide-react';
 import HelpdeskTabs from './HelpdeskTabs';
 import StatusDropdown from '@/components/StatusDropdown';
@@ -12,6 +12,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 /* ───── Avatar stack ───── */
 function AvatarStack({
@@ -132,9 +139,7 @@ const statusColors = {
     'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
     'in_progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
     'resolved': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200',
-    'Pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200',
-    'In Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
-    'Resolved': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200',
+    'rejected': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-200',
 };
 
 const priorityColors = {
@@ -147,6 +152,7 @@ const statusOptions = [
     { value: 'pending', label: 'Pending', icon: Clock },
     { value: 'in_progress', label: 'In Progress', icon: Eye },
     { value: 'resolved', label: 'Resolved', icon: CheckCircle },
+    { value: 'rejected', label: 'Rejected', icon: X },
 ];
 
 /* ───── Avatar Component ───── */
@@ -183,6 +189,12 @@ function UserAvatar({ user, size = 'sm' }: { user: User | null; size?: 'xs' | 's
 }
 
 export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
+    const page = usePage();
+    const urlParams = page.props as any;
+    const [perPage, setPerPage] = useState(urlParams.perPage || 10);
+    const [activeTab, setActiveTab] = useState('tickets');
+    const [searchValue, setSearchValue] = useState(urlParams.search || '');
+    const [statusFilter, setStatusFilter] = useState(urlParams.status || '');
     const [statusDropdown, setStatusDropdown] = useState<number | null>(null);
     const [assignmentDropdown, setAssignmentDropdown] = useState<number | null>(null);
     const [assignmentModal, setAssignmentModal] = useState<number | null>(null);
@@ -193,6 +205,13 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
     const assignButtonRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
     const [sortField, setSortField] = useState('id');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+    // Sync state with URL parameters
+    useEffect(() => {
+        setSearchValue(urlParams.search || '');
+        setStatusFilter(urlParams.status || '');
+        setPerPage(urlParams.perPage || 10);
+    }, [urlParams.search, urlParams.status, urlParams.perPage]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -286,7 +305,29 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
         setSortDir(dir);
     };
 
-    const sortedTickets = [...tickets].sort((a, b) => {
+    // Filter tickets by status and search
+    const filteredTickets = tickets.filter(ticket => {
+        // Apply status filter
+        if (statusFilter && ticket.status !== statusFilter) {
+            return false;
+        }
+        
+        // Apply search filter
+        if (searchValue) {
+            const searchLower = searchValue.toLowerCase();
+            const matchesTicketId = ticket.id.toLowerCase().includes(searchLower);
+            const matchesUser = ticket.user.toLowerCase().includes(searchLower);
+            const matchesIssue = ticket.issue.toLowerCase().includes(searchLower);
+            
+            if (!matchesTicketId && !matchesUser && !matchesIssue) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+
+    const sortedTickets = [...filteredTickets].sort((a, b) => {
         const av = a[sortField as keyof Ticket];
         const bv = b[sortField as keyof Ticket];
         if (typeof av === 'string' && typeof bv === 'string')
@@ -295,6 +336,9 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
             return sortDir === 'asc' ? av - bv : bv - av;
         return 0;
     });
+
+    // Apply pagination to the filtered and sorted tickets
+    const paginatedTickets = sortedTickets.slice(0, perPage);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -324,25 +368,140 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
 
                 <div className="flex flex-col gap-3 sm:gap-4 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden dark:border-neutral-700 dark:bg-neutral-900">
                     <div className="border-b border-gray-200 p-3 sm:p-4 dark:border-neutral-700">
-                        <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">Show:</span>
-                                <select className="h-7 w-[60px] border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100 rounded-md border">
-                                    <option value="10">10</option>
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 hidden sm:inline">entries</span>
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            {/* Mobile: Search on top, Status+Entries row below. Desktop: Status | Search | Entries */}
+                            <div className="flex flex-col gap-2 w-full md:w-auto md:flex-row md:items-center md:gap-3">
+                                {/* Desktop: Status first. Mobile: Status in row with Entries */}
+                                <div className="hidden md:block md:w-[140px]">
+                                    <Select
+                                        key={statusFilter}
+                                        value={statusFilter || 'all'}
+                                        onValueChange={(value: string) => {
+                                            const newStatusFilter = value === 'all' ? '' : value;
+                                            setStatusFilter(newStatusFilter);
+                                            const params: Record<string, string | number> = {
+                                                tab: 'helpdesk',
+                                                search: searchValue,
+                                                status: newStatusFilter,
+                                                perPage: perPage,
+                                            };
+                                            router.get('/helpdesk', params, { preserveState: true, replace: true });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100 sm:h-auto sm:text-sm">
+                                            <SelectValue placeholder="All Status" />
+                                        </SelectTrigger>
+                                        <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="Pending">Pending</SelectItem>
+                                            <SelectItem value="In Progress">In Progress</SelectItem>
+                                            <SelectItem value="Resolved">Resolved</SelectItem>
+                                            <SelectItem value="Rejected">Rejected</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                <div className="relative w-full md:w-[200px]">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search tickets, users..."
+                                        value={searchValue}
+                                        onChange={(e) => {
+                                            setSearchValue(e.target.value);
+                                        }}
+                                        className="w-full rounded-md border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-100"
+                                    />
+                                </div>
+                                
+                                {/* Mobile only: Status + Entries row */}
+                                <div className="flex flex-row gap-2 w-full md:hidden">
+                                    <div className="flex-1">
+                                        <Select
+                                            key={`mobile-${statusFilter}`}
+                                            value={statusFilter || 'all'}
+                                            onValueChange={(value: string) => {
+                                                const newStatusFilter = value === 'all' ? '' : value;
+                                                setStatusFilter(newStatusFilter);
+                                                const params: Record<string, string | number> = {
+                                                    tab: 'helpdesk',
+                                                    search: searchValue,
+                                                    status: newStatusFilter,
+                                                    perPage: perPage,
+                                                };
+                                                router.get('/helpdesk', params, { preserveState: true, replace: true });
+                                            }}
+                                        >
+                                            <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                                <SelectValue placeholder="All Status" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                                <SelectItem value="all">All Status</SelectItem>
+                                                <SelectItem value="Pending">Pending</SelectItem>
+                                                <SelectItem value="In Progress">In Progress</SelectItem>
+                                                <SelectItem value="Resolved">Resolved</SelectItem>
+                                                <SelectItem value="Rejected">Rejected</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    
+                                    <div className="flex-1">
+                                        <Select
+                                            value={perPage.toString()}
+                                            onValueChange={(v: string) => {
+                                                const n = parseInt(v);
+                                                setPerPage(n);
+                                                const params: Record<string, string | number> = {
+                                                    tab: 'helpdesk',
+                                                    search: searchValue,
+                                                    status: statusFilter,
+                                                    perPage: n,
+                                                };
+                                                router.get('/helpdesk', params, { preserveState: true, replace: true });
+                                            }}
+                                        >
+                                            <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100">
+                                                <SelectValue placeholder="Entries" />
+                                            </SelectTrigger>
+                                            <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                                {[10, 25, 50, 100].map((n) => (
+                                                    <SelectItem key={n} value={n.toString()}>
+                                                        {n} entries
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
                             </div>
                             
-                            <div className="relative flex-1 max-w-sm w-full sm:w-auto">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search tickets, users..."
-                                    className="w-full rounded-md border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-gray-100"
-                                />
+                            {/* Desktop only: Entries dropdown */}
+                            <div className="hidden md:block md:w-[120px]">
+                                <Select
+                                    value={perPage.toString()}
+                                    onValueChange={(v: string) => {
+                                        const n = parseInt(v);
+                                        setPerPage(n);
+                                        const params: Record<string, string | number> = {
+                                            tab: 'helpdesk',
+                                            search: searchValue,
+                                            status: statusFilter,
+                                            perPage: n,
+                                        };
+                                        router.get('/helpdesk', params, { preserveState: true, replace: true });
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full h-9 border-gray-300 text-xs bg-white dark:border-neutral-600 dark:bg-neutral-900 dark:text-gray-100 sm:h-auto sm:text-sm">
+                                        <SelectValue placeholder="Entries" />
+                                    </SelectTrigger>
+                                    <SelectContent className="border-gray-200 dark:border-neutral-700 dark:bg-neutral-900">
+                                        {[10, 25, 50, 100].map((n) => (
+                                            <SelectItem key={n} value={n.toString()}>
+                                                {n} entries
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>
@@ -459,7 +618,7 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">
-                                    {sortedTickets.map((ticket) => (
+                                    {paginatedTickets.map((ticket) => (
                                         <tr key={ticket.id} className="hover:bg-gray-50 transition-colors dark:hover:bg-neutral-800/50">
                                             <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-[#163832] dark:text-[#4ade80]">{ticket.id}</td>
                                             <td className="px-4 sm:px-6 py-3 sm:py-4">
@@ -529,7 +688,7 @@ export default function Helpdesk({ tickets, stats, users }: HelpdeskProps) {
 
                         {/* Mobile Card View */}
                         <div className="lg:hidden space-y-3 p-4">
-                            {sortedTickets.map((ticket) => (
+                            {paginatedTickets.map((ticket) => (
                                 <div key={ticket.id} className="bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4 shadow-sm">
                                     {/* Header */}
                                     <div className="flex items-start justify-between mb-3">
